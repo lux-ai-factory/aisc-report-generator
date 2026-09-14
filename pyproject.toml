@@ -1,0 +1,16 @@
+[project]
+name = "vera-report-generator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1.6",
+    "pyyaml>=6.0.2",
+    "sqlalchemy>=2.0.48",
+    "vera-report-plugin-interface",
+    "weasyprint>=68.1",
+]
+
+[tool.uv.sources]
+vera-report-plugin-interface = { git = "https://github.com/lux-ai-factory/vera-report-plugin-interface.git", branch = "dev" }

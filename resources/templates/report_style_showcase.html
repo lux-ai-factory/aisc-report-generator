@@ -1,0 +1,253 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Style Showcase</title>
+  <link rel="stylesheet" href="./report_style.css">
+  <style>
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .showcase-block {
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      padding: var(--space-md);
+      background: var(--color-bg-white);
+    }
+
+    .label {
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .showcase-meta {
+      color: var(--color-text-muted);
+      font-size: 13px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .code-sample {
+      margin-top: 8px;
+      padding: var(--space-sm);
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-panel);
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: var(--color-text);
+    }
+
+    .single-column {
+      grid-template-columns: 1fr;
+
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="height:40px; display:flex; align-items:center; color:var(--color-text-muted);">Logo Placeholder</div>
+  </header>
+
+  <section class="title-page">
+    <div class="title-page-heading">
+      <h1 class="title-page-title">Report Style Showcase</h1>
+      <p class="title-page-subtitle">Preview of Available Elements</p>
+      <p class="title-page-version">v1.0</p>
+    </div>
+
+    <div class="title-page-developer">
+      <p class="title-page-label">Demonstration</p>
+      <p class="title-page-author">Template Components</p>
+    </div>
+
+    <div class="title-page-meta">
+      <p>Generated: 2026-03-19</p>
+      <p>Style file: report_style.css</p>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <h2>Typography</h2>
+    <div class="showcase-grid single-column">
+      <div class="showcase-block">
+        <span class="label">Headings (h1-h5)</span>
+        <h1>Heading Level 1</h1>
+        <h2>Heading Level 2</h2>
+        <h3>Heading Level 3</h3>
+        <h4>Heading Level 4</h4>
+        <h5>Heading Level 5</h5>
+        <div class="showcase-meta">
+          Name: Native heading tags<br>
+          Alias: h1, h2, h3, h4, h5
+        </div>
+        <div class="code-sample">&lt;h1&gt;Heading Level 1&lt;/h1&gt;
+&lt;h2&gt;Heading Level 2&lt;/h2&gt;
+&lt;h3&gt;Heading Level 3&lt;/h3&gt;
+&lt;h4&gt;Heading Level 4&lt;/h4&gt;
+&lt;h5&gt;Heading Level 5&lt;/h5&gt;</div>
+      </div>
+
+      <div class="showcase-block">
+        <span class="label">Paragraph and Note</span>
+        <p>Default paragraph text using base body color and spacing.</p>
+        <p class="note">This is a note utility style.</p>
+        <div class="showcase-meta">
+          Name: Note utility<br>
+          Alias: .note
+        </div>
+        <div class="code-sample">&lt;p&gt;Default paragraph text&lt;/p&gt;
+&lt;p class="note"&gt;Note text&lt;/p&gt;</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-separator">
+
+  <section class="content-section">
+    <h2>Boxes and Groups</h2>
+
+    <div class="showcase-grid">
+      
+
+      <div class="showcase-block">
+        <span class="label">report-box info</span>
+        <div class="report-box info">
+          <p>Informational box style.</p>
+        </div>
+        <div class="showcase-meta">Name: Info box variant<br>Alias: .report-box.info</div>
+        <div class="code-sample">&lt;div class="report-box info"&gt;...&lt;/div&gt;</div>
+      </div>
+
+      <div class="showcase-block">
+        <span class="label">report-box warning</span>
+        <div class="report-box warning">
+          <p>Warning box style.</p>
+        </div>
+        <div class="showcase-meta">Name: Warning box variant<br>Alias: .report-box.warning</div>
+        <div class="code-sample">&lt;div class="report-box warning"&gt;...&lt;/div&gt;</div>
+      </div>
+
+      <div class="showcase-block">
+        <span class="label">report-box success</span>
+        <div class="report-box success">
+          <p>Success box style.</p>
+        </div>
+        <div class="showcase-meta">Name: Success box variant<br>Alias: .report-box.success</div>
+        <div class="code-sample">&lt;div class="report-box success"&gt;...&lt;/div&gt;</div>
+      </div>
+
+      <div class="showcase-block">
+        <span class="label">report-box accent</span>
+        <div class="report-box accent">
+          <p>Accent box style.</p>
+        </div>
+        <div class="showcase-meta">Name: Accent box variant<br>Alias: .report-box.accent</div>
+        <div class="code-sample">&lt;div class="report-box accent"&gt;...&lt;/div&gt;</div>
+      </div>
+
+      <div class="showcase-block">
+        <span class="label">report-box info / note</span>
+        <div class="report-box info"><p>Info box style (same as .note modifier)</p></div>
+        <div class="showcase-meta">Name: Info/Note box variant<br>Alias: .report-box.info, .report-box.note</div>
+        <div class="code-sample">&lt;div class="report-box info"&gt;...&lt;/div&gt;
+&lt;div class="report-box note"&gt;...&lt;/div&gt;</div>
+      </div>
+
+      <div class="showcase-block">
+        <span class="label">stat-box & stat-value</span>
+        <div class="stat-box">
+          <strong>Model Accuracy</strong>
+          <span class="stat-value">95.2%</span>
+        </div>
+        <p style="margin-top: var(--space-lg);">
+          <span class="stat-value passed">84<span class="stat-percentage">%</span></span>
+          <span class="stat-value failed">12<span class="stat-percentage">%</span></span>
+          <span class="stat-value error">4<span class="stat-percentage">%</span></span>
+        </p>
+        <div class="showcase-meta">Name: Stat cards & values<br>Alias: .stat-box, .stat-value, .stat-value.passed/failed/error</div>
+        <div class="code-sample">&lt;div class="stat-box"&gt;
+  &lt;strong&gt;Model Accuracy&lt;/strong&gt;
+  &lt;span class="stat-value"&gt;95.2%&lt;/span&gt;
+&lt;/div&gt;
+&lt;span class="stat-value passed"&gt;84%&lt;/span&gt;</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="content-section">
+    <h2>Recommendations</h2>
+    <div class="showcase-grid single-column">
+      <div class="showcase-block">
+        <div class="recommendations">
+          <h3>Recommended Actions</h3>
+          <ul>
+            <li>Expand validation coverage for minority subgroups.</li>
+            <li>Re-run calibration checks quarterly.</li>
+            <li>Track drift metrics in production.</li>
+          </ul>
+        </div>
+        <div class="showcase-meta">Name: Recommendations panel<br>Alias: .recommendations</div>
+        <div class="code-sample">&lt;div class="recommendations"&gt;
+  &lt;h3&gt;Recommended Actions&lt;/h3&gt;
+  &lt;ul&gt;...&lt;/ul&gt;
+&lt;/div&gt;</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="content-section">
+    <h2>Summary Layout</h2>
+    <div class="showcase-grid single-column">
+      <div class="showcase-block">
+        <div class="summary-container">
+          <div class="summary-column">
+            <div class="summary-stats">
+              <div class="stat-box">
+                <strong>Total Tests</strong>
+                <span class="stat-value">38</span>
+              </div>
+              <div class="stat-box">
+                <strong>Passed</strong>
+                <span class="stat-value passed">32</span>
+              </div>
+            </div>
+          </div>
+          <div class="summary-column right-column">
+            <div class="report-box info">
+              <p><strong>Key Observation:</strong> Performance remains stable across recent data slices.</p>
+            </div>
+            <div class="summary-details">
+              <p><strong>Model:</strong> Credit Scorer v3</p>
+              <p><strong>Owner:</strong> Risk Analytics Team</p>
+              <p><strong>Last Review:</strong> 2026-03-19</p>
+            </div>
+          </div>
+        </div>
+        <div class="showcase-meta">Name: Summary layout grid<br>Alias: .summary-container, .summary-column, .summary-stats, .summary-details, .right-column</div>
+        <div class="code-sample">&lt;div class="summary-container"&gt;
+  &lt;div class="summary-column"&gt;...&lt;/div&gt;
+  &lt;div class="summary-column right-column"&gt;...&lt;/div&gt;
+&lt;/div&gt;</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-separator">
+
+  <div class="page-break"></div>
+</body>
+</html>

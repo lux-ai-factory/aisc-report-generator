@@ -1,0 +1,49 @@
+{% if system_info %}
+<!-- System Card Page -->
+<div style="page-break-before: always;">
+  <h1 style="text-align: center; color: var(--color-primary); font-size: 28px; margin-bottom: 15px; margin-top: 0; font-weight: 600;">AI System Card</h1>
+  
+  <!-- Two Column Layout for Top Section -->
+  <div style="display: table; width: 100%; margin-bottom: 15px;">
+    <!-- Left Column: System Metadata -->
+    <div style="display: table-cell; width: 38%; vertical-align: top; padding-right: 2%;">
+      <div class="report-box system-card">
+        <h2 style="color: var(--color-primary); font-size: 14px; margin-top: 0; margin-bottom: 10px; text-align: center; font-weight: 600;">System Metadata</h2>
+        {% for key, value in system_info['System Metadata'].items() %}
+        <div style="margin-bottom: 8px;">
+          <p style="margin: 0 0 2px 0; font-weight: 600; font-size: 10px; color: var(--color-text);">{{ key }}</p>
+          <p style="margin: 0; font-size: 10px; line-height: 1.3; color: var(--color-text-muted);">{{ value }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+    <!-- Right Column: Intended Purpose -->
+    <div style="display: table-cell; width: 58%; vertical-align: top; padding-left: 2%;">
+      <div class="report-box system-card">
+        <h2 style="color: var(--color-primary); font-size: 14px; margin-top: 0; margin-bottom: 10px; text-align: center; font-weight: 600;">Intended Purpose / Use Case</h2>
+        {% for key, value in system_info['Intended Use Case'].items() %}
+        <div style="margin-bottom: 8px;">
+          <p style="margin: 0 0 2px 0; font-weight: 600; font-size: 10px; color: var(--color-text);">{{ key }}</p>
+          <p style="margin: 0; font-size: 10px; line-height: 1.3; color: var(--color-text-muted); white-space: pre-line;">{{ value }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Full Width: System Functionalities and Components -->
+  <div class="report-box system-card" style="margin-top: 15px;">
+    <h2 style="color: var(--color-primary); font-size: 14px; margin-top: 0; margin-bottom: 10px; text-align: center; font-weight: 600;">System Functionalities and Components</h2>
+    
+    {% for key, value in system_info['System Functionalities and Components'].items() %}
+    <div style="margin-bottom: 10px;">
+      <p style="margin: 0 0 4px 0; font-weight: 600; font-size: 10px; color: var(--color-text);">{{ key }}</p>
+      <p style="margin: 0; font-size: 10px; line-height: 1.4; color: var(--color-text-muted); text-align: justify; white-space: pre-line;">{{ value }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  
+  <div style="page-break-after: always;"></div>
+</div>
+{% endif %}

@@ -1,0 +1,58 @@
+{% if system_info %}
+<!-- Title Page -->
+<div class="title-page">
+  <div class="title-page-heading">
+    <h1 class="title-page-title">
+      {{ system_info['System Metadata']['Name'] }}
+    </h1>
+    <p class="title-page-subtitle">
+      Trustworthiness Assessment Report
+    </p>
+    <p class="title-page-version">
+      System Version: {{ system_info['System Metadata']['Version'] }}
+    </p>
+  </div>
+  
+  <div class="title-page-developer">
+    <p class="title-page-label">Developed by</p>
+    <p class="title-page-author">
+      {{ system_info['System Metadata']['Developer'] }}
+    </p>
+  </div>
+  
+  <div class="title-page-meta">
+    <p>Licensing: {{ system_info['System Metadata']['Licensing'] }}</p>
+    {% if system_info['System Metadata'].get('Repository') %}
+    <p>Documentation: {{ system_info['System Metadata']['Repository'] }}</p>
+    {% endif %}
+  </div>
+</div>
+  {% else %}
+<!-- Fallback Title Page -->
+<div class="title-page">
+  <div class="title-page-heading">
+    <h1 class="title-page-title">
+      No System Information Provided...
+    </h1>
+    <p class="title-page-subtitle">
+      Trustworthiness Assessment Report
+    </p>
+    <p class="title-page-version">
+      System Version: N/A
+    </p>
+  </div>
+ 
+  <div class="title-page-developer">
+    <p class="title-page-label">Developed by</p>
+    <p class="title-page-author">
+      System Developer: N/A
+    </p>
+  </div>
+  
+  <div class="title-page-meta">
+    <p>Licensing: no license provided</p>
+    <p>Documentation: No documentation or repository provided</p>
+  </div>
+</div>
+</div> 
+{% endif %}

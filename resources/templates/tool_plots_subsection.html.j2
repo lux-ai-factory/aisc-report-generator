@@ -1,0 +1,23 @@
+<!-- Tool Plots/Visualizations -->
+{% set normalized_tool_name = tool_name | lower | replace(' ', '') | replace('_', '') | replace('-', '') %}
+{% set plot_items = tool_plots.get(tool_name) or tool_plots.get(tool_name | lower) or tool_plots.get(tool_name | upper) or tool_plots.get(normalized_tool_name) %}
+{% if tool_plots and plot_items %}
+<div class="tool-plots-section">
+  <h3>Results</h3>
+  <div class="plots-container">
+    {% for plot in plot_items %}
+    {% set plot_name_l = (plot.name | default('') | lower) %}
+    {% set needs_dark_large = ('model-performance-plot' in plot_name_l) or ('mla-reject-plot' in plot_name_l) %}
+    <div class="plot-item{% if needs_dark_large %} plot-dark-bg plot-large{% endif %}">
+      {% if plot.svg_content %}
+        <div class="plot-svg">
+          {{ plot.svg_content | safe }}
+        </div>
+      {% else %}
+        <img src="{{ plot.path }}" alt="{{ plot.name }}" class="plot-image">
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

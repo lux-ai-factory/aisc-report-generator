@@ -1,0 +1,42 @@
+<div style="page-break-before: always;">
+<!-- Project Summary -->
+<h2>Project Summary for: {{ assessment_summary.project_name }} (ID {{ assessment_summary.project_id }})</h2>
+
+<table class="assessment-summary-table">
+  <colgroup>
+    <col style="width: 15%;">
+    <col style="width: 30%;">
+    <col style="width: 55%;">
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Evaluation ID</th>
+      <th>Tools Used</th>
+      <th>Legal Requirements</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in assessment_summary.rows %}
+    <tr>
+      <td>{{ row.evaluation_id }}</td>
+      <td>
+        {% if row.tools %}
+          {{ row.tools | map(attribute='name') | list | join(', ') }}
+        {% else %}
+          <span class="note">None</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if row.legal_requirements %}
+          {{ row.legal_requirements | join(', ') }}
+        {% else %}
+          <span class="note">None</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<div style="page-break-after: always;"></div>

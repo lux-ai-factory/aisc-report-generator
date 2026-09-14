@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <style>
+    {#
+    We'll include a custom report style if provided, otherwise we use the default, allowing users to override styling (colors, fonts, ...)
+    #}
+    {% if custom_report_style %}
+    {% include custom_report_style %}
+    {% endif %}
+
+    {% include 'report_style.css' %}
+
+  
+
+     @page {
+      margin: 100px 40px 60px 40px;
+      @bottom-left {
+        content: counter(page);
+        font-size: 12px;
+        color: var(--color-primary);
+      }
+      @bottom-right {
+        content: "";
+      }
+
+      @top-left {
+        content: element(header);
+      }
+    }
+
+    @page :first {
+      margin: 100px 40px 60px 40px;
+      @bottom-left {
+        content: "";
+      }
+      @bottom-right {
+        content: "";
+      }
+    }
+
+    @page :nth(even) {
+      margin: 100px 40px 60px 40px;
+      @bottom-left {
+        content: "";
+      }
+      @bottom-right {
+        content: counter(page);
+        font-size: 12px;
+        color: var(--color-primary);
+      }
+    }
+
+    @page :nth(even):first {
+      margin: 100px 40px 60px 40px;
+      @bottom-left {
+        content: "";
+      }
+      @bottom-right {
+        content: "";
+      }
+    }
+
+  </style>
+</head>
+
+
+
+<body>
+
+{% if logo_path%}
+<header>
+  <img src="{{ logo_path }}" alt="">
+</header>
+{% endif %}
+
+{% include 'title_page.html.j2' %}
+{% include 'system_card.html.j2' %}
+{% include 'assessment_summary.html.j2' %}
+
+{% if plugin_sections %}
+{% for evaluation_id, evaluation_sections in plugin_sections.items() %}
+<section class="content-section" id="section-eval-{{ evaluation_id }}">
+  <h2>Evaluation {{ evaluation_id }} Assessment Results</h2>
+  {% for plugin_name, plugin_html in evaluation_sections.items() %}
+    <h3>{{ plugin_name }}</h3>
+    {{ plugin_html | safe }}
+  {% endfor %}
+</section>
+<div class="page-break"></div>
+{% endfor %}
+{% endif %}
+
+</body>
+</html>

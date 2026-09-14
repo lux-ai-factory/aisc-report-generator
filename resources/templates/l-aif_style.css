@@ -1,0 +1,68 @@
+:root {
+	/* Logotype / National branding colors */
+	--l-aif-red-100: #E30613;
+	--l-aif-red-80: #E93842;
+	--l-aif-red-60: #EE6A71;
+	--l-aif-red-40: #F49BA1;
+	--l-aif-red-20: #F9CDD0;
+
+	--l-aif-cyan-100: #0099FF;
+	--l-aif-cyan-80: #33ADFF;
+	--l-aif-cyan-60: #66C2FF;
+	--l-aif-cyan-40: #99D6FF;
+	--l-aif-cyan-20: #CCEBFF;
+
+	--l-aif-black-100: #000000;
+	--l-aif-black-80: #333333;
+	--l-aif-black-60: #666666;
+	--l-aif-black-40: #999999;
+	--l-aif-black-20: #CCCCCC;
+
+	/* Branding colors */
+	--l-aif-bright-secondary-100: #FF007E;
+	--l-aif-bright-secondary-80: #FF3398;
+	--l-aif-bright-secondary-60: #FF66B2;
+	--l-aif-bright-secondary-40: #FF99CB;
+	--l-aif-bright-secondary-20: #FFCCE5;
+
+	--l-aif-dominant-100: #000FDF;
+	--l-aif-dominant-80: #333FE5;
+	--l-aif-dominant-60: #666FEC;
+	--l-aif-dominant-40: #999FF2;
+	--l-aif-dominant-20: #CCCFF9;
+
+	--l-aif-dark-secondary-blue-100: #000079;
+	--l-aif-dark-secondary-blue-80: #333394;
+	--l-aif-dark-secondary-blue-60: #6666AF;
+	--l-aif-dark-secondary-blue-40: #9999C9;
+	--l-aif-dark-secondary-blue-20: #CCCCE4;
+
+
+	/* Semantic aliases */
+	--l-aif-primary: var(--l-aif-dominant-100);
+	--l-aif-accent: var(--l-aif-bright-secondary-100);
+	--l-aif-info: var(--l-aif-cyan-100);
+	--l-aif-danger: var(--l-aif-red-100);
+	--l-aif-text-dark: var(--l-aif-black-100);
+	--l-aif-text-muted: var(--l-aif-black-60);
+
+	/* Theme schema contract consumed by report_style.css */
+	--theme-primary: var(--l-aif-primary);
+	--theme-success: #09860f97;
+	--theme-warning: var(--l-aif-bright-secondary-60);
+	--theme-danger: var(--l-aif-danger);
+	--theme-info: var(--l-aif-info);
+	--theme-text: var(--l-aif-text-dark);
+	--theme-text-muted: var(--l-aif-black-80);
+	--theme-text-dim: var(--l-aif-black-60);
+	--theme-bg-soft: var(--l-aif-cyan-20);
+	--theme-bg-subtle: var(--l-aif-cyan-20);
+	--theme-bg-panel: #F0F0F0;
+	--theme-bg-white: #ffffff;
+	--theme-border: var(--l-aif-cyan-40);
+	--theme-border-strong: var(--l-aif-black-20);
+	--theme-separator: var(--l-aif-black-20);
+	--theme-link-hover: var(--l-aif-bright-secondary-100);
+	--theme-accent-warm: var(--l-aif-bright-secondary-100);
+	--theme-accent-warm-bg: var(--l-aif-bright-secondary-20);
+}

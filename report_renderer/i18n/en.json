@@ -1,0 +1,18 @@
+{
+ "_meta": {
+  "code": "en",
+  "name": "English",
+  "decimal_separator": ".",
+  "percent_format": "{value}%"
+ },
+ "messages": {
+  "{count} evaluations|one": "{count} evaluation",
+  "in {count} requirement groups|one": "in {count} requirement group",
+  "{count} answers were given for other versions and are not shown.|one": "{count} answer was given for another version and is not shown.",
+  "{count} evaluations are not tied to a version and are not shown.|one": "{count} evaluation is not tied to a version and is not shown.",
+  "{count} more groups are not shown.|one": "{count} more group is not shown.",
+  "{count} observations could not be tied to a tool.|one": "{count} observation could not be tied to a tool.",
+  "{count} selected checklists are not in this project and are not shown.|one": "{count} selected checklist is not in this project and is not shown.",
+  "{name} ({size} bytes)|one": "{name} ({size} byte)"
+ }
+}

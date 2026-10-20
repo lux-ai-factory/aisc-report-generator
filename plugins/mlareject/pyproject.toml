@@ -1,0 +1,37 @@
+[project]
+name = "aisc-report-plugin-mlareject"
+version = "0.1.0"
+description = "MLAReject report plugin for the AISC report generator"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "sqlalchemy>=2.0.48",
+    "aisc-report-plugin-interface",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.entry-points."aisc_report.tools"]
+mlareject = "aisc_report_plugin_mlareject:MLAREJECTToolRenderer"
+
+[tool.setuptools.package-data]
+aisc_report_plugin_mlareject = ["templates/*.j2"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aisc_report_plugin_mlareject*"]
+
+[tool.uv.sources]
+# Local path source (the GitHub repo was renamed to aisc-report-plugin-interface)
+aisc-report-plugin-interface = { path = "../../../../shared/report-plugin-interface", editable = true }
+

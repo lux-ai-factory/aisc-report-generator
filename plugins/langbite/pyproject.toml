@@ -1,0 +1,35 @@
+[project]
+name = "aisc-report-plugin-langbite"
+version = "0.1.0"
+description = "Tool renderer for langbite runs in the AISC report (Test results block)"
+requires-python = ">=3.12"
+dependencies = [
+    "aisc-report-plugin-interface",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "beautifulsoup4>=4.12",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.entry-points."aisc_report.tools"]
+langbite = "aisc_report_plugin_langbite:LANGBITEToolRenderer"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+aisc_report_plugin_langbite = ["templates/*.j2", "i18n/*.json"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aisc_report_plugin_langbite*"]
+
+[tool.uv.sources]
+# Local path source, as aisc-report-mlareject
+aisc-report-plugin-interface = { path = "../../../../shared/report-plugin-interface", editable = true }

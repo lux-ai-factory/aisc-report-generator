@@ -1,0 +1,60 @@
+[project]
+name = "aisc-report-generator"
+version = "0.1.0"
+description = "Renders a saved report layout into HTML and PDF"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1.6",
+    "jsonschema>=4.21",
+    "psycopg[binary]>=3.1",
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "httpx>=0.27",
+    "weasyprint>=70.0",
+    # Pillow decodes the logo and every image in a PDF: 12.3.0 fixes CVE-2026-42311, -59203, -59204, -40192
+    "pillow>=12.3.0",
+    # The report plugin interface. An evaluation tool's own renderer is found through the
+    # `aisc_report.tools` entry point; a tool without one gets the generic table.
+    # 0.2.0 and later: a ToolRun carries its target
+    "aisc-report-plugin-interface>=0.2.0",
+    # the tool renderers bundled in plugins/ (one folder each), installed with the renderer
+    "aisc-report-plugin-langbite",
+    "aisc-report-plugin-mlareject",
+    "aisc-report-plugin-promptfoo",
+    "aisc-report-plugin-strongreject",
+    # the DOCX export
+    "python-docx>=1.1",
+    "cairosvg>=2.7",
+    # parses an SVG logo to refuse embedded pictures (cairosvg uses it too)
+    "defusedxml>=0.7",
+    "lxml>=5",
+]
+
+[project.optional-dependencies]
+# test-only dependencies
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+    "fastapi>=0.111",
+    "beautifulsoup4>=4.12",
+    "pypdf>=4.0",
+    # the DOCX tests read the document with python-docx
+    "python-docx>=1.1",
+]
+
+[tool.uv.sources]
+# this repository is aisc's apps/report-generator submodule, and the interface is its
+# shared/report-plugin-interface submodule
+aisc-report-plugin-interface = { path = "../../shared/report-plugin-interface", editable = true }
+aisc-report-plugin-langbite = { path = "plugins/langbite" }
+aisc-report-plugin-mlareject = { path = "plugins/mlareject" }
+aisc-report-plugin-promptfoo = { path = "plugins/promptfoo" }
+aisc-report-plugin-strongreject = { path = "plugins/strongreject" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "db: needs the throwaway report bed (docker, postgres:14-alpine, never the host's 5432)",
+]

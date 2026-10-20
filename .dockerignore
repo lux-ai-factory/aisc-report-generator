@@ -1,0 +1,7 @@
+# local environments and build leftovers, in this folder and in plugins/<tool>/
+**/.venv
+**/__pycache__
+**/*.egg-info
+**/.pytest_cache
+**/.ruff_cache
+reports/

@@ -1,0 +1,29 @@
+{
+ "renderer_commit": "26e235d",
+ "cases": {
+  "d_v1_live": {
+   "html": "d_v1_live.html",
+   "pdf_text": "d_v1_live.pdf.json"
+  },
+  "d_v1_live_styled": {
+   "html": "d_v1_live_styled.html",
+   "pdf_text": "d_v1_live_styled.pdf.json"
+  },
+  "d_v1_free_text": {
+   "html": "d_v1_free_text.html"
+  },
+  "a_v2_live": {
+   "html": "a_v2_live.html"
+  },
+  "a_v2_live_styled": {
+   "html": "a_v2_live_styled.html",
+   "pdf_text": "a_v2_live_styled.pdf.json"
+  },
+  "m_v2_live_styled": {
+   "html": "m_v2_live_styled.html"
+  },
+  "a_v2_legacy_links": {
+   "html": "a_v2_legacy_links.html"
+  }
+ }
+}

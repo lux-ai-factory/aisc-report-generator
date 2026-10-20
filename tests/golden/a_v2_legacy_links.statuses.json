@@ -1,0 +1,62 @@
+[
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a001",
+  "block_type": "cover",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a002",
+  "block_type": "ai_card",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a003",
+  "block_type": "risk_classification",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a004",
+  "block_type": "control_objectives",
+  "status": "ok",
+  "notices": [
+   "The mapping run stopped: cap."
+  ]
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a005",
+  "block_type": "test_results",
+  "status": "stale",
+  "notices": [
+   "Newer results exist for version 3.",
+   "2 evaluations are not tied to a version and are not shown.",
+   "No dedicated renderer for LangBiTeEvaluationPlugin; showing raw measurements.",
+   "No dedicated renderer for LangBiTe; showing raw measurements.",
+   "No dedicated renderer for Mystery Tool; showing raw measurements.",
+   "1 observations could not be tied to a tool."
+  ]
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a006",
+  "block_type": "control_answers",
+  "status": "stale",
+  "notices": [
+   "Newer results exist for version 3.",
+   "2 answers were given for other versions and are not shown."
+  ]
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a007",
+  "block_type": "summary_coverage",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a008",
+  "block_type": "summary_coverage",
+  "status": "ok",
+  "notices": []
+ }
+]

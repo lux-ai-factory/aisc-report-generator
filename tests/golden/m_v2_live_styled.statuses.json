@@ -1,0 +1,48 @@
+[
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a001",
+  "block_type": "cover",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a002",
+  "block_type": "ai_card",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a003",
+  "block_type": "risk_classification",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a004",
+  "block_type": "control_objectives",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a005",
+  "block_type": "test_results",
+  "status": "ok",
+  "notices": [
+   "No dedicated renderer for StrongREJECT; showing raw measurements.",
+   "No dedicated renderer for LangBiTe; showing raw measurements.",
+   "No dedicated renderer for Promptfoo; showing raw measurements."
+  ]
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a006",
+  "block_type": "control_answers",
+  "status": "ok",
+  "notices": []
+ },
+ {
+  "instance_id": "00000000-0000-4000-8000-00000000a007",
+  "block_type": "summary_coverage",
+  "status": "ok",
+  "notices": []
+ }
+]

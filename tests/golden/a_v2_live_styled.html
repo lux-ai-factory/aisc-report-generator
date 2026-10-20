@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Live default layout</title>
+<style>:root {
+	/* Logotype / National branding colors */
+	--l-aif-red-100: #E30613;
+	--l-aif-red-80: #E93842;
+	--l-aif-red-60: #EE6A71;
+	--l-aif-red-40: #F49BA1;
+	--l-aif-red-20: #F9CDD0;
+
+	--l-aif-cyan-100: #0099FF;
+	--l-aif-cyan-80: #33ADFF;
+	--l-aif-cyan-60: #66C2FF;
+	--l-aif-cyan-40: #99D6FF;
+	--l-aif-cyan-20: #CCEBFF;
+
+	--l-aif-black-100: #000000;
+	--l-aif-black-80: #333333;
+	--l-aif-black-60: #666666;
+	--l-aif-black-40: #999999;
+	--l-aif-black-20: #CCCCCC;
+
+	/* Branding colors */
+	--l-aif-bright-secondary-100: #FF007E;
+	--l-aif-bright-secondary-80: #FF3398;
+	--l-aif-bright-secondary-60: #FF66B2;
+	--l-aif-bright-secondary-40: #FF99CB;
+	--l-aif-bright-secondary-20: #FFCCE5;
+
+	--l-aif-dominant-100: #000FDF;
+	--l-aif-dominant-80: #333FE5;
+	--l-aif-dominant-60: #666FEC;
+	--l-aif-dominant-40: #999FF2;
+	--l-aif-dominant-20: #CCCFF9;
+
+	--l-aif-dark-secondary-blue-100: #000079;
+	--l-aif-dark-secondary-blue-80: #333394;
+	--l-aif-dark-secondary-blue-60: #6666AF;
+	--l-aif-dark-secondary-blue-40: #9999C9;
+	--l-aif-dark-secondary-blue-20: #CCCCE4;
+
+
+	/* Semantic aliases */
+	--l-aif-primary: var(--l-aif-dominant-100);
+	--l-aif-accent: var(--l-aif-bright-secondary-100);
+	--l-aif-info: var(--l-aif-cyan-100);
+	--l-aif-danger: var(--l-aif-red-100);
+	--l-aif-text-dark: var(--l-aif-black-100);
+	--l-aif-text-muted: var(--l-aif-black-60);
+
+	/* Theme schema contract consumed by report_style.css */
+	--theme-primary: var(--l-aif-primary);
+	--theme-success: #09860f97;
+	--theme-warning: var(--l-aif-bright-secondary-60);
+	--theme-danger: var(--l-aif-danger);
+	--theme-info: var(--l-aif-info);
+	--theme-text: var(--l-aif-text-dark);
+	--theme-text-muted: var(--l-aif-black-80);
+	--theme-text-dim: var(--l-aif-black-60);
+	--theme-bg-soft: var(--l-aif-cyan-20);
+	--theme-bg-subtle: var(--l-aif-cyan-20);
+	--theme-bg-panel: #F0F0F0;
+	--theme-bg-white: #ffffff;
+	--theme-border: var(--l-aif-cyan-40);
+	--theme-border-strong: var(--l-aif-black-20);
+	--theme-separator: var(--l-aif-black-20);
+	--theme-link-hover: var(--l-aif-bright-secondary-100);
+	--theme-accent-warm: var(--l-aif-bright-secondary-100);
+	--theme-accent-warm-bg: var(--l-aif-bright-secondary-20);
+}
+
+/* import your style file to preview the elements with your color scheme via the report_style_showcase.html */
+
+/* Theme tokens: any external color schema can override with --theme-* variables. */
+:root {
+  --color-primary: var(--theme-primary, #545875);
+  --color-success: var(--theme-success, #2e7d32);
+  --color-warning: var(--theme-warning, #e65100);
+  --color-danger: var(--theme-danger, #d32f2f);
+  --color-info: var(--theme-info, #2196f3);
+
+  --color-text: var(--theme-text, #333);
+  --color-text-muted: var(--theme-text-muted, #666);
+  --color-text-dim: var(--theme-text-dim, #999);
+
+  --color-bg-soft: var(--theme-bg-soft, #79adec);
+  --color-bg-panel: var(--theme-bg-panel, #93d8de);
+  --color-bg-white: var(--theme-bg-white, #fff);
+
+  --color-border-strong: var(--theme-border-strong, #ddd);
+  --color-accent-warm: var(--theme-accent-warm, #FF8C42);
+  --color-accent-warm-bg: var(--theme-accent-warm-bg, #fff8e8);
+  --color-success-bg: var(--theme-success-bg, #ccedce);
+  --color-warning-bg: var(--theme-warning-bg, #fff3e0);
+  --color-danger-bg: var(--theme-danger-bg, #ffebee);
+  --color-info-bg: var(--theme-info-bg, #e7f3ff);
+  --color-info-border: var(--theme-info-border, #b3d9ff);
+
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 10px;
+  --space-md: 12px;
+  --space-lg: 15px;
+  --space-xl: 20px;
+  --radius-sm: 4px;
+}
+
+body { font-family: Arial, sans-serif; margin: calc(var(--space-xl) * 2); color: var(--color-text); }
+h1 { color: var(--color-primary); text-align: center; }
+h2 { color: var(--color-primary); border-bottom: 3px solid var(--color-primary); }
+h3 { color: var(--color-primary); }
+h4 { color: var(--color-accent-warm); margin-top: 18px; }
+h5 { color: var(--color-accent-warm); margin-top: 14px; }
+ul { list-style-type: disc; margin-left: var(--space-xl); }
+.page-break { page-break-after: always; }
+
+/* ===== UNIFIED BOX/GROUP STYLING ===== */
+:is(.stat-box) {
+  padding: var(--space-md);
+  margin: 0;
+  border-radius: var(--radius-sm);
+}
+
+:is(.report-box) {
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border-left: 5px solid transparent;
+}
+
+/* Box Variants */
+:is(.report-box.info, .report-box.note) {
+  border-left-color: var(--color-primary);
+  background-color: var(--color-bg-soft); 
+}
+
+:is(.report-box.system-card) {
+  background-color: var(--color-bg-soft);
+}
+
+:is(.report-box.warning) {
+  border-left-color: var(--color-warning);
+  background-color: var(--color-warning); 
+}
+
+:is(.report-box.success) {
+  border-left-color: var(--color-success); 
+  background-color: var(--color-success-bg); 
+}
+
+:is(.report-box.accent) {
+  border-left-color: var(--color-accent-warm); 
+  background-color: var(--color-accent-warm-bg); 
+}
+
+.stat-box {
+  border: 1px solid var(--color-border-strong);
+  background-color: var(--color-bg-panel);
+}
+
+.stat-box {
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.stat-box strong { 
+  display: block;
+  color: var(--color-primary); 
+  font-weight: 600; 
+  margin-bottom: var(--space-xxs); 
+  font-size: 18px; 
+}
+
+/* ===== SUMMARY STATUS STYLES ===== */
+.stat-value {
+  padding: var(--space-xxs) var(--space-md);
+  border-radius: var(--space-md);
+  font-weight: 600;
+  display: inline-block;
+}
+
+.stat-value.passed {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.stat-value.failed {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.stat-value.error {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.stat-percentage {
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: var(--space-xxs);
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--color-primary);
+  margin-top: var(--space-xs);
+}
+
+.note { color: var(--color-text-muted); font-style: italic; }
+
+/* ===== SECTION STYLING ===== */
+.content-section {
+  margin: 30px 0;
+  padding: 0;
+}
+
+.content-section h2 {
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.content-section p {
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+/* ===== TABLE STYLING ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: var(--space-lg) 0;
+  background-color: var(--color-bg-white);
+}
+
+table thead th {
+  background-color: var(--color-primary);
+  color: var(--color-bg-white);
+  border: 1px solid var(--color-border-strong);
+  padding: var(--space-sm);
+  text-align: left;
+  font-weight: 700;
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: var(--color-bg-white);
+}
+
+table tbody tr:nth-child(even) {
+  background-color: var(--color-bg-soft);
+}
+
+table tbody td {
+  border: 1px solid var(--color-border-strong);
+  padding: var(--space-sm);
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+table tbody tr.warning-row,
+table tbody tr.row-warning,
+table tbody tr.problem-row {
+  background-color: var(--color-warning-bg) !important;
+}
+
+/* ===== RECOMMENDATIONS ===== */
+.recommendations {
+  background-color: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-left: var(--space-xxs) solid var(--color-info);
+  padding: var(--space-xl);
+  border-radius: var(--radius-sm);
+  margin: 30px 0;
+}
+
+.recommendations h3 {
+  margin-top: 0;
+  color: var(--color-primary);
+}
+
+.recommendations ul {
+  margin: var(--space-sm) 0;
+  padding-left: var(--space-xl);
+}
+
+.recommendations li {
+  margin-bottom: var(--space-sm);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* ===== SUMMARY LAYOUT ===== */
+.summary-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-xl);
+  margin: var(--space-lg) 0;
+  width: 100%;
+}
+
+.summary-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.summary-column.right-column {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  margin: 0;
+}
+
+.summary-details {
+  margin: var(--space-xl) 0;
+  padding: var(--space-lg);
+  background-color: var(--color-bg-panel);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.summary-details p {
+  margin: var(--space-xs) 0;
+  line-height: 1.6;
+}
+
+/* ===== HEADER ===== */
+header {
+  display: flex;
+  position: running(header);
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  margin-bottom: var(--space-xl);
+  margin-top: var(--space-sm);
+}
+
+header img {
+  height: calc(var(--space-xl) * 2);
+  margin-right: var(--space-xl);
+}
+
+/* ===== TITLE PAGE ===== */
+.title-page {
+  page-break-after: always;
+  min-height: 80%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.title-page-heading {
+  margin-bottom: 50px;
+}
+
+.title-page-title {
+  font-size: 48px;
+  color: var(--color-primary);
+  margin-bottom: var(--space-xl);
+  font-weight: 700;
+}
+
+.title-page-subtitle {
+  font-size: 24px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.title-page-version {
+  font-size: 18px;
+  color: var(--color-text-dim);
+}
+
+.title-page-developer {
+  margin-top: 80px;
+  padding: 30px;
+  background-color: var(--color-bg-soft);
+  border-radius: var(--space-xs);
+  max-width: 600px;
+}
+
+.title-page-label {
+  font-size: 18px;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+}
+
+.title-page-author {
+  font-size: 20px;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.title-page-meta {
+  margin-top: 100px;
+  color: var(--color-text-dim);
+  font-size: 14px;
+}
+
+.title-page-meta p {
+  margin: var(--space-xxs) 0;
+}
+
+/* ===== TOOL PLOTS ===== */
+.tool-plots-section {
+  margin: var(--space-xl) 0;
+}
+
+.plots-container {
+  display: block;
+  width: 100%;
+}
+
+.plot-item {
+  width: 100%;
+  margin: 0 0 var(--space-xl) 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.plot-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.plot-svg,
+.plot-svg svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.plot-item.plot-dark-bg {
+  background-color: #000;
+  padding: var(--space-xxs);
+  border-radius: var(--radius-sm);
+}
+
+.plot-item.plot-dark-bg .plot-svg,
+.plot-item.plot-dark-bg .plot-image {
+  background-color: #000;
+}
+
+.plot-item.plot-large .plot-svg svg {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.plot-item.plot-large .plot-svg svg text {
+  fill: #fff !important;
+}
+
+.plot-item.plot-large .plot-image {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ── the report renderer ── */
+body { margin: 0; }
+.block { margin: 0 0 1.5em 0; }
+.block h2 { margin-top: 0.8em; }
+ul.notices { margin: 0.3em 0 0.8em 0; padding-left: 1.2em; font-size: 0.9em; color: #6b5a00; }
+.error-box { border: 1px solid #b00020; background: #fdecee; color: #7a0014; padding: 0.4em 0.8em; margin: 0.5em 0; }
+.banner { border: 1px solid #c9a400; background: #fff8dc; padding: 0.4em 0.8em; margin: 0.5em 0 1em 0; }
+.placeholder, .note { color: #555; font-style: italic; }
+.more { color: #555; font-size: 0.9em; }
+#toc ol { padding-left: 1.4em; }
+#toc a { color: inherit; text-decoration: none; }
+table { border-collapse: collapse; width: 100%; margin: 0.4em 0 0.8em 0; font-size: 0.9em; }
+th, td { border: 1px solid #ccc; padding: 0.25em 0.45em; text-align: left; vertical-align: top; }
+dl.card dt { font-weight: bold; margin-top: 0.4em; }
+dl.card dd { margin-left: 1.2em; }
+.comments ul { margin-left: 1.2em; }
+.comments li { margin: 0.3em 0; }
+.cover h1 { text-align: left; }
+
+/* Risk classification: one section per risk, instead of an eight-column table */
+section.risk {
+  border-left: 3px solid var(--l-aif-primary);
+  padding: 0.2em 0 0.4em 0.9em;
+  margin: 0 0 1.1em;
+  break-inside: avoid;
+}
+section.risk h3 { margin: 0 0 0.3em; color: var(--l-aif-primary); }
+section.risk dl.card { margin: 0; }
+
+@page { size: A4; margin: 22mm 16mm 20mm 16mm; @top-left { content: "Alpha project, Version 2"; font-size: 9pt } @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 9pt } }
+:root { --l-aif-primary: #000fdf; --l-aif-dominant-100: #000fdf; --l-aif-accent: #ff007e; --l-aif-bright-secondary-100: #ff007e; }
+html, body { font-family: "Inter", "Liberation Sans", Arial, sans-serif; font-size: 10pt; }
+h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: #000fdf; }
+</style>
+</head>
+<body>
+
+
+
+<section class="block block-cover" id="block-00000000-0000-4000-8000-00000000a001" data-status="ok">
+  <h2>Cover</h2>
+  
+  <div class="cover">
+  
+  <h1>AI system assessment report</h1>
+  
+  <dl class="card">
+    <dt>Project</dt><dd>Alpha project</dd>
+    <dt>AI system</dt><dd>Alpha scorer</dd>
+    <dt>Version</dt><dd>Version 2 (1.0)</dd>
+    <dt>Provider</dt><dd>Provider: Acme AI</dd>
+    <dt>Date</dt><dd>Generated 2026-09-20</dd>
+    <dt>Layout</dt><dd>Layout: Live default layout, revision 1</dd>
+    <dt>Author</dt><dd>Generated by: preview</dd>
+  </dl>
+  <p class="banner">This report covers version 2. Version 3 is newer.</p>
+</div>
+</section>
+<nav id="toc"><h2>Contents</h2><ol><li><a href="#block-00000000-0000-4000-8000-00000000a002">AI card</a></li><li><a href="#block-00000000-0000-4000-8000-00000000a003">Risk classification</a></li><li><a href="#block-00000000-0000-4000-8000-00000000a004">Control objectives</a></li><li><a href="#block-00000000-0000-4000-8000-00000000a005">Test results</a></li><li><a href="#block-00000000-0000-4000-8000-00000000a006">Checklist answers</a></li><li><a href="#block-00000000-0000-4000-8000-00000000a007">Summary and coverage</a></li></ol></nav>
+
+<section class="block block-ai_card" id="block-00000000-0000-4000-8000-00000000a002" data-status="ok">
+  <h2>AI card</h2>
+  
+  <dl class="card">
+  <dt>System</dt><dd>Alpha scorer</dd>
+  <dt>Company</dt><dd>Acme AI</dd>
+  <dt>Description</dt><dd>Scores loan files with explanations</dd>
+  <dt>Target use case</dt><dd>Credit scoring</dd>
+  <dt>Target users</dt><dd>Loan officers</dd>
+  <dt>Intended deployers</dt><dd>Retail banks</dd>
+  <dt>Version description</dt><dd>second card</dd>
+</dl>
+
+<h3>Tags</h3>
+<dl class="card tags">
+  <dt>Target system</dt><dd>scoring</dd><dt>Sector</dt><dd>finance</dd><dt>Market form</dt><dd>b2b</dd><dt>Locality</dt><dd>eu</dd>
+</dl>
+
+
+<h3>Components</h3>
+
+<table class="components">
+  <thead><tr><th>Name</th><th>Type</th><th>AIRO property</th><th>Object</th></tr></thead>
+  <tbody>
+  <tr><td>Applications 2025</td><td>dataset</td><td>hasTrainingData</td><td>train.csv</td></tr>
+  <tr><td>Gradient model</td><td>model</td><td>hasModel</td><td>model.pkl</td></tr>
+  <tr><td>Holdout set</td><td>dataset</td><td>hasTestingData</td><td>holdout.csv</td></tr>
+  
+  </tbody>
+</table>
+
+
+
+</section>
+
+
+<section class="block block-risk_classification" id="block-00000000-0000-4000-8000-00000000a003" data-status="ok">
+  <h2>Risk classification</h2>
+  
+  <dl class="card">
+  <dt>Operators</dt>
+  <dd>Acme AI (provider) (provider); Retail Bank (deployer) (deployer); urn:aisc:user:officer (user)</dd>
+  <dt>AI Act risk class</dt><dd>Not determined</dd>
+</dl>
+
+
+<h3 class="risks-title">Risks</h3>
+
+<section class="risk">
+  <h3>Bias against applicants &lt;script&gt;alert(1)&lt;/script&gt;</h3>
+  <dl class="card">
+    <dt>Source</dt><dd>Training data</dd>
+    <dt>Vulnerability</dt><dd>Historic bias</dd>
+    <dt>Consequence</dt><dd>Unfair refusals</dd>
+    <dt>Affected</dt><dd>Operator (the company providing or running the system)</dd>
+    <dt>Impact areas</dt><dd>Health, Safety</dd>
+    <dt>Control</dt><dd>Bias audit</dd>
+    <dt>Follow-up control</dt><dd>Quarterly review</dd>
+  </dl>
+</section>
+
+<section class="risk">
+  <h3>Opaque refusals</h3>
+  <dl class="card">
+    <dt>Source</dt><dd>Model complexity</dd>
+    
+    <dt>Consequence</dt><dd>Applicants cannot contest</dd>
+    <dt>Affected</dt><dd>User (people who use the system or are affected by it)</dd>
+    <dt>Impact areas</dt><dd>fundamental_rights</dd>
+    <dt>Control</dt><dd>Explanations</dd>
+    
+  </dl>
+</section>
+
+
+</section>
+
+
+<section class="block block-control_objectives" id="block-00000000-0000-4000-8000-00000000a004" data-status="ok">
+  <h2>Control objectives</h2>
+  <ul class="notices"><li>The mapping run stopped: cap.</li></ul>
+  
+
+<div class="objective" data-objective="R1.1">
+  <h3>R1.1 Operator oversight capability</h3>
+  <p>A qualified operator can monitor and halt the system.</p>
+  <p class="meta">AI Act Art. 14 | R1 Human Agency and Oversight</p>
+  <ul class="mapped-risks">
+  <li>Bias against applicants: oversight counters bias</li>
+  
+  </ul>
+  <p class="coverage">Coverage: not covered</p>
+</div>
+
+<div class="objective" data-objective="R2.1">
+  <h3>R2.1 Training data quality</h3>
+  <p>Training data is relevant and examined for bias.</p>
+  <p class="meta">AI Act Art. 10 | R2 Data Governance</p>
+  <ul class="mapped-risks">
+  <li>Bias against applicants: data governance counters bias</li>
+  <li>Opaque refusals: records explain refusals</li>
+  
+  </ul>
+  <p class="coverage">Coverage: not covered</p>
+</div>
+
+<div class="objective" data-objective="R4.1">
+  <h3>R4.1 Declared accuracy</h3>
+  <p>Accuracy levels are declared and met.</p>
+  <p class="meta">AI Act Art. 15 | R4 Accuracy</p>
+  <ul class="mapped-risks">
+  <li>Opaque refusals: accuracy of refusals</li>
+  
+  </ul>
+  <p class="coverage">Coverage: not covered</p>
+</div>
+
+<div class="objective" data-objective="R5.1">
+  <h3>R5.1 Instructions for use</h3>
+  <p>Deployers receive instructions for use.</p>
+  <p class="meta">AI Act Art. 13 | R5 Transparency</p>
+  <ul class="mapped-risks">
+  <li>Opaque refusals: transparency to applicants</li>
+  
+  </ul>
+  <p class="coverage">Coverage: not covered</p>
+</div>
+
+
+</section>
+
+
+<section class="block block-test_results" id="block-00000000-0000-4000-8000-00000000a005" data-status="stale">
+  <h2>Test results</h2>
+  <ul class="notices"><li>Newer results exist for version 3.</li><li>2 evaluations are not tied to a version and are not shown.</li><li>No dedicated renderer for LangBiTeEvaluationPlugin; showing raw measurements.</li><li>No dedicated renderer for LangBiTe; showing raw measurements.</li><li>No dedicated renderer for Mystery Tool; showing raw measurements.</li><li>1 observations could not be tied to a tool.</li></ul>
+  
+<div class="evaluation">
+  <h3>Evaluation a2e00000</h3>
+  <p class="meta">Status: Done | Date: 2026-09-09</p>
+  
+  <div class="run">
+    <h4>LangBiTeEvaluationPlugin</h4>
+    <p class="meta">Run status: Done</p>
+    <table class="measurements">
+  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
+  <tbody>
+  <tr><td>bias_rate</td><td>0.5</td><td>%</td></tr>
+  
+  </tbody>
+</table>
+
+    
+  </div>
+  
+  
+</div>
+
+<div class="evaluation">
+  <h3>Evaluation a2e00000</h3>
+  <p class="meta">Status: Done | Date: 2026-09-10</p>
+  
+  <div class="run">
+    <h4>LangBiTe</h4>
+    <p class="meta">Components: Scoring model endpoint (model), Holdout prompts (dataset) | Run status: Done</p>
+    <table class="measurements">
+  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
+  <tbody>
+  <tr><td>bias_rate</td><td>0.125</td><td>%</td></tr>
+  
+  </tbody>
+</table>
+
+    
+  </div>
+  
+  <div class="run">
+    <h4>Mystery Tool</h4>
+    <p class="meta">Components: Scoring model endpoint (model) | Run status: Done</p>
+    <table class="measurements">
+  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
+  <tbody>
+  <tr><td>mystery_metric</td><td>1</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>2</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>3</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>4</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>5</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>6</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>7</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>8</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>9</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>10</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>11</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>12</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>13</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>14</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>15</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>16</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>17</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>18</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>19</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>20</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>21</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>22</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>23</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>24</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>25</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>26</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>27</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>28</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>29</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>30</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>31</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>32</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>33</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>34</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>35</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>36</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>37</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>38</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>39</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>40</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>41</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>42</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>43</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>44</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>45</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>46</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>47</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>48</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>49</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>50</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>51</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>52</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>53</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>54</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>55</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>56</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>57</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>58</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>59</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>60</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>61</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>62</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>63</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>64</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>65</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>66</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>67</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>68</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>69</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>70</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>71</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>72</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>73</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>74</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>75</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>76</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>77</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>78</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>79</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>80</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>81</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>82</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>83</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>84</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>85</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>86</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>87</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>88</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>89</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>90</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>91</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>92</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>93</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>94</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>95</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>96</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>97</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>98</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>99</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>100</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>101</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>102</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>103</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>104</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>105</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>106</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>107</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>108</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>109</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>110</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>111</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>112</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>113</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>114</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>115</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>116</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>117</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>118</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>119</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>120</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>121</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>122</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>123</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>124</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>125</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>126</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>127</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>128</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>129</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>130</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>131</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>132</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>133</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>134</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>135</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>136</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>137</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>138</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>139</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>140</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>141</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>142</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>143</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>144</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>145</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>146</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>147</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>148</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>149</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>150</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>151</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>152</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>153</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>154</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>155</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>156</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>157</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>158</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>159</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>160</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>161</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>162</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>163</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>164</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>165</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>166</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>167</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>168</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>169</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>170</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>171</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>172</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>173</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>174</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>175</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>176</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>177</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>178</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>179</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>180</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>181</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>182</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>183</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>184</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>185</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>186</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>187</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>188</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>189</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>190</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>191</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>192</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>193</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>194</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>195</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>196</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>197</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>198</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>199</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>200</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>201</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>202</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>203</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>204</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>205</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>206</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>207</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>208</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>209</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>210</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>211</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>212</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>213</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>214</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>215</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>216</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>217</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>218</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>219</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>220</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>221</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>222</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>223</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>224</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>225</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>226</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>227</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>228</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>229</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>230</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>231</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>232</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>233</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>234</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>235</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>236</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>237</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>238</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>239</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>240</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>241</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>242</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>243</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>244</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>245</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>246</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>247</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>248</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>249</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>250</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>251</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>252</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>253</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>254</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>255</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>256</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>257</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>258</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>259</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>260</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>261</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>262</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>263</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>264</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>265</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>266</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>267</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>268</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>269</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>270</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>271</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>272</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>273</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>274</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>275</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>276</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>277</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>278</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>279</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>280</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>281</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>282</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>283</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>284</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>285</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>286</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>287</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>288</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>289</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>290</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>291</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>292</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>293</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>294</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>295</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>296</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>297</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>298</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>299</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>300</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>301</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>302</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>303</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>304</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>305</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>306</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>307</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>308</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>309</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>310</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>311</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>312</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>313</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>314</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>315</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>316</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>317</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>318</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>319</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>320</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>321</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>322</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>323</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>324</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>325</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>326</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>327</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>328</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>329</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>330</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>331</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>332</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>333</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>334</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>335</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>336</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>337</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>338</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>339</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>340</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>341</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>342</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>343</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>344</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>345</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>346</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>347</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>348</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>349</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>350</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>351</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>352</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>353</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>354</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>355</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>356</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>357</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>358</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>359</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>360</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>361</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>362</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>363</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>364</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>365</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>366</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>367</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>368</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>369</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>370</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>371</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>372</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>373</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>374</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>375</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>376</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>377</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>378</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>379</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>380</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>381</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>382</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>383</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>384</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>385</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>386</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>387</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>388</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>389</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>390</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>391</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>392</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>393</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>394</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>395</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>396</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>397</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>398</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>399</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>400</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>401</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>402</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>403</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>404</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>405</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>406</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>407</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>408</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>409</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>410</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>411</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>412</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>413</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>414</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>415</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>416</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>417</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>418</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>419</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>420</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>421</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>422</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>423</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>424</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>425</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>426</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>427</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>428</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>429</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>430</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>431</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>432</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>433</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>434</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>435</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>436</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>437</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>438</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>439</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>440</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>441</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>442</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>443</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>444</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>445</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>446</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>447</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>448</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>449</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>450</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>451</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>452</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>453</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>454</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>455</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>456</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>457</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>458</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>459</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>460</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>461</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>462</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>463</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>464</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>465</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>466</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>467</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>468</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>469</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>470</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>471</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>472</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>473</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>474</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>475</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>476</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>477</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>478</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>479</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>480</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>481</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>482</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>483</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>484</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>485</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>486</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>487</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>488</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>489</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>490</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>491</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>492</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>493</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>494</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>495</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>496</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>497</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>498</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>499</td><td>pt</td></tr>
+  <tr><td>mystery_metric</td><td>500</td><td>pt</td></tr>
+  
+  </tbody>
+</table>
+<p class="more">and 5 more</p>
+    
+  </div>
+  
+  <h4>Observations not tied to a tool</h4><table class="measurements">
+  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
+  <tbody>
+  <tr><td>bias_rate</td><td>0.375</td><td>%</td></tr>
+  
+  </tbody>
+</table>
+
+</div>
+
+</section>
+
+
+<section class="block block-control_answers" id="block-00000000-0000-4000-8000-00000000a006" data-status="stale">
+  <h2>Checklist answers</h2>
+  <ul class="notices"><li>Newer results exist for version 3.</li><li>2 answers were given for other versions and are not shown.</li></ul>
+  
+<div class="checklist" data-checklist="cl-1">
+  <h3>Transparency checklist</h3>
+  <p class="meta">Source: EU AI Act | Topic: Transparency | Submission: Second pass (Draft, version 2)</p>
+  
+  <table class="answers">
+    <thead><tr><th>Question</th><th>Article</th><th>Answer</th><th>Score</th></tr></thead>
+    <tbody>
+    <tr><td>Is the system documented?</td><td>Art. 13(1)</td><td>Documented in the manual</td><td>4</td></tr>
+    <tr><td>Are deployers told the limits?</td><td>Art. 13(3)</td><td>Partly &lt;b&gt;bold&lt;/b&gt;</td><td>1</td></tr>
+    <tr><td>Are instructions for use written?</td><td>Art. 13(2)</td><td>Not answered</td><td></td></tr>
+    <tr><td>Is the log kept?</td><td>Art. 12</td><td>Not answered</td><td></td></tr>
+    
+    </tbody>
+  </table>
+  
+  <p class="scores">Mean score 2.5, answered 2 of 4</p>
+</div>
+
+
+</section>
+
+
+<section class="block block-summary_coverage" id="block-00000000-0000-4000-8000-00000000a007" data-status="ok">
+  <h2>Summary and coverage</h2>
+  
+  <table class="coverage">
+  <thead><tr><th>Objective</th><th>Label</th><th>Tests</th><th>Checklists</th><th>Status</th></tr></thead>
+  <tbody>
+  <tr data-objective="R1.1"><td>R1.1</td><td>Operator oversight capability</td><td></td><td></td><td>not covered</td></tr>
+  <tr data-objective="R2.1"><td>R2.1</td><td>Training data quality</td><td></td><td></td><td>not covered</td></tr>
+  <tr data-objective="R4.1"><td>R4.1</td><td>Declared accuracy</td><td></td><td></td><td>not covered</td></tr>
+  <tr data-objective="R5.1"><td>R5.1</td><td>Instructions for use</td><td></td><td></td><td>not covered</td></tr>
+  
+  </tbody>
+</table>
+<p class="coverage-counts">evidence: <span data-coverage-count="evidence">0</span>; evidence, attention: <span data-coverage-count="evidence, attention">0</span>; no evidence: <span data-coverage-count="no evidence">0</span>; not covered: <span data-coverage-count="not covered">4</span></p>
+</section>
+
+
+</body>
+</html>

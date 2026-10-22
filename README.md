@@ -100,8 +100,8 @@ uv run scripts/aisc.py start
 
 This makes the secrets if they are missing (`REPORT_RO_PASSWORD`, `REPORT_SERVICE_TOKEN` and the others)
 and brings up the whole stack, keeping port 443 answering on an https install. To rebuild only the renderer
-after a change, run `uv run scripts/aisc.py secrets`. It prints this install's exact compose command. Add
-`up -d --build report-renderer` to it. The service mounts three read-only data files from other modules:
+after a change, run `uv run scripts/aisc.py secrets`. It prints this install's exact compose command, which ends in
+`up -d`. Append `--build report-renderer` to it. The service mounts three read-only data files from other modules:
 `apps/qualification/src/data/airo_vocab.json`, `apps/qualification/src/data/vair_vocab.json` and
 `apps/control-objectives/src/aisc_control_objectives/data/ai_act_control_objectives.csv`.
 

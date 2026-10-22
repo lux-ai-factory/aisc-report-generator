@@ -95,13 +95,13 @@ backend network only (it is not in the Caddyfile) and is called by `report-compo
 From the aisc repository root:
 
 ```bash
-./scripts/secrets.sh        # once: makes REPORT_RO_PASSWORD, REPORT_SERVICE_TOKEN and the other secrets
-docker compose -p aisc --env-file env.runtime -f docker-compose.plugin_downloader.yml \
-  -f docker-compose-infra.development.yml -f docker-compose.development.yml up -d --build
+uv run scripts/aisc.py start
 ```
 
-This brings up the whole stack. To rebuild only the renderer after a change, add `report-renderer` at
-the end of the same command. The service mounts three read-only data files from other modules:
+This makes the secrets if they are missing (`REPORT_RO_PASSWORD`, `REPORT_SERVICE_TOKEN` and the others)
+and brings up the whole stack, keeping port 443 answering on an https install. To rebuild only the renderer
+after a change, run `uv run scripts/aisc.py secrets`. It prints this install's exact compose command. Add
+`up -d --build report-renderer` to it. The service mounts three read-only data files from other modules:
 `apps/qualification/src/data/airo_vocab.json`, `apps/qualification/src/data/vair_vocab.json` and
 `apps/control-objectives/src/aisc_control_objectives/data/ai_act_control_objectives.csv`.
 

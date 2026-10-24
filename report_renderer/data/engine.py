@@ -41,10 +41,11 @@ class LocalRunRefused(ValueError):
 
 def _local(run: str) -> str:
     """SQL: the plugin run aliased `run` is on a local model file (the engine worker stores
-    {"local_model": {...}} as the value of the plugin's model input). Such a run is not part of the
+    {"local_model": {...}} as the value of the plugin's model input; any other value of local_model marks
+    nothing, as the engine refuses markers a client writes). Such a run is not part of the
     assessment record, so no query below returns it, its inputs, artifacts or observations."""
     return ("EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationinput li"
-            f" WHERE li.evaluation_plugin_id = {run}.id AND li.value ? 'local_model')")
+            f" WHERE li.evaluation_plugin_id = {run}.id AND jsonb_typeof(li.value -> 'local_model') = 'object')")
 
 
 def _local_observation(o: str) -> str:

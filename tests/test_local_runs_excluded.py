@@ -65,6 +65,13 @@ def local_langbite_run_untagged(bed):
 
 
 @pytest.fixture
+def model_input_with_a_text_local_model(bed):
+    undo = _mark(bed, "ep.id = 721", {"local_model": "scoring.onnx"})
+    yield
+    undo()
+
+
+@pytest.fixture
 def local_only_evaluation(bed):
     undo = _mark(bed, "ep.id = 711")
     yield
@@ -150,3 +157,8 @@ def test_the_card_run_beside_a_local_run_does_not_take_its_untagged_observations
     assert ("StrongREJECT", "Overall Pass Rate") not in pairs
     assert ("StrongREJECT", "StrongREJECT Harmfulness") in pairs
 
+
+def test_a_local_model_that_is_not_an_object_is_no_local_marker(sources, model_input_with_a_text_local_model):
+    ev = _mixed(sources)
+    runs = _engine("runs")(IDS["M"], IDS["M_V2"], sources=sources, evaluation_ids=[ev["id"]])
+    assert [r["id"] for r in runs] == [721, 722]

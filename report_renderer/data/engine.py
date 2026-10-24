@@ -57,6 +57,18 @@ def _local_observation(o: str) -> str:
             f" AND {o}.tool = lq.package_name || '::' || lq.name || ' (v' || lq.version || ')' AND {_local('lp')})")
 
 
+def _untagged_beside_local(o: str) -> str:
+    """SQL: observation `o` names no run of its evaluation and that evaluation has a local run. Whose it is
+    cannot be told, so it may be the local run's: it is left out rather than given to a card run."""
+    return ("(EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin up"
+            f" WHERE up.evaluation_id = {o}.evaluation_id AND {_local('up')})"
+            " AND NOT EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin tp"
+            " JOIN engine.aisc_backend_pluginconfig tc ON tc.id = tp.plugin_config_id"
+            " JOIN engine.aisc_backend_plugin tq ON tq.id = tc.plugin_id"
+            f" WHERE tp.evaluation_id = {o}.evaluation_id AND {o}.tool = COALESCE(tq.package_name, 'None')"
+            " || '::' || tq.name || ' (v' || COALESCE(tq.version, 'None') || ')'))")
+
+
 def _only_local(ev: str = "e") -> str:
     """SQL: evaluation `ev` has plugin runs and every one is local, so nothing of it is in the record."""
     return ("(EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin lp WHERE lp.evaluation_id = "
@@ -137,7 +149,8 @@ def observations(project_id, system_id, *, sources, evaluation_ids, selection=No
     return db.project_rows(sources, check_uuid(project_id), "engine",
                    "SELECT o.id, o.evaluation_id, o.tool FROM engine.aisc_backend_observation o"
                    f" JOIN {_EVAL} ON e.id = o.evaluation_id"
-                   f" WHERE {_scope(selection)} AND NOT {_local_observation('o')} AND e.id = ANY(%(ids)s::bigint[])"
+                   f" WHERE {_scope(selection)} AND NOT {_local_observation('o')} AND NOT {_untagged_beside_local('o')}"
+                   " AND e.id = ANY(%(ids)s::bigint[])"
                    " ORDER BY o.evaluation_id, o.id",
                    _params(project_id, system_id, selection, ids=list(evaluation_ids)))
 
@@ -151,7 +164,8 @@ def measurements(project_id, system_id, *, sources, observation_ids, selection=N
                    " FROM engine.aisc_backend_measurement m JOIN engine.aisc_backend_metric mt ON mt.id = m.metric_id"
                    " JOIN engine.aisc_backend_observation o ON o.id = m.observation_id"
                    f" JOIN {_EVAL} ON e.id = o.evaluation_id"
-                   f" WHERE {_scope(selection)} AND NOT {_local_observation('o')} AND o.id = ANY(%(ids)s::bigint[])"
+                   f" WHERE {_scope(selection)} AND NOT {_local_observation('o')} AND NOT {_untagged_beside_local('o')}"
+                   " AND o.id = ANY(%(ids)s::bigint[])"
                    " ORDER BY m.observation_id, m.id",
                    _params(project_id, system_id, selection, ids=list(observation_ids)))
 
@@ -203,7 +217,8 @@ def metric_pairs(project_id, system_id, *, sources) -> list[dict]:
     """The distinct (tool, metric) of every run of the project, of any status and any version, named as
     the Test results block names them (views.load_runs): a run owns the observations tagged
     "{package_name}::{plugin name} (v{version})" in its evaluation, or, when it is its evaluation's only
-    run and owns none, all of them; an observation no run owns is left out. The tool is the plugin's
+    run and owns none, all of them; an observation no run owns is left out. A local run counts as a run of
+    its evaluation, so a card run beside it never takes its observations, and nothing it owns is offered. The tool is the plugin's
     display name, else the plugin's name, else (no plugin configuration) the run's name; the metric is
     the metric's name, else the measurement's. Empty names are left out."""
     return db.project_rows(sources, check_uuid(project_id), "engine",
@@ -212,18 +227,19 @@ def metric_pairs(project_id, system_id, *, sources) -> list[dict]:
                    " COALESCE(NULLIF(pl.display_name, ''), NULLIF(pl.name, ''), ep.name) AS tool,"
                    " CASE WHEN NULLIF(pl.name, '') IS NOT NULL THEN COALESCE(pl.package_name, 'None') || '::'"
                    " || pl.name || ' (v' || COALESCE(pl.version, 'None') || ')' END AS tag,"
-                   " count(*) OVER (PARTITION BY ep.evaluation_id) AS runs_of_evaluation"
+                   " count(*) OVER (PARTITION BY ep.evaluation_id) AS runs_of_evaluation,"
+                   f" {_local('ep')} AS local"
                    " FROM engine.aisc_backend_evaluationplugin ep"
                    f" JOIN {_EVAL} ON e.id = ep.evaluation_id"
                    " LEFT JOIN engine.aisc_backend_pluginconfig pc ON pc.id = ep.plugin_config_id"
                    " LEFT JOIN engine.aisc_backend_plugin pl ON pl.id = pc.plugin_id"
-                   f" WHERE {_scope(_EVERY_VERSION)} AND NOT {_local('ep')}),"
+                   f" WHERE {_scope(_EVERY_VERSION)}),"
                    " owned AS ("
                    " SELECT r.tool, o.id AS observation_id FROM r JOIN engine.aisc_backend_observation o"
-                   f" ON o.evaluation_id = r.evaluation_id AND o.tool = r.tag AND NOT {_local_observation('o')}"
+                   f" ON o.evaluation_id = r.evaluation_id AND o.tool = r.tag AND NOT r.local AND NOT {_local_observation('o')}"
                    " UNION ALL"
                    " SELECT r.tool, o.id FROM r JOIN engine.aisc_backend_observation o ON o.evaluation_id = r.evaluation_id"
-                   f" WHERE r.runs_of_evaluation = 1 AND NOT {_local_observation('o')} AND NOT EXISTS (SELECT 1 FROM engine.aisc_backend_observation t"
+                   f" WHERE NOT r.local AND r.runs_of_evaluation = 1 AND NOT {_local_observation('o')} AND NOT EXISTS (SELECT 1 FROM engine.aisc_backend_observation t"
                    " WHERE t.evaluation_id = r.evaluation_id AND t.tool = r.tag))"
                    " SELECT DISTINCT owned.tool, COALESCE(NULLIF(mt.name, ''), m.name) AS metric FROM owned"
                    " JOIN engine.aisc_backend_measurement m ON m.observation_id = owned.observation_id"

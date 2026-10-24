@@ -18,16 +18,21 @@ LOCAL_VALUE = {"local_model": {"file": "scoring.onnx", "sha256": "ab" * 32}}
 EVAL_MIXED, EVAL_ALONE = "f2e00000-0000-4000-8000-000000000072", "f2e00000-0000-4000-8000-000000000071"
 
 
-def _mark(bed, run_condition):
-    """Mark the model input of the runs `run_condition` (SQL on evaluationplugin ep) selects; returns the undo."""
+def _connect(bed):
     db = need("report_bed", "project_db")(IDS["M"])
-    conn = psycopg.connect(bed.su_dsn(db), autocommit=True)
+    return psycopg.connect(bed.su_dsn(db), autocommit=True)
+
+
+def _mark(bed, run_condition, value=LOCAL_VALUE):
+    """Set the model input of the runs `run_condition` (SQL on evaluationplugin ep) selects to `value`;
+    returns the undo."""
+    conn = _connect(bed)
     saved = conn.execute("SELECT i.id, i.value FROM engine.aisc_backend_evaluationinput i"
                          " JOIN engine.aisc_backend_evaluationplugin ep ON ep.id = i.evaluation_plugin_id"
                          f" WHERE i.name = 'model' AND ({run_condition})").fetchall()
     for iid, _ in saved:
         conn.execute("UPDATE engine.aisc_backend_evaluationinput SET value = %s WHERE id = %s",
-                     (json.dumps(LOCAL_VALUE), iid))
+                     (json.dumps(value), iid))
 
     def undo():
         for iid, value in saved:
@@ -41,6 +46,21 @@ def _mark(bed, run_condition):
 def local_langbite_run(bed):
     undo = _mark(bed, "ep.id = 721")
     yield
+    undo()
+
+
+@pytest.fixture
+def local_langbite_run_untagged(bed):
+    """Run 721 is local and neither observation of evaluation 72 names its run (an older engine left the
+    tool empty), so nothing tells whose they are."""
+    undo = _mark(bed, "ep.id = 721")
+    conn = _connect(bed)
+    saved = conn.execute("SELECT id, tool FROM engine.aisc_backend_observation WHERE evaluation_id = 72").fetchall()
+    conn.execute("UPDATE engine.aisc_backend_observation SET tool = '' WHERE evaluation_id = 72")
+    yield
+    for oid, tool in saved:
+        conn.execute("UPDATE engine.aisc_backend_observation SET tool = %s WHERE id = %s", (tool, oid))
+    conn.close()
     undo()
 
 
@@ -95,7 +115,8 @@ def test_the_local_runs_inputs_artifacts_details_and_observations_are_left_out(s
     ev = _mixed(sources)
     args = (IDS["M"], IDS["M_V2"])
     assert {i["evaluation_plugin_id"] for i in _engine("inputs")(*args, sources=sources, run_ids=[721, 722])} == {722}
-    assert {a["evaluation_plugin_id"] for a in _engine("artifacts")(*args, sources=sources, run_ids=[721, 722])} <= {722}
+    artifacts = _engine("artifacts")(*args, sources=sources, run_ids=[721, 722])
+    assert [(a["evaluation_plugin_id"], a["name"]) for a in artifacts] == [(722, "strongreject_per_prompt.csv")]
     details = _engine("run_details")(*args, sources=sources, evaluation_ids=[ev["id"]])
     assert [d["name"] for d in details] == ["StrongRejectPlugin"]
     obs = _engine("observations")(*args, sources=sources, evaluation_ids=[ev["id"]])
@@ -115,4 +136,17 @@ def test_the_choice_lists_leave_out_a_tool_that_only_ran_locally(sources, every_
 def test_the_choice_lists_still_offer_card_tools(sources):
     args = (IDS["M"], IDS["M_V2"])
     assert any("langbite" in r["value"].lower() for r in _engine("tool_choices")(*args, sources=sources))
+
+
+
+def test_untagged_observations_of_an_evaluation_with_a_local_run_are_left_out(sources, local_langbite_run_untagged):
+    ev = _mixed(sources)
+    args = (IDS["M"], IDS["M_V2"])
+    assert _engine("observations")(*args, sources=sources, evaluation_ids=[ev["id"]]) == []
+
+
+def test_the_card_run_beside_a_local_run_does_not_take_its_untagged_observations(sources, local_langbite_run_untagged):
+    pairs = {(r["tool"], r["metric"]) for r in _engine("metric_pairs")(IDS["M"], IDS["M_V2"], sources=sources)}
+    assert ("StrongREJECT", "Overall Pass Rate") not in pairs
+    assert ("StrongREJECT", "StrongREJECT Harmfulness") in pairs
 

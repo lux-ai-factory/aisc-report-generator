@@ -35,15 +35,32 @@ def _params(project_id, system_id, selection=None, **extra) -> dict:
             "pt": getattr(selection, "period_to", None), **extra}
 
 
+class LocalRunRefused(ValueError):
+    """A run on a local model file was asked for by id."""
+
+
+#: whether an evaluation has a run on a local model file: the worker stores {"local_model": {...}} as the
+#: value of the plugin's model input
+_LOCAL = ("EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin lp"
+          " JOIN engine.aisc_backend_evaluationinput li ON li.evaluation_plugin_id = lp.id"
+          " WHERE lp.evaluation_id = e.id AND li.value ? 'local_model')")
+
+
 def evaluations(project_id, system_id, *, sources, statuses=None, pids=None, selection=None) -> list[dict]:
-    return db.project_rows(sources, check_uuid(project_id), "engine",
-                   "SELECT e.id, e.pid::text AS pid, e.status, e.created_at, s.number AS version_number"
+    """The evaluations a report covers. A run on a local model file is not part of the assessment record:
+    asking for one by pid is refused, and a period or version selection leaves it out."""
+    rows = db.project_rows(sources, check_uuid(project_id), "engine",
+                   "SELECT e.id, e.pid::text AS pid, e.status, e.created_at, s.number AS version_number,"
+                   f" {_LOCAL} AS local"
                    f" FROM {_EVAL} LEFT JOIN project.system s ON s.pid = e.system_id WHERE {_scope(selection)}"
                    " AND (%(st)s::text[] IS NULL OR e.status = ANY(%(st)s::text[]))"
                    " AND (%(pids)s::uuid[] IS NULL OR e.pid = ANY(%(pids)s::uuid[]))"
                    " ORDER BY e.created_at, e.id",
                    _params(project_id, system_id, selection, st=list(statuses) if statuses is not None else None,
                            pids=[check_uuid(x) for x in pids] if pids is not None else None))
+    if pids is not None and any(r["local"] for r in rows):
+        raise LocalRunRefused("a local run is not part of the assessment record")
+    return [{k: v for k, v in r.items() if k != "local"} for r in rows if not r["local"]]
 
 
 def runs(project_id, system_id, *, sources, evaluation_ids, selection=None) -> list[dict]:

@@ -39,19 +39,38 @@ class LocalRunRefused(ValueError):
     """A run on a local model file was asked for by id."""
 
 
-#: whether an evaluation has a run on a local model file: the worker stores {"local_model": {...}} as the
-#: value of the plugin's model input
-_LOCAL = ("EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin lp"
-          " JOIN engine.aisc_backend_evaluationinput li ON li.evaluation_plugin_id = lp.id"
-          " WHERE lp.evaluation_id = e.id AND li.value ? 'local_model')")
+def _local(run: str) -> str:
+    """SQL: the plugin run aliased `run` is on a local model file (the engine worker stores
+    {"local_model": {...}} as the value of the plugin's model input). Such a run is not part of the
+    assessment record, so no query below returns it, its inputs, artifacts or observations."""
+    return ("EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationinput li"
+            f" WHERE li.evaluation_plugin_id = {run}.id AND li.value ? 'local_model')")
+
+
+def _local_observation(o: str) -> str:
+    """SQL: observation `o` belongs to a local run, found as the engine tags it: "{package}::{name} (v{version})"
+    in its evaluation."""
+    return ("EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin lp"
+            " JOIN engine.aisc_backend_pluginconfig lc ON lc.id = lp.plugin_config_id"
+            " JOIN engine.aisc_backend_plugin lq ON lq.id = lc.plugin_id"
+            f" WHERE lp.evaluation_id = {o}.evaluation_id"
+            f" AND {o}.tool = lq.package_name || '::' || lq.name || ' (v' || lq.version || ')' AND {_local('lp')})")
+
+
+def _only_local(ev: str = "e") -> str:
+    """SQL: evaluation `ev` has plugin runs and every one is local, so nothing of it is in the record."""
+    return ("(EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin lp WHERE lp.evaluation_id = "
+            f"{ev}.id) AND NOT EXISTS (SELECT 1 FROM engine.aisc_backend_evaluationplugin cp WHERE "
+            f"cp.evaluation_id = {ev}.id AND NOT {_local('cp')}))")
 
 
 def evaluations(project_id, system_id, *, sources, statuses=None, pids=None, selection=None) -> list[dict]:
-    """The evaluations a report covers. A run on a local model file is not part of the assessment record:
-    asking for one by pid is refused, and a period or version selection leaves it out."""
+    """The evaluations a report covers. A run on a local model file is not part of the assessment record: no
+query here returns it, and an evaluation whose runs are all local is left out of a selection and refused when
+asked for by pid. An evaluation that also has a card run stays, with the card run alone."""
     rows = db.project_rows(sources, check_uuid(project_id), "engine",
                    "SELECT e.id, e.pid::text AS pid, e.status, e.created_at, s.number AS version_number,"
-                   f" {_LOCAL} AS local"
+                   f" {_only_local()} AS local"
                    f" FROM {_EVAL} LEFT JOIN project.system s ON s.pid = e.system_id WHERE {_scope(selection)}"
                    " AND (%(st)s::text[] IS NULL OR e.status = ANY(%(st)s::text[]))"
                    " AND (%(pids)s::uuid[] IS NULL OR e.pid = ANY(%(pids)s::uuid[]))"
@@ -72,7 +91,8 @@ def runs(project_id, system_id, *, sources, evaluation_ids, selection=None) -> l
                    f" FROM engine.aisc_backend_evaluationplugin ep JOIN {_EVAL} ON e.id = ep.evaluation_id"
                    " LEFT JOIN engine.aisc_backend_pluginconfig pc ON pc.id = ep.plugin_config_id"
                    " LEFT JOIN engine.aisc_backend_plugin pl ON pl.id = pc.plugin_id"
-                   f" WHERE {_scope(selection)} AND e.id = ANY(%(ids)s::bigint[]) ORDER BY ep.evaluation_id, ep.id",
+                   f" WHERE {_scope(selection)} AND NOT {_local('ep')} AND e.id = ANY(%(ids)s::bigint[])"
+                   " ORDER BY ep.evaluation_id, ep.id",
                    _params(project_id, system_id, selection, ids=list(evaluation_ids)))
 
 
@@ -86,7 +106,8 @@ def inputs(project_id, system_id, *, sources, run_ids, selection=None) -> list[d
                    " JOIN engine.aisc_backend_aicomponent c ON c.id = ei.component_id"
                    " JOIN engine.aisc_backend_evaluationplugin ep ON ep.id = ei.evaluation_plugin_id"
                    f" JOIN {_EVAL} ON e.id = ep.evaluation_id"
-                   f" WHERE {_scope(selection)} AND ep.id = ANY(%(ids)s::bigint[]) ORDER BY ei.evaluation_plugin_id, ei.id",
+                   f" WHERE {_scope(selection)} AND NOT {_local('ep')} AND ep.id = ANY(%(ids)s::bigint[])"
+                   " ORDER BY ei.evaluation_plugin_id, ei.id",
                    _params(project_id, system_id, selection, ids=list(run_ids)))
 
 
@@ -116,7 +137,8 @@ def observations(project_id, system_id, *, sources, evaluation_ids, selection=No
     return db.project_rows(sources, check_uuid(project_id), "engine",
                    "SELECT o.id, o.evaluation_id, o.tool FROM engine.aisc_backend_observation o"
                    f" JOIN {_EVAL} ON e.id = o.evaluation_id"
-                   f" WHERE {_scope(selection)} AND e.id = ANY(%(ids)s::bigint[]) ORDER BY o.evaluation_id, o.id",
+                   f" WHERE {_scope(selection)} AND NOT {_local_observation('o')} AND e.id = ANY(%(ids)s::bigint[])"
+                   " ORDER BY o.evaluation_id, o.id",
                    _params(project_id, system_id, selection, ids=list(evaluation_ids)))
 
 
@@ -129,7 +151,8 @@ def measurements(project_id, system_id, *, sources, observation_ids, selection=N
                    " FROM engine.aisc_backend_measurement m JOIN engine.aisc_backend_metric mt ON mt.id = m.metric_id"
                    " JOIN engine.aisc_backend_observation o ON o.id = m.observation_id"
                    f" JOIN {_EVAL} ON e.id = o.evaluation_id"
-                   f" WHERE {_scope(selection)} AND o.id = ANY(%(ids)s::bigint[]) ORDER BY m.observation_id, m.id",
+                   f" WHERE {_scope(selection)} AND NOT {_local_observation('o')} AND o.id = ANY(%(ids)s::bigint[])"
+                   " ORDER BY m.observation_id, m.id",
                    _params(project_id, system_id, selection, ids=list(observation_ids)))
 
 
@@ -140,7 +163,8 @@ def artifacts(project_id, system_id, *, sources, run_ids, selection=None) -> lis
                    "SELECT a.evaluation_plugin_id, a.name, a.file_size FROM engine.aisc_backend_artifact a"
                    " JOIN engine.aisc_backend_evaluationplugin ep ON ep.id = a.evaluation_plugin_id"
                    f" JOIN {_EVAL} ON e.id = ep.evaluation_id"
-                   f" WHERE {_scope(selection)} AND ep.id = ANY(%(ids)s::bigint[]) ORDER BY a.evaluation_plugin_id, a.id",
+                   f" WHERE {_scope(selection)} AND NOT {_local('ep')} AND ep.id = ANY(%(ids)s::bigint[])"
+                   " ORDER BY a.evaluation_plugin_id, a.id",
                    _params(project_id, system_id, selection, ids=list(run_ids)))
 
 
@@ -155,13 +179,14 @@ def run_details(project_id, system_id, *, sources, evaluation_ids, selection=Non
                    f" FROM engine.aisc_backend_evaluationplugin ep JOIN {_EVAL} ON e.id = ep.evaluation_id"
                    " LEFT JOIN engine.aisc_backend_pluginconfig pc ON pc.id = ep.plugin_config_id"
                    " LEFT JOIN engine.aisc_backend_plugin pl ON pl.id = pc.plugin_id"
-                   f" WHERE {_scope(selection)} AND e.id = ANY(%(ids)s::bigint[]) ORDER BY ep.started_at, ep.id",
+                   f" WHERE {_scope(selection)} AND NOT {_local('ep')} AND e.id = ANY(%(ids)s::bigint[])"
+                   " ORDER BY ep.started_at, ep.id",
                    _params(project_id, system_id, selection, ids=list(evaluation_ids)))
 
 
 def unversioned_count(project_id, system_id, *, sources) -> int:
     row = db.project_one(sources, check_uuid(project_id), "engine",
-                 "SELECT count(*) AS n FROM engine.aisc_backend_evaluation e WHERE e.system_id IS NULL",
+                 f"SELECT count(*) AS n FROM engine.aisc_backend_evaluation e WHERE e.system_id IS NULL AND NOT {_only_local()}",
                  _params(project_id, system_id))
     return int(row["n"]) if row else 0
 
@@ -169,7 +194,7 @@ def unversioned_count(project_id, system_id, *, sources) -> int:
 def newest_newer_evaluation(project_id, system_id, *, sources) -> int | None:
     row = db.project_one(sources, check_uuid(project_id), "engine",
                  f"SELECT max(s.number) AS n FROM {_EVAL} JOIN project.system s ON s.pid = e.system_id"
-                 " WHERE s.number > (SELECT number FROM project.system WHERE pid = %(s)s)",
+                 f" WHERE s.number > (SELECT number FROM project.system WHERE pid = %(s)s) AND NOT {_only_local()}",
                  _params(project_id, system_id))
     return row["n"] if row else None
 
@@ -192,13 +217,13 @@ def metric_pairs(project_id, system_id, *, sources) -> list[dict]:
                    f" JOIN {_EVAL} ON e.id = ep.evaluation_id"
                    " LEFT JOIN engine.aisc_backend_pluginconfig pc ON pc.id = ep.plugin_config_id"
                    " LEFT JOIN engine.aisc_backend_plugin pl ON pl.id = pc.plugin_id"
-                   f" WHERE {_scope(_EVERY_VERSION)}),"
+                   f" WHERE {_scope(_EVERY_VERSION)} AND NOT {_local('ep')}),"
                    " owned AS ("
                    " SELECT r.tool, o.id AS observation_id FROM r JOIN engine.aisc_backend_observation o"
-                   " ON o.evaluation_id = r.evaluation_id AND o.tool = r.tag"
+                   f" ON o.evaluation_id = r.evaluation_id AND o.tool = r.tag AND NOT {_local_observation('o')}"
                    " UNION ALL"
                    " SELECT r.tool, o.id FROM r JOIN engine.aisc_backend_observation o ON o.evaluation_id = r.evaluation_id"
-                   " WHERE r.runs_of_evaluation = 1 AND NOT EXISTS (SELECT 1 FROM engine.aisc_backend_observation t"
+                   f" WHERE r.runs_of_evaluation = 1 AND NOT {_local_observation('o')} AND NOT EXISTS (SELECT 1 FROM engine.aisc_backend_observation t"
                    " WHERE t.evaluation_id = r.evaluation_id AND t.tool = r.tag))"
                    " SELECT DISTINCT owned.tool, COALESCE(NULLIF(mt.name, ''), m.name) AS metric FROM owned"
                    " JOIN engine.aisc_backend_measurement m ON m.observation_id = owned.observation_id"
@@ -214,6 +239,6 @@ def tool_choices(project_id, system_id, *, sources) -> list[dict]:
                    f" JOIN {_EVAL} ON e.id = ep.evaluation_id"
                    " JOIN engine.aisc_backend_pluginconfig pc ON pc.id = ep.plugin_config_id"
                    " JOIN engine.aisc_backend_plugin pl ON pl.id = pc.plugin_id"
-                   f" WHERE {_scope(_EVERY_VERSION)} AND pl.display_name IS NOT NULL ORDER BY pl.display_name",
+                   f" WHERE {_scope(_EVERY_VERSION)} AND NOT {_local('ep')} AND pl.display_name IS NOT NULL ORDER BY pl.display_name",
                    _params(project_id, system_id))
     return [{"value": r["display_name"], "label": r["display_name"]} for r in rows]

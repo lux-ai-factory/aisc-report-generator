@@ -29,7 +29,8 @@ jobs:
       - name: AISC around the renderer
         run: |
           git clone --depth 1 --branch "$AISC_REF" https://github.com/lux-ai-factory/aisc.git "$RUNNER_TEMP/aisc"
-          git -C "$RUNNER_TEMP/aisc" submodule update --init --depth 50 shared/report-plugin-interface
+          # the report plugin interface the lock names, and the VAIR vocabulary the labels are read from
+          git -C "$RUNNER_TEMP/aisc" submodule update --init --depth 50 shared/report-plugin-interface apps/qualification
           echo "AISC $AISC_REF from $(git -C "$RUNNER_TEMP/aisc" remote get-url origin) at $(git -C "$RUNNER_TEMP/aisc" rev-parse --short HEAD)"
           rm -rf "$RUNNER_TEMP/aisc/apps/report-generator" && cp -a "$GITHUB_WORKSPACE" "$RUNNER_TEMP/aisc/apps/report-generator"
       - uses: astral-sh/setup-uv@v5

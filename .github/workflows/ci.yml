@@ -1,0 +1,39 @@
+# The report generator's tests, run inside an AISC checkout as on a workstation: the lock takes the report plugin
+# interface from ../../shared/report-plugin-interface, and the tests find their beds (scripts/lib/report_bed*.py,
+# init/*.sql, platform/) in the AISC root around this folder. The db tests start throwaway Postgres containers,
+# so the runner needs Docker.
+name: ci
+
+on:
+  push:
+    branches: [feat/unified-modules, main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UV_PYTHON: "3.12"
+  # the AISC branch around this commit; a repository variable can move it
+  AISC_REF: ${{ vars.AISC_REF || 'feat/unified-modules' }}
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      # a copy, not a link: the lock's ../../ source path must resolve inside the AISC tree
+      - name: AISC around the renderer
+        run: |
+          git clone --depth 1 --branch "$AISC_REF" https://github.com/lux-ai-factory/aisc.git "$RUNNER_TEMP/aisc"
+          git -C "$RUNNER_TEMP/aisc" submodule update --init --depth 50 shared/report-plugin-interface
+          echo "AISC $AISC_REF from $(git -C "$RUNNER_TEMP/aisc" remote get-url origin) at $(git -C "$RUNNER_TEMP/aisc" rev-parse --short HEAD)"
+          rm -rf "$RUNNER_TEMP/aisc/apps/report-generator" && cp -a "$GITHUB_WORKSPACE" "$RUNNER_TEMP/aisc/apps/report-generator"
+      - uses: astral-sh/setup-uv@v5
+      - name: Docker is reachable
+        run: docker version --format '{{.Server.Version}}'
+      - working-directory: ${{ runner.temp }}/aisc/apps/report-generator
+        run: env -u DATABASE_URL -u PLATFORM_TEST_DATABASE_URL uv run --locked --extra dev pytest -q -p no:cacheprovider tests

@@ -159,8 +159,10 @@ kernel picks) through `scripts/lib/report_bed.py` and `scripts/lib/report_bed_is
 repository, and remove them at the end. As a submodule of aisc the tests find that repository two
 folders up; elsewhere, set `AISC_INSTALL_DIR` to an aisc checkout. Docker must be running.
 
-There is no CI of its own: the tests need the report plugin interface from `shared/report-plugin-interface`
-and the test beds of the aisc repository, both only in a full aisc checkout. Run them there.
+The tests need the report plugin interface from `shared/report-plugin-interface` and the test beds of the
+aisc repository, both only in a full aisc checkout. So the CI (`.github/workflows/ci.yml`) checks out aisc's
+`feat/unified-modules` around this commit and runs the command above, with `--locked`, in it; locally, run it in a full aisc
+checkout.
 
 **Never point the tests at the live database** (port 5432 of the running stack). The bed refuses to
 start when a DSN variable (`DATABASE_URL`, `REPORT_PLATFORM_DATABASE_URL` and the like) is set to

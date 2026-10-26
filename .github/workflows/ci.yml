@@ -33,6 +33,17 @@ jobs:
           echo "AISC $AISC_REF from $(git -C "$RUNNER_TEMP/aisc" remote get-url origin) at $(git -C "$RUNNER_TEMP/aisc" rev-parse --short HEAD)"
           rm -rf "$RUNNER_TEMP/aisc/apps/report-generator" && cp -a "$GITHUB_WORKSPACE" "$RUNNER_TEMP/aisc/apps/report-generator"
       - uses: astral-sh/setup-uv@v5
+      # the fonts the golden PDFs were rendered with (Arial is Liberation Sans there); a runner without them falls back
+      # to another sans-serif and the PDF text differs
+      - name: the report fonts
+        run: |
+          missing=()
+          for package in fonts-liberation fonts-dejavu-core; do
+            dpkg -s "$package" >/dev/null 2>&1 || missing+=("$package")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            sudo apt-get update -q && sudo apt-get install -y -q "${missing[@]}"
+          fi
       - name: Docker is reachable
         run: docker version --format '{{.Server.Version}}'
       - working-directory: ${{ runner.temp }}/aisc/apps/report-generator

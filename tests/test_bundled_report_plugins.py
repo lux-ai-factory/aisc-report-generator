@@ -31,5 +31,5 @@ def test_the_image_copies_the_add_ons_before_installing_the_locked_packages():
 def test_the_build_context_leaves_out_local_environments():
     """COPY plugins would otherwise carry each folder's .venv and build leftovers into the image."""
     ignore = (ROOT / ".dockerignore").read_text().split()
-    for pattern in ("**/.venv", "**/__pycache__", "**/*.egg-info"):
+    for pattern in ("**/.venv", "**/__pycache__", "**/*.egg-info", "**/build"):
         assert pattern in ignore, pattern

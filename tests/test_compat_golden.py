@@ -1,6 +1,6 @@
 """Compatibility pins against the goldens of tests/golden/.
 
-The goldens were captured from the renderer at 26e235d (tests/golden/capture.py; MANIFEST.json names
+The goldens were captured from the renderer at df14131 (tests/golden/capture.py; MANIFEST.json names
 the commit). A snapshot that uses none of the later snapshot keys must render the same:
 - Delta v1 (no evaluation): byte-identical HTML; identical PDF text apart from the TOC page numbers.
 - Alpha v2 and Mike v2 (evaluations): identical except inside the Test results section.
@@ -38,7 +38,7 @@ def render_case(gdeps, name, mode="preview"):
 
 def test_the_goldens_come_from_the_renderer_before_the_run():
     manifest = json.loads((GOLDEN / "MANIFEST.json").read_text())
-    assert manifest["renderer_commit"] == "26e235d"
+    assert manifest["renderer_commit"] == "df14131"
     assert set(manifest["cases"]) == set(CASES)
 
 
@@ -46,7 +46,7 @@ def test_the_goldens_come_from_the_renderer_before_the_run():
 
 @pytest.mark.parametrize("name", ["d_v1_live", "d_v1_live_styled", "d_v1_free_text"])
 def test_an_old_snapshot_without_evaluations_renders_byte_for_byte(gdeps, name):
-    """No later snapshot key, no evaluation: the same HTML as at 26e235d."""
+    """No later snapshot key, no evaluation: the same HTML as at df14131."""
     result = render_case(gdeps, name)
     assert result["html"] == golden(name)
     assert result["block_statuses"] == json.loads(golden(name, "statuses.json"))
@@ -146,7 +146,7 @@ def _outside_test_results(lines) -> tuple[list[str], list[str]]:
 
 
 def test_pdf_text_with_evaluations_only_the_test_results_section_may_change(gdeps):
-    """The same rule on the PDF (a_v2_live_styled.pdf.json, captured at 26e235d): every text outside
+    """The same rule on the PDF (a_v2_live_styled.pdf.json, captured at df14131): every text outside
     the Test results section is the same, and the section still starts and ends in the same place."""
     now = _flow_lines(pdf_pages(render_case(gdeps, "a_v2_live_styled", mode="pdf")))
     then = _flow_lines(json.loads(golden("a_v2_live_styled", "pdf.json")))

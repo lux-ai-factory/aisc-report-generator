@@ -46,7 +46,8 @@ def test_verdict_stays_none_and_coverage_is_unchanged(deps):
         need_tool_package(module, cls)
     links = [{"objective_id": "R1.1", "tests": ["LangBiTe"], "checklists": []},
              {"objective_id": "R2.1", "tests": ["Promptfoo", "StrongREJECT"], "checklists": []}]
-    _, _, node, _ = one(deps, "summary_coverage", coverage_links=links)
+    # the coverage is shown by the control objectives section (the summary shows descriptions only)
+    _, _, node, _ = one(deps, "control_objectives", coverage_links=links)
     rows = {el["data-objective"]: text(el) for el in node.find_all(attrs={"data-objective": True})}
     assert "attention" not in rows["R1.1"] and "evidence" in rows["R1.1"], rows["R1.1"]
     assert "attention" not in rows["R2.1"] and "evidence" in rows["R2.1"], rows["R2.1"]

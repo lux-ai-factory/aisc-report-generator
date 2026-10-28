@@ -32,10 +32,8 @@
   "notices": [
    "Newer results exist for version 3.",
    "2 evaluations are not tied to a version and are not shown.",
-   "No dedicated renderer for LangBiTeEvaluationPlugin; showing raw measurements.",
-   "No dedicated renderer for LangBiTe; showing raw measurements.",
    "No dedicated renderer for Mystery Tool; showing raw measurements.",
-   "1 observations could not be tied to a tool."
+   "1 observation could not be tied to a tool."
   ]
  },
  {

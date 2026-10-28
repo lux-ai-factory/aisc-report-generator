@@ -165,4 +165,5 @@ def test_one_observation_is_singular_in_the_test_results_section(make_deps, name
     assert "1 observation could not be tied to a tool." in tr
     assert "1 observations" not in html
     golden = (GOLDEN / f"{name}.html").read_text(encoding="utf-8")
-    assert "1 observations could not be tied to a tool." in split_sections(golden)[1][TEST_RESULTS_IID]
+    # the goldens were recaptured after the fix: they hold the singular too
+    assert "1 observation could not be tied to a tool." in split_sections(golden)[1][TEST_RESULTS_IID]

@@ -671,26 +671,30 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
 
 <section class="block block-test_results" id="block-00000000-0000-4000-8000-00000000a005" data-status="ok">
   <h2>Test results</h2>
-  <ul class="notices"><li>No dedicated renderer for StrongREJECT; showing raw measurements.</li><li>No dedicated renderer for LangBiTe; showing raw measurements.</li><li>No dedicated renderer for Promptfoo; showing raw measurements.</li></ul>
+  
   
 <div class="evaluation">
-  <h3>Evaluation f2e00000</h3>
-  <p class="meta">Status: Done | Date: 2026-09-19</p>
+  <h3>Evaluation 1: StrongREJECT</h3>
+  <p class="meta">Status: Done | Date: 2026-09-19 08:00 UTC | Reference: f2e00000</p>
   
   <div class="run">
     <h4>StrongREJECT</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Example Assistant endpoint (model) | Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>StrongREJECT Harmfulness</td><td>0</td><td></td></tr>
-  <tr><td>Jailbreak Resistance</td><td>0</td><td></td></tr>
-  <tr><td>Worst-Case Jailbreak Harmfulness</td><td>0</td><td></td></tr>
-  <tr><td>Baseline Harmfulness (no jailbreak)</td><td>0</td><td></td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-strongreject">
+<ul class="notices">
+<li>StrongREJECT did not produce scores in this run.</li>
+</ul>
+<table class="key-numbers">
+<tbody>
+<tr><td>Harmfulness (mean, 0 to 1, lower is safer)</td><td>not scored: No score produced</td></tr>
+<tr><td>Jailbreak resistance (1 minus harmfulness, higher is safer)</td><td>not scored: Not measured</td></tr>
+<tr><td>Baseline harmfulness, no jailbreak</td><td>not scored: No &#39;none&#39; baseline run</td></tr>
+<tr><td>Worst jailbreak</td><td>not scored: No attacked jailbreaks</td></tr>
+</tbody>
 </table>
-
+</div>
     
   </div>
   
@@ -698,47 +702,57 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
 </div>
 
 <div class="evaluation">
-  <h3>Evaluation f2e00000</h3>
-  <p class="meta">Status: Done | Date: 2026-09-19</p>
+  <h3>Evaluation 2: LangBiTe, StrongREJECT</h3>
+  <p class="meta">Status: Done | Date: 2026-09-19 09:00 UTC | Reference: f2e00000</p>
   
   <div class="run">
     <h4>LangBiTe</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Example Assistant endpoint (model) | Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>LangBiTe Run Success</td><td>1</td><td></td></tr>
-  <tr><td>gender | gpt-4o-mini | en_us | prompt | observational</td><td>0.9</td><td></td></tr>
-  <tr><td>gender | gpt-4o-mini | fr_fr | prompt | observational</td><td>0.6</td><td></td></tr>
-  <tr><td>ageism | gpt-4o-mini | en_us | prompt | observational</td><td>0.75</td><td></td></tr>
-  <tr><td>religion | gpt-4o-mini | en_us | prompt | observational</td><td>0.5</td><td></td></tr>
-  <tr><td>Overall Pass Rate</td><td>0.6875</td><td></td></tr>
-  <tr><td>All Tolerances Passed</td><td>0</td><td></td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-langbite">
+<p class="summary">Overall pass rate: 68.8% across 4 groups</p>
+<p class="summary">All tolerance checks: Fail (1 of 4 passed)</p>
+<p class="note">Run: finished</p>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pass rate by concern" width="160mm" height="26.5mm" viewBox="0 0 640 106" font-family="sans-serif"><title>Pass rate by concern</title><line x1="200" y1="10" x2="200" y2="76" stroke="#CCCCCC" stroke-width="0.5"/><text x="200" y="90" font-size="10" text-anchor="middle" fill="#000000">0%</text><line x1="295" y1="10" x2="295" y2="76" stroke="#CCCCCC" stroke-width="0.5"/><text x="295" y="90" font-size="10" text-anchor="middle" fill="#000000">25%</text><line x1="390" y1="10" x2="390" y2="76" stroke="#CCCCCC" stroke-width="0.5"/><text x="390" y="90" font-size="10" text-anchor="middle" fill="#000000">50%</text><line x1="485" y1="10" x2="485" y2="76" stroke="#CCCCCC" stroke-width="0.5"/><text x="485" y="90" font-size="10" text-anchor="middle" fill="#000000">75%</text><line x1="580" y1="10" x2="580" y2="76" stroke="#CCCCCC" stroke-width="0.5"/><text x="580" y="90" font-size="10" text-anchor="middle" fill="#000000">100%</text><text x="194" y="24.67" font-size="11" text-anchor="end" fill="#000000">ageism</text><rect x="200" y="14" width="285" height="14" fill="#000fdf"/><text x="489" y="24.67" font-size="11" fill="#000000">75%</text><text x="194" y="46.67" font-size="11" text-anchor="end" fill="#000000">gender</text><rect x="200" y="36" width="285" height="14" fill="#000fdf"/><text x="489" y="46.67" font-size="11" fill="#000000">75%</text><text x="194" y="68.67" font-size="11" text-anchor="end" fill="#000000">religion</text><rect x="200" y="58" width="190" height="14" fill="#000fdf"/><text x="394" y="68.67" font-size="11" fill="#000000">50%</text><line x1="200" y1="10" x2="200" y2="76" stroke="#CCCCCC" stroke-width="1"/></svg>
+<table>
+<thead><tr><th>Concern</th><th>Model</th><th>Language</th><th>Input type</th><th>Reflection type</th><th>Passed</th><th>Failed</th><th>Pass rate</th><th>Tolerance set in LangBiTe</th><th>Pass / Fail (LangBiTe tolerance check)</th></tr></thead>
+<tbody>
+<tr><td>ageism</td><td>gpt-4o-mini</td><td>en_us</td><td>prompt</td><td>observational</td><td>3 of 4</td><td>1 of 4</td><td>75%</td><td>80%</td><td>Fail</td></tr>
+<tr><td>gender</td><td>gpt-4o-mini</td><td>en_us</td><td>prompt</td><td>observational</td><td>9 of 10</td><td>1 of 10</td><td>90%</td><td>80%</td><td>Pass</td></tr>
+<tr><td>gender</td><td>gpt-4o-mini</td><td>fr_fr</td><td>prompt</td><td>observational</td><td>6 of 10</td><td>4 of 10</td><td>60%</td><td>80%</td><td>Fail</td></tr>
+<tr><td>religion</td><td>gpt-4o-mini</td><td>en_us</td><td>prompt</td><td>observational</td><td>1 of 2</td><td>1 of 2</td><td>50%</td><td>n/a</td><td>Not evaluated</td></tr>
+</tbody>
 </table>
-
+</div>
     
   </div>
   
   <div class="run">
     <h4>StrongREJECT</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Example Assistant endpoint (model) | Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>StrongREJECT Harmfulness</td><td>0.2</td><td></td></tr>
-  <tr><td>Jailbreak Resistance</td><td>0.8</td><td></td></tr>
-  <tr><td>Worst-Case Jailbreak Harmfulness</td><td>0.45</td><td></td></tr>
-  <tr><td>Baseline Harmfulness (no jailbreak)</td><td>0.05</td><td></td></tr>
-  <tr><td>Harmfulness | pair</td><td>0.45</td><td></td></tr>
-  <tr><td>Harmfulness | none</td><td>0.05</td><td></td></tr>
-  <tr><td>Harmfulness | aim</td><td>0.1</td><td></td></tr>
-  <tr><td>Harmfulness | base64</td><td>0.2</td><td></td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-strongreject">
+<table class="key-numbers">
+<tbody>
+<tr><td>Harmfulness (mean, 0 to 1, lower is safer)</td><td>0.2</td></tr>
+<tr><td>Jailbreak resistance (1 minus harmfulness, higher is safer)</td><td>0.8</td></tr>
+<tr><td>Baseline harmfulness, no jailbreak</td><td>0.05</td></tr>
+<tr><td>Worst jailbreak: pair</td><td>0.45</td></tr>
+</tbody>
 </table>
-
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Harmfulness by jailbreak" width="160mm" height="72.5mm" viewBox="0 0 640 290" font-family="sans-serif"><title>Harmfulness by jailbreak</title><line x1="60" y1="220" x2="630" y2="220" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="223.67" font-size="10" text-anchor="end" fill="#000000">0</text><line x1="60" y1="170" x2="630" y2="170" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="173.67" font-size="10" text-anchor="end" fill="#000000">0.25</text><line x1="60" y1="120" x2="630" y2="120" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="123.67" font-size="10" text-anchor="end" fill="#000000">0.5</text><line x1="60" y1="70" x2="630" y2="70" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="73.67" font-size="10" text-anchor="end" fill="#000000">0.75</text><line x1="60" y1="20" x2="630" y2="20" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="23.67" font-size="10" text-anchor="end" fill="#000000">1</text><text x="131.25" y="234" font-size="10" text-anchor="end" transform="rotate(-30 131.25 234)" fill="#000000">none</text><rect x="88.5" y="210" width="85.5" height="10" fill="#000fdf"/><text x="131.25" y="206" font-size="11" text-anchor="middle" fill="#000000">0.05</text><text x="273.75" y="234" font-size="10" text-anchor="end" transform="rotate(-30 273.75 234)" fill="#000000">aim</text><rect x="231" y="200" width="85.5" height="20" fill="#000fdf"/><text x="273.75" y="196" font-size="11" text-anchor="middle" fill="#000000">0.1</text><text x="416.25" y="234" font-size="10" text-anchor="end" transform="rotate(-30 416.25 234)" fill="#000000">base64</text><rect x="373.5" y="180" width="85.5" height="40" fill="#000fdf"/><text x="416.25" y="176" font-size="11" text-anchor="middle" fill="#000000">0.2</text><text x="558.75" y="234" font-size="10" text-anchor="end" transform="rotate(-30 558.75 234)" fill="#000000">pair</text><rect x="516" y="130" width="85.5" height="90" fill="#000fdf"/><text x="558.75" y="126" font-size="11" text-anchor="middle" fill="#000000">0.45</text><line x1="60" y1="220" x2="630" y2="220" stroke="#CCCCCC" stroke-width="1"/></svg>
+<table>
+<thead><tr><th>Jailbreak</th><th>Harmfulness (0 to 1, lower is safer)</th><th>Prompts</th></tr></thead>
+<tbody>
+<tr><td>none</td><td>0.050</td><td>20</td></tr>
+<tr><td>aim</td><td>0.100</td><td>20</td></tr>
+<tr><td>base64</td><td>0.200</td><td>20</td></tr>
+<tr><td>pair</td><td>0.450</td><td>20</td></tr>
+</tbody>
+</table>
+</div>
     
   </div>
   
@@ -746,22 +760,27 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
 </div>
 
 <div class="evaluation">
-  <h3>Evaluation f2e00000</h3>
-  <p class="meta">Status: Done | Date: 2026-09-19</p>
+  <h3>Evaluation 3: Promptfoo</h3>
+  <p class="meta">Status: Done | Date: 2026-09-19 10:00 UTC | Reference: f2e00000</p>
   
   <div class="run">
     <h4>Promptfoo</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Example Assistant endpoint (model) | Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>mean_latency_ms</td><td>640</td><td>ms (lower is better)</td></tr>
-  <tr><td>total_cost</td><td>0</td><td>USD (lower is better)</td></tr>
-  <tr><td>n_tests</td><td>12</td><td>count</td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-promptfoo">
+<table>
+<thead><tr><th>Measure</th><th>Value</th></tr></thead>
+<tbody>
+<tr><th>Tests run</th><td>12</td></tr>
+<tr><th>Pass</th><td>not reported</td></tr>
+<tr><th>Fail</th><td>not reported</td></tr>
+<tr><th>Refusal rate</th><td>not reported</td></tr>
+<tr><th>Mean latency (lower is better)</th><td>640 ms</td></tr>
+<tr><th>Total cost (lower is better)</th><td>0.0000 USD</td></tr>
+</tbody>
 </table>
-
+</div>
     
   </div>
   
@@ -769,25 +788,30 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
 </div>
 
 <div class="evaluation">
-  <h3>Evaluation f2e00000</h3>
-  <p class="meta">Status: Done | Date: 2026-09-19</p>
+  <h3>Evaluation 4: Promptfoo</h3>
+  <p class="meta">Status: Done | Date: 2026-09-19 11:00 UTC | Reference: f2e00000</p>
   
   <div class="run">
     <h4>Promptfoo</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Example Assistant endpoint (model) | Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>pass_rate</td><td>0.85</td><td>rate (higher is better)</td></tr>
-  <tr><td>fail_rate</td><td>0.15</td><td>rate (lower is better)</td></tr>
-  <tr><td>refusal_rate</td><td>0.1</td><td>rate</td></tr>
-  <tr><td>mean_latency_ms</td><td>812.4</td><td>ms (lower is better)</td></tr>
-  <tr><td>total_cost</td><td>0.01234</td><td>USD (lower is better)</td></tr>
-  <tr><td>n_tests</td><td>40</td><td>count</td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-promptfoo">
+<table>
+<thead><tr><th>Measure</th><th>Value</th></tr></thead>
+<tbody>
+<tr><th>Tests run</th><td>40</td></tr>
+<tr><th>Pass (higher is better)</th><td>85%</td></tr>
+<tr><th>Fail (lower is better)</th><td>15%</td></tr>
+<tr><th>Refusal rate</th><td>10%</td></tr>
+<tr><th>Mean latency (lower is better)</th><td>812 ms</td></tr>
+<tr><th>Total cost (lower is better)</th><td>0.0123 USD</td></tr>
+</tbody>
 </table>
-
+<p class="note">Pass and Fail are promptfoo&#39;s own results: a test passes when all of its assertions pass. The values are shares of the tests.</p>
+<p class="note">Refusal rate: estimated from the grader&#39;s reasons.</p>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pass, fail and refusal rates" width="160mm" height="72.5mm" viewBox="0 0 640 290" font-family="sans-serif"><title>Pass, fail and refusal rates</title><line x1="60" y1="220" x2="630" y2="220" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="223.67" font-size="10" text-anchor="end" fill="#000000">0%</text><line x1="60" y1="170" x2="630" y2="170" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="173.67" font-size="10" text-anchor="end" fill="#000000">25%</text><line x1="60" y1="120" x2="630" y2="120" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="123.67" font-size="10" text-anchor="end" fill="#000000">50%</text><line x1="60" y1="70" x2="630" y2="70" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="73.67" font-size="10" text-anchor="end" fill="#000000">75%</text><line x1="60" y1="20" x2="630" y2="20" stroke="#CCCCCC" stroke-width="0.5"/><text x="54" y="23.67" font-size="10" text-anchor="end" fill="#000000">100%</text><text x="155" y="234" font-size="10" text-anchor="end" transform="rotate(-30 155 234)" fill="#000000">Pass</text><rect x="98" y="50" width="114" height="170" fill="#000fdf"/><text x="155" y="46" font-size="11" text-anchor="middle" fill="#000000">85%</text><text x="345" y="234" font-size="10" text-anchor="end" transform="rotate(-30 345 234)" fill="#000000">Fail</text><rect x="288" y="190" width="114" height="30" fill="#000fdf"/><text x="345" y="186" font-size="11" text-anchor="middle" fill="#000000">15%</text><text x="535" y="234" font-size="10" text-anchor="end" transform="rotate(-30 535 234)" fill="#000000">Refusal rate</text><rect x="478" y="200" width="114" height="20" fill="#000fdf"/><text x="535" y="196" font-size="11" text-anchor="middle" fill="#000000">10%</text><line x1="60" y1="220" x2="630" y2="220" stroke="#CCCCCC" stroke-width="1"/></svg>
+</div>
     
   </div>
   
@@ -806,9 +830,9 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
   <p class="meta">Source: EU AI Act | Topic: Oversight | Submission: Mike oversight (Draft, version 1)</p>
   
   <table class="answers">
-    <thead><tr><th>Question</th><th>Article</th><th>Answer</th><th>Score</th></tr></thead>
+    <thead><tr><th>Question</th><th>Answer</th><th>Score</th></tr></thead>
     <tbody>
-    <tr><td>Can staff take over a conversation?</td><td>Art. 14</td><td>Yes, a button</td><td>3</td></tr>
+    <tr><td>Can staff take over a conversation?</td><td>Yes, a button</td><td>3</td></tr>
     
     </tbody>
   </table>
@@ -821,10 +845,10 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
   <p class="meta">Source: EU AI Act | Topic: Transparency | Submission: Mike pass two (Draft, version 2)</p>
   
   <table class="answers">
-    <thead><tr><th>Question</th><th>Article</th><th>Answer</th><th>Score</th></tr></thead>
+    <thead><tr><th>Question</th><th>Answer</th><th>Score</th></tr></thead>
     <tbody>
-    <tr><td>Are users told they talk to a bot?</td><td>Art. 50</td><td>Yes, in the first message</td><td>4</td></tr>
-    <tr><td>Are the limits documented?</td><td>Art. 13</td><td>Yes, on the help page</td><td>5</td></tr>
+    <tr><td>Are users told they talk to a bot?</td><td>Yes, in the first message</td><td>4</td></tr>
+    <tr><td>Are the limits documented?</td><td>Yes, on the help page</td><td>5</td></tr>
     
     </tbody>
   </table>
@@ -840,16 +864,15 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
   <h2>Summary and coverage</h2>
   
   <table class="coverage">
-  <thead><tr><th>Objective</th><th>Label</th><th>Tests</th><th>Checklists</th><th>Status</th></tr></thead>
+  <thead><tr><th>Objective</th><th>Label</th><th>Description</th></tr></thead>
   <tbody>
-  <tr data-objective="R1.1"><td>R1.1</td><td>Operator oversight capability</td><td></td><td></td><td>not covered</td></tr>
-  <tr data-objective="R2.1"><td>R2.1</td><td>Training data quality</td><td></td><td></td><td>not covered</td></tr>
-  <tr data-objective="R4.1"><td>R4.1</td><td>Declared accuracy</td><td></td><td></td><td>not covered</td></tr>
-  <tr data-objective="R5.1"><td>R5.1</td><td>Instructions for use</td><td></td><td></td><td>not covered</td></tr>
+  <tr data-objective="R1.1"><td>R1.1</td><td>Operator oversight capability</td><td>A qualified operator can monitor and halt the system.</td></tr>
+  <tr data-objective="R2.1"><td>R2.1</td><td>Training data quality</td><td>Training data is relevant and examined for bias.</td></tr>
+  <tr data-objective="R4.1"><td>R4.1</td><td>Declared accuracy</td><td>Accuracy levels are declared and met.</td></tr>
+  <tr data-objective="R5.1"><td>R5.1</td><td>Instructions for use</td><td>Deployers receive instructions for use.</td></tr>
   
   </tbody>
 </table>
-<p class="coverage-counts">evidence: <span data-coverage-count="evidence">0</span>; evidence, attention: <span data-coverage-count="evidence, attention">0</span>; no evidence: <span data-coverage-count="no evidence">0</span>; not covered: <span data-coverage-count="not covered">4</span></p>
 </section>
 
 

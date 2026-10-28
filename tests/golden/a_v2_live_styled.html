@@ -673,23 +673,26 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
 
 <section class="block block-test_results" id="block-00000000-0000-4000-8000-00000000a005" data-status="stale">
   <h2>Test results</h2>
-  <ul class="notices"><li>Newer results exist for version 3.</li><li>2 evaluations are not tied to a version and are not shown.</li><li>No dedicated renderer for LangBiTeEvaluationPlugin; showing raw measurements.</li><li>No dedicated renderer for LangBiTe; showing raw measurements.</li><li>No dedicated renderer for Mystery Tool; showing raw measurements.</li><li>1 observations could not be tied to a tool.</li></ul>
+  <ul class="notices"><li>Newer results exist for version 3.</li><li>2 evaluations are not tied to a version and are not shown.</li><li>No dedicated renderer for Mystery Tool; showing raw measurements.</li><li>1 observation could not be tied to a tool.</li></ul>
   
 <div class="evaluation">
-  <h3>Evaluation a2e00000</h3>
-  <p class="meta">Status: Done | Date: 2026-09-09</p>
+  <h3>Evaluation 1: LangBiTeEvaluationPlugin</h3>
+  <p class="meta">Status: Done | Date: 2026-09-09 09:00 UTC | Reference: a2e00000</p>
   
   <div class="run">
     <h4>LangBiTeEvaluationPlugin</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>bias_rate</td><td>0.5</td><td>%</td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-langbite">
+<h4>Other measurements</h4>
+<table>
+<thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
+<tbody>
+<tr><td>bias_rate</td><td>0.5</td><td>%</td></tr>
+</tbody>
 </table>
-
+</div>
     
   </div>
   
@@ -697,26 +700,31 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
 </div>
 
 <div class="evaluation">
-  <h3>Evaluation a2e00000</h3>
-  <p class="meta">Status: Done | Date: 2026-09-10</p>
+  <h3>Evaluation 2: LangBiTe, Mystery Tool</h3>
+  <p class="meta">Status: Done | Date: 2026-09-10 09:00 UTC | Reference: a2e00000</p>
   
   <div class="run">
     <h4>LangBiTe</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Scoring model endpoint (model), Holdout prompts (dataset) | Run status: Done</p>
-    <table class="measurements">
-  <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
-  <tbody>
-  <tr><td>bias_rate</td><td>0.125</td><td>%</td></tr>
-  
-  </tbody>
+    
+    <div class="tool-section tool-langbite">
+<h4>Other measurements</h4>
+<table>
+<thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
+<tbody>
+<tr><td>bias_rate</td><td>0.125</td><td>%</td></tr>
+</tbody>
 </table>
-
+</div>
     
   </div>
   
   <div class="run">
     <h4>Mystery Tool</h4>
+    <p class="meta target">Tested: not recorded</p>
     <p class="meta">Components: Scoring model endpoint (model) | Run status: Done</p>
+    
     <table class="measurements">
   <thead><tr><th>Metric</th><th>Value</th><th>Unit</th></tr></thead>
   <tbody>
@@ -1249,12 +1257,12 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
   <p class="meta">Source: EU AI Act | Topic: Transparency | Submission: Second pass (Draft, version 2)</p>
   
   <table class="answers">
-    <thead><tr><th>Question</th><th>Article</th><th>Answer</th><th>Score</th></tr></thead>
+    <thead><tr><th>Question</th><th>Answer</th><th>Score</th></tr></thead>
     <tbody>
-    <tr><td>Is the system documented?</td><td>Art. 13(1)</td><td>Documented in the manual</td><td>4</td></tr>
-    <tr><td>Are deployers told the limits?</td><td>Art. 13(3)</td><td>Partly &lt;b&gt;bold&lt;/b&gt;</td><td>1</td></tr>
-    <tr><td>Are instructions for use written?</td><td>Art. 13(2)</td><td>Not answered</td><td></td></tr>
-    <tr><td>Is the log kept?</td><td>Art. 12</td><td>Not answered</td><td></td></tr>
+    <tr><td>Is the system documented?</td><td>Documented in the manual</td><td>4</td></tr>
+    <tr><td>Are deployers told the limits?</td><td>Partly &lt;b&gt;bold&lt;/b&gt;</td><td>1</td></tr>
+    <tr><td>Are instructions for use written?</td><td>Not answered</td><td></td></tr>
+    <tr><td>Is the log kept?</td><td>Not answered</td><td></td></tr>
     
     </tbody>
   </table>
@@ -1270,16 +1278,15 @@ h1, h2, h3 { font-family: "Inter", "Liberation Sans", Arial, sans-serif; color: 
   <h2>Summary and coverage</h2>
   
   <table class="coverage">
-  <thead><tr><th>Objective</th><th>Label</th><th>Tests</th><th>Checklists</th><th>Status</th></tr></thead>
+  <thead><tr><th>Objective</th><th>Label</th><th>Description</th></tr></thead>
   <tbody>
-  <tr data-objective="R1.1"><td>R1.1</td><td>Operator oversight capability</td><td></td><td></td><td>not covered</td></tr>
-  <tr data-objective="R2.1"><td>R2.1</td><td>Training data quality</td><td></td><td></td><td>not covered</td></tr>
-  <tr data-objective="R4.1"><td>R4.1</td><td>Declared accuracy</td><td></td><td></td><td>not covered</td></tr>
-  <tr data-objective="R5.1"><td>R5.1</td><td>Instructions for use</td><td></td><td></td><td>not covered</td></tr>
+  <tr data-objective="R1.1"><td>R1.1</td><td>Operator oversight capability</td><td>A qualified operator can monitor and halt the system.</td></tr>
+  <tr data-objective="R2.1"><td>R2.1</td><td>Training data quality</td><td>Training data is relevant and examined for bias.</td></tr>
+  <tr data-objective="R4.1"><td>R4.1</td><td>Declared accuracy</td><td>Accuracy levels are declared and met.</td></tr>
+  <tr data-objective="R5.1"><td>R5.1</td><td>Instructions for use</td><td>Deployers receive instructions for use.</td></tr>
   
   </tbody>
 </table>
-<p class="coverage-counts">evidence: <span data-coverage-count="evidence">0</span>; evidence, attention: <span data-coverage-count="evidence, attention">0</span>; no evidence: <span data-coverage-count="no evidence">0</span>; not covered: <span data-coverage-count="not covered">4</span></p>
 </section>
 
 

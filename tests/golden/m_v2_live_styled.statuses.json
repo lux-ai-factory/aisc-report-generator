@@ -27,11 +27,7 @@
   "instance_id": "00000000-0000-4000-8000-00000000a005",
   "block_type": "test_results",
   "status": "ok",
-  "notices": [
-   "No dedicated renderer for StrongREJECT; showing raw measurements.",
-   "No dedicated renderer for LangBiTe; showing raw measurements.",
-   "No dedicated renderer for Promptfoo; showing raw measurements."
-  ]
+  "notices": []
  },
  {
   "instance_id": "00000000-0000-4000-8000-00000000a006",

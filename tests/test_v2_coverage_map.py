@@ -21,6 +21,14 @@ def statuses(node):
     return {el["data-objective"]: status_word(text(el)) for el in node.find_all(attrs={"data-objective": True})}
 
 
+# The summary shows no coverage any more; which map it reads shows in what "only objectives without evidence" keeps.
+WITHOUT_EVIDENCE = sorted(o for o, st in MIKE_V2_STATUSES.items() if st in ("not covered", "no evidence"))
+
+
+def kept(node):
+    return sorted(el["data-objective"] for el in node.find_all(attrs={"data-objective": True}))
+
+
 # The snapshot's map.
 
 def test_control_objectives_read_the_snapshot_map(deps):
@@ -37,9 +45,9 @@ def test_the_snapshot_map_wins_over_the_first_summary(deps):
 
 
 def test_summary_with_empty_links_reads_the_snapshot_map(deps):
-    b = block("summary_coverage", links=[])
+    b = block("summary_coverage", links=[], show_uncovered_only=True)
     result = render_snapshot(deps, v2_snapshot([b], coverage_links=MIKE_MAP))
-    assert statuses(section(result["html"], b["instance_id"])) == MIKE_V2_STATUSES
+    assert kept(section(result["html"], b["instance_id"])) == WITHOUT_EVIDENCE
 
 
 def test_an_old_snapshot_keeps_the_first_summary_rule(deps):
@@ -53,17 +61,17 @@ def test_an_old_snapshot_keeps_the_first_summary_rule(deps):
 
 def test_own_links_win(deps):
     own = [{"objective_id": "R5.1", "tests": ["StrongREJECT"], "checklists": []}]
-    b = block("summary_coverage", links=own)
+    b = block("summary_coverage", links=own, show_uncovered_only=True)
     result = render_snapshot(deps, v2_snapshot([b], coverage_links=MIKE_MAP))
-    got = statuses(section(result["html"], b["instance_id"]))
-    assert got == {"R1.1": "not covered", "R2.1": "not covered", "R4.1": "not covered", "R5.1": "evidence"}
+    # by its own links only R5.1 has evidence; by the snapshot's map R1.1 and R2.1 would too
+    assert kept(section(result["html"], b["instance_id"])) == ["R1.1", "R2.1", "R4.1"]
 
 
 def test_a_later_summary_with_empty_links_uses_the_layout_map_in_an_old_snapshot(deps):
     """In an old snapshot the layout's map is the first summary block's links."""
-    first, second = block("summary_coverage", links=MIKE_MAP), block("summary_coverage", links=[])
+    first, second = block("summary_coverage", links=MIKE_MAP), block("summary_coverage", links=[], show_uncovered_only=True)
     result = render_snapshot(deps, v2_snapshot([first, second]))
-    assert statuses(section(result["html"], second["instance_id"])) == MIKE_V2_STATUSES
+    assert kept(section(result["html"], second["instance_id"])) == WITHOUT_EVIDENCE
 
 
 def test_links_option_stays_in_the_schema(deps):

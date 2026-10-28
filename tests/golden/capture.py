@@ -1,6 +1,6 @@
 """Capture the compatibility goldens of tests/golden/.
 
-The goldens are the renderer's output at commit 26e235d (MANIFEST.json names it), the baseline that
+The goldens are the renderer's output at commit df14131 (MANIFEST.json names it), the baseline that
 test_compat_golden.py compares against. Running this script again overwrites them, so run it only to
 re-baseline on purpose, from the repository root, with AISC_INSTALL_DIR at the aisc superproject:
 

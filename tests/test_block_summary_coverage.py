@@ -1,7 +1,9 @@
 """Summary / coverage block.
 
-Markup the tests rely on: one row per objective with `data-objective="<ID>"` holding its status
-text, and one count per status with `data-coverage-count="<status>"`.
+Markup the tests rely on: one row per objective with `data-objective="<ID>"`: its id, its label and its
+description. Tests and checklists are not yet linked to objectives in practice, so the table shows no
+tests, checklists, status or counts; the coverage links still decide which objectives "only objectives without
+evidence" keeps.
 Alpha v2: objectives R1.1, R2.1, R4.1, R5.1; cl-1's v2 mean score is 2.5 (below 3).
 """
 from importlib.metadata import EntryPoint
@@ -30,24 +32,22 @@ def status_word(row_text):
     return None
 
 
-def test_status_per_objective(deps):
+def test_one_row_per_objective_with_its_label_and_description(deps):
     _, s, node, _ = render_one(deps, "summary_coverage", links=LINKS)
-    rows = statuses(node)
+    headers = [th.get_text(strip=True) for th in node.find("table").find_all("th")]
+    assert headers == ["Objective", "Label", "Description"]
+    rows = {tr["data-objective"]: [td.get_text(strip=True) for td in tr.find_all("td")]
+            for tr in node.find_all("tr", attrs={"data-objective": True})}
     assert sorted(rows) == ["R1.1", "R2.1", "R4.1", "R5.1"]
-    assert status_word(rows["R1.1"]) == "evidence, attention"   # checklist mean 2.5 < 3
-    assert status_word(rows["R2.1"]) == "no evidence"           # MLA-Reject ran on v1 only
-    assert status_word(rows["R4.1"]) == "evidence"
-    assert status_word(rows["R5.1"]) == "not covered"
-    assert "LangBiTe" in rows["R1.1"] and "Transparency checklist" in rows["R1.1"] or "cl-1" in rows["R1.1"]
+    assert all(len(cells) == 3 and cells[0] == oid for oid, cells in rows.items())
+    assert all(cells[2] for cells in rows.values()), "an objective without its description"
 
 
-# a tool verdict of fail
-def test_a_failing_verdict_is_attention(make_deps):
-    build = need("report_renderer.registry", "build_registry")
-    reg = build(entry_points=[EntryPoint(name="m", value="plugins_fixture.tools:FailingMysteryVerdict",
-                                         group="aisc_report.tools")])
-    _, _, node, _ = render_one(make_deps(registry=reg), "summary_coverage", links=LINKS)
-    assert status_word(statuses(node)["R4.1"]) == "evidence, attention"
+def test_no_tests_checklists_status_or_counts_are_shown(deps):
+    t, _, node, _ = render_one(deps, "summary_coverage", links=LINKS)
+    assert node.find(attrs={"data-coverage-count": True}) is None
+    for shown_before in ("LangBiTe", "MLA-Reject", "not covered", "no evidence"):
+        assert shown_before not in t
 
 
 # computed from the data, not from the other blocks of the layout
@@ -62,13 +62,6 @@ def test_works_without_the_other_blocks(deps):
 def test_uncovered_only(deps):
     _, _, node, _ = render_one(deps, "summary_coverage", links=LINKS, show_uncovered_only=True)
     assert sorted(statuses(node)) == ["R2.1", "R5.1"]
-
-
-def test_counts_per_status(deps):
-    _, _, node, _ = render_one(deps, "summary_coverage", links=LINKS)
-    counts = {el["data-coverage-count"]: el.get_text(strip=True) for el in node.find_all(attrs={"data-coverage-count": True})}
-    assert {k: v for k, v in counts.items()} == {"evidence": "1", "evidence, attention": "1",
-                                                 "no evidence": "1", "not covered": "1"}
 
 
 def test_empty_without_an_assessment(deps):

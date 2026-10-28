@@ -4,9 +4,9 @@
   <p class="meta">{% if ca.checklist.source_name %}{{ t("Source: {name}", name=ca.checklist.source_name) }} | {% endif %}{{ t("Topic: {topic}", topic=ca.checklist.control_topic) }} | {{ t("Submission: {label} ({status}, version {version})", label=ca.submission.label, status=ca.submission.status, version=ca.submission.version) }}{% if ca.submission.questions_version is not none %} | {{ t("Answered under template revision {revision}", revision=ca.submission.questions_version) }}{% endif %}</p>
   {% if item.rows %}
   <table class="answers">
-    <thead><tr><th>{{ t("Question") }}</th><th>{{ t("Article") }}</th><th>{{ t("Answer") }}</th>{% if show_scores %}<th>{{ t("Score") }}</th>{% endif %}</tr></thead>
+    <thead><tr><th>{{ t("Question") }}</th><th>{{ t("Answer") }}</th>{% if show_scores %}<th>{{ t("Score") }}</th>{% endif %}</tr></thead>
     <tbody>
-    {% for r in item.rows %}<tr><td>{{ r.question }}</td><td>{{ r.article }}</td><td>{% if r.answered %}{{ r.answer if r.answer is not none else "" }}{% else %}{{ t("Not answered") }}{% endif %}</td>{% if show_scores %}<td>{{ number(r.score) if r.score is not none else "" }}</td>{% endif %}</tr>
+    {% for r in item.rows %}<tr><td>{{ r.question }}</td><td>{% if r.answered %}{{ r.answer if r.answer is not none else "" }}{% else %}{{ t("Not answered") }}{% endif %}</td>{% if show_scores %}<td>{{ number(r.score) if r.score is not none else "" }}</td>{% endif %}</tr>
     {% endfor %}
     </tbody>
   </table>

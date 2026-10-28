@@ -21,12 +21,19 @@ def test_the_latest_submission_with_answers_for_the_version(deps):
     assert_no_foreign_data(result["html"])
 
 
-def test_questions_in_order_with_article_answer_and_score(deps):
+def test_questions_in_order_with_answer_and_score(deps):
     t, *_ = render_one(deps, "control_answers")
     order = [t.index(q) for q in ("Is the system documented?", "Are deployers told the limits?",
                                   "Are instructions for use written?", "Is the log kept?")]
     assert order == sorted(order)
-    assert "Art. 13(1)" in t and "Documented in the manual" in t
+    assert "Documented in the manual" in t
+
+
+def test_the_table_has_no_article_column(deps):
+    t, _, node, _ = render_one(deps, "control_answers")
+    headers = [th.get_text(strip=True) for th in node.find("table").find_all("th")]
+    assert headers[:2] == ["Question", "Answer"] and "Article" not in headers
+    assert "Art. 13(1)" not in t
 
 
 def test_answers_are_escaped(deps):
@@ -127,8 +134,8 @@ def test_a_closed_submission_shows_its_answers_as_they_were_answered(deps, archi
                                   "Are instructions for use written?", "Is the log kept?",
                                   "Was a question removed since?")]
     assert order == sorted(order)
-    assert "Is the system documented?" not in t and "Art. 13(1) as it was" in t
-    assert "Kept after removal" in t and "Art. 99" in t and "LOSTMARK" not in t
+    assert "Is the system documented?" not in t and "Art. 13(1) as it was" not in t      # no article column
+    assert "Kept after removal" in t and "Art. 99" not in t and "LOSTMARK" not in t
     assert "answered 2 of 5" in t and "3.5" in t
     assert "Answered under template revision 7" in t
 

@@ -1,7 +1,8 @@
 """The Summary and coverage block.
 
 Its own `links` win when non-empty (older layouts keep their links there); otherwise it reads the
-layout's coverage map. It can be limited to requirement groups; the counts cover the shown objectives.
+layout's coverage map. It can be limited to requirement groups. The table shows each objective's label and
+description; the coverage decides only what "only objectives without evidence" keeps.
 """
 from __future__ import annotations
 
@@ -9,7 +10,7 @@ import copy
 
 from aisc_report_plugin_interface import BaseBlockRenderer, BlockResult
 
-from ..coverage import STATUSES, coverage_for
+from ..coverage import coverage_for
 from ..objective_filters import REQUIREMENTS_PROPERTY, Filters, requirement_groups
 from ._common import empty_result
 
@@ -18,7 +19,7 @@ class SummaryCoverageBlock(BaseBlockRenderer):
     type_id = "summary_coverage"
     title = "Summary and coverage"
     contract_version = 2
-    description = "One table of the objectives and the tests and checklists that cover them."
+    description = "One table of the objectives, each with its label and its description."
     options_schema = {
         "type": "object",
         "additionalProperties": False,
@@ -65,20 +66,18 @@ class SummaryCoverageBlock(BaseBlockRenderer):
         filters = Filters.from_options({"requirements": options.get("requirements", "all")})
         labels = ctx.data.objectives
         coverage = data["coverage"]
-        counts = {st: 0 for st in STATUSES}
         rows = []
         for oid in data["ids"]:
             if not filters.objective_shown(oid, labels.get(oid, {}), ()):
                 continue
             cov = coverage[oid]
-            counts[cov.status] += 1
             if options["show_uncovered_only"] and cov.status not in ("not covered", "no evidence"):
                 continue
+            # tests and checklists are not yet linked to objectives in practice: the objective is described,
+            # its coverage only decides what "only objectives without evidence" keeps
             rows.append({"id": oid, "label": labels.get(oid, {}).get("label", ""),
-                         "tests": [x[0] for x in cov.tests],
-                         "checklists": [f"{c[1]} ({c[0]})" for c in cov.checklists], "status": cov.status})
-        html = self.render_package_template("templates/summary_coverage.html.j2", rows=rows,
-                                            counts=[(st, counts[st]) for st in STATUSES], t=t)
+                         "description": labels.get(oid, {}).get("objective", "")})
+        html = self.render_package_template("templates/summary_coverage.html.j2", rows=rows, t=t)
         notices = [filters.notice(t)] if filters.active else []
         return BlockResult(html=html, status="ok", notices=notices)
 

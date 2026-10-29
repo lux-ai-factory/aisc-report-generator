@@ -1,7 +1,9 @@
 """The Control objectives block.
 
 It can be limited to requirement groups, objectives and a minimum risk impact (by default it shows
-everything). The coverage status reads the layout's coverage map (ctx.report.coverage_links).
+everything). The coverage status reads the layout's coverage map (ctx.report.coverage_links). The
+priority objectives step 2 stores are marked with their priority score: the sum of the ratings of the
+rated risks linked to them, as step 2 computes it.
 """
 from __future__ import annotations
 
@@ -12,6 +14,15 @@ from aisc_report_plugin_interface import BaseBlockRenderer
 from ..coverage import coverage_for
 from ..objective_filters import REQUIREMENTS_PROPERTY, Filters, requirement_groups
 from ._common import empty_result, finish
+
+
+def _priority_scores(rows, priority_ids) -> dict[str, int]:
+    """{priority objective: the sum of the ratings of the rated risks linked to it}."""
+    scores = {}
+    for oid in priority_ids:
+        ratings = {r["risk_id"]: r["rating"] for r in rows if r["objective_id"] == oid}
+        scores[oid] = sum(v for v in ratings.values() if v is not None)
+    return scores
 
 
 class ControlObjectivesBlock(BaseBlockRenderer):
@@ -62,7 +73,8 @@ class ControlObjectivesBlock(BaseBlockRenderer):
         ids = co.objective_ids()
         coverage = coverage_for(ctx, ids, ctx.report.coverage_links) if options["show_status"] else {}
         return {"assessment": assessment, "rows": rows, "ids": ids, "run": co.mapping_run(),
-                "coverage": coverage, "newest_newer": co.newest_newer_assessment()}
+                "coverage": coverage, "newest_newer": co.newest_newer_assessment(),
+                "priority": _priority_scores(rows, co.priority_ids())}
 
     def render(self, data, options, ctx):
         t = ctx.t
@@ -71,6 +83,7 @@ class ControlObjectivesBlock(BaseBlockRenderer):
         filters = Filters.from_options(options)
         labels = ctx.data.objectives
         rows = data["rows"]
+        priority = {oid: t("Priority objective, score {score}", score=score) for oid, score in data["priority"].items()}
         objectives = []
         shown_ids = set()
         for oid in data["ids"]:
@@ -82,7 +95,7 @@ class ControlObjectivesBlock(BaseBlockRenderer):
             risks = [dict(r, rating_text=self._rating(t, r)) for r in risks]
             cov = data["coverage"].get(oid)
             objectives.append({"id": oid, "info": info, "risks": risks,
-                               "status": cov.status if cov else None})
+                               "status": cov.status if cov else None, "priority": priority.get(oid)})
         risks = []
         for r in rows:
             if not risks or risks[-1]["risk_id"] != r["risk_id"]:
@@ -93,7 +106,8 @@ class ControlObjectivesBlock(BaseBlockRenderer):
                 risks[-1]["mapped"] = True
                 if r["objective_id"] in shown_ids:
                     risks[-1]["objectives"].append({"id": r["objective_id"],
-                                                    "label": labels.get(r["objective_id"], {}).get("label", "")})
+                                                    "label": labels.get(r["objective_id"], {}).get("label", ""),
+                                                    "priority": priority.get(r["objective_id"])})
         if filters.active:
             kept = []
             for r in risks:

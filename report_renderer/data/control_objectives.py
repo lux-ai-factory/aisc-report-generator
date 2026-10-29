@@ -74,6 +74,19 @@ def objective_ids(project_id, system_id, *, sources) -> list[str]:
     return sorted((r["objective_id"] for r in rows), key=objective_order)
 
 
+def priority_ids(project_id, system_id, *, sources) -> list[str]:
+    """The version's priority objectives as step 2 stores them on its selection (its default rule with the
+    assessor's choices over it). [] when there is no selection, or a database without the column."""
+    try:
+        row = db.project_one(sources, check_uuid(project_id), "control_objectives",
+                             "SELECT sel.priority_ids FROM control_objectives.objective_selection sel"
+                             " JOIN control_objectives.project a ON a.id = sel.project_id"
+                             f" WHERE {_SCOPE}", _params(project_id, system_id))
+    except psycopg.errors.UndefinedColumn:
+        return []
+    return sorted((row or {}).get("priority_ids") or [], key=objective_order)
+
+
 def own_objectives(project_id, system_id, *, sources) -> list[dict]:
     """The project's own objectives the version's assessment works with: those of the profile version it
     pins, worded as in the set version that profile took. [] for an assessment on the built-in profile,

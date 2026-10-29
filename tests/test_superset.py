@@ -45,8 +45,9 @@ def test_no_image_provider_gives_no_image():
 class FakeSuperset:
     """A mocked Superset 4.1 API: login, cache_screenshot, then the image after `ready_after` polls."""
 
-    def __init__(self, ready_after=2, image_status=200):
+    def __init__(self, ready_after=2, image_status=200, dataset_columns=("question", "score")):
         self.ready_after, self.image_status = ready_after, image_status
+        self.dataset_columns = dataset_columns
         self.requests = []
         self.polls = 0
 
@@ -58,6 +59,8 @@ class FakeSuperset:
             assert body["provider"] == "db" and body["username"] == "aisc-report"
             return httpx.Response(200, json={"access_token": "tok"})
         assert request.headers.get("authorization") == "Bearer tok"
+        if path.rstrip("/") in ("/api/v1/chart/33", "/api/v1/dataset/7"):
+            return superset_reads(path, None, self.dataset_columns)
         if path.startswith("/api/v1/chart/33/cache_screenshot"):
             return httpx.Response(202, json={"image_url": "http://sup/api/v1/chart/33/screenshot/abc/", "cache_key": "abc"})
         if path == "/api/v1/chart/33/screenshot/abc/":
@@ -124,21 +127,105 @@ def test_the_fake_chart_data_returns_its_columns_and_rows():
     assert data.data(33) == {"columns": ["system_version", "bias_rate"], "rows": [[1, 0.25], [2, 0.125]]}
 
 
-# the chart data table from Superset's chart-data API
-def test_chart_data_from_the_api():
-    def fake(request: httpx.Request) -> httpx.Response:
-        if request.url.path == "/api/v1/security/login":
+# the chart data table from Superset's chart-data API: the chart's saved query, asked again
+
+QUERY_CONTEXT = {"datasource": {"id": 7, "type": "table"},
+                 "queries": [{"columns": ["system_version"], "metrics": ["bias_rate"], "filters": []}]}
+RUN_COLUMNS = ("system_version", "bias_rate", "target_status")
+
+
+def superset_reads(path, query_context=QUERY_CONTEXT, dataset_columns=RUN_COLUMNS):
+    """Superset's answer to reading chart 33 (its saved query) or dataset 7 (its columns)."""
+    if path.rstrip("/") == "/api/v1/chart/33":
+        result = {"id": 33, "params": json.dumps({"datasource": "7__table"}),
+                  "query_context": None if query_context is None else json.dumps(query_context)}
+        return httpx.Response(200, json={"result": result})
+    if path.rstrip("/") == "/api/v1/dataset/7":
+        return httpx.Response(200, json={"result": {"columns": [{"column_name": c} for c in dataset_columns]}})
+    return None
+
+
+class ChartDataSuperset:
+    """Superset answering the chart's saved query; `rows` is what the posted query returns."""
+
+    def __init__(self, rows, colnames=("system_version", "bias_rate"), query_context=QUERY_CONTEXT,
+                 dataset_columns=RUN_COLUMNS):
+        self.rows, self.colnames = rows, list(colnames)
+        self.query_context, self.dataset_columns = query_context, dataset_columns
+        self.posted = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path == "/api/v1/security/login":
             return httpx.Response(200, json={"access_token": "tok"})
         assert request.headers.get("authorization") == "Bearer tok"
-        if request.url.path == "/api/v1/chart/33/data/":
-            return httpx.Response(200, json={"result": [{"colnames": ["system_version", "bias_rate"],
-                                                         "data": [{"system_version": 1, "bias_rate": 0.25}]}]})
+        read = superset_reads(path, self.query_context, self.dataset_columns)
+        if read is not None:
+            return read
+        if request.method == "POST" and path.rstrip("/") == "/api/v1/chart/data":
+            self.posted.append(json.loads(request.content))
+            return httpx.Response(200, json={"result": [{"colnames": self.colnames, "data": self.rows}]})
         return httpx.Response(404)
 
+
+def chart_data(fake):
     cls = need(S, "SupersetChartData")
-    client = httpx.Client(transport=httpx.MockTransport(fake), base_url="http://sup")
-    data = cls(base_url="http://sup", username="aisc-report", password="pw", http=client)
-    assert data.data(33) == {"columns": ["system_version", "bias_rate"], "rows": [[1, 0.25]]}
+    return cls(base_url="http://sup", username="aisc-report", password="pw",
+               http=httpx.Client(transport=httpx.MockTransport(fake), base_url="http://sup"))
+
+
+LOCAL_FILTER = {"col": "target_status", "op": "NOT IN", "val": ["local"]}
+
+
+def test_chart_data_from_the_api():
+    fake = ChartDataSuperset([{"system_version": 1, "bias_rate": 0.25}])
+    assert chart_data(fake).data(33) == {"columns": ["system_version", "bias_rate"], "rows": [[1, 0.25]]}
+    (posted,) = fake.posted
+    assert posted["datasource"] == QUERY_CONTEXT["datasource"] and posted["result_format"] == "json"
+
+
+def test_chart_data_leaves_out_runs_on_a_local_model_file():
+    """The chart's query is asked again with a filter on its dataset's target_status: a run on a local
+    model file never reaches a report, whatever the chart aggregates."""
+    fake = ChartDataSuperset([{"system_version": 1, "bias_rate": 0.25}])
+    chart_data(fake).data(33)
+    (posted,) = fake.posted
+    assert all(LOCAL_FILTER in q["filters"] for q in posted["queries"])
+
+
+def test_chart_data_drops_a_local_row_the_query_still_returns():
+    fake = ChartDataSuperset([{"system_version": 1, "target_status": "current"},
+                              {"system_version": 1, "target_status": "local"}],
+                             colnames=("system_version", "target_status"))
+    assert chart_data(fake).data(33)["rows"] == [[1, "current"]]
+
+
+def test_chart_data_of_a_dataset_without_runs_is_not_filtered():
+    fake = ChartDataSuperset([{"question": "q1", "score": 4}], colnames=("question", "score"),
+                             dataset_columns=("question", "score"))
+    assert chart_data(fake).data(33)["rows"] == [["q1", 4]]
+    assert all(LOCAL_FILTER not in q["filters"] for q in fake.posted[0]["queries"])
+
+
+def test_a_chart_without_a_saved_query_has_no_data_table():
+    fake = ChartDataSuperset([{"system_version": 1, "bias_rate": 0.25}], query_context=None)
+    with pytest.raises(need(S, "ChartDataUnavailable")):
+        chart_data(fake).data(33)
+    assert fake.posted == []
+
+
+# a screenshot cannot leave rows out: none of a chart on run data
+def test_no_screenshot_of_a_chart_whose_dataset_holds_runs():
+    fake = FakeSuperset(ready_after=1, dataset_columns=RUN_COLUMNS)
+    p, _ = provider(fake)
+    with pytest.raises(need(S, "ImageWouldShowLocalRuns")):
+        p.image(33, 1200, 700)
+    assert not [r for r in fake.requests if "cache_screenshot" in r.url.path]
+
+
+def test_a_screenshot_would_show_local_runs_is_unavailable_not_disabled():
+    error = need(S, "ImageWouldShowLocalRuns")
+    assert issubclass(error, need(S, "ImagesUnavailable")) and not issubclass(error, need(S, "ImagesDisabled"))
 
 
 def test_chart_data_off_without_a_login():
@@ -161,7 +248,10 @@ class ExpiringSuperset:
         self.used[token] = self.used.get(token, 0) + 1
         if token == "tok1" and self.used[token] > 1:
             return httpx.Response(401, json={"msg": "Token has expired"})
-        if path.startswith("/api/v1/chart/33/data"):
+        read = superset_reads(path, QUERY_CONTEXT, ("a",))
+        if read is not None:
+            return read
+        if path.rstrip("/") == "/api/v1/chart/data":
             return httpx.Response(200, json={"result": [{"colnames": ["a"], "data": [{"a": 1}]}]})
         if path.startswith("/api/v1/chart/33/cache_screenshot"):
             return httpx.Response(202, json={"image_url": "http://sup/api/v1/chart/33/screenshot/abc/"})

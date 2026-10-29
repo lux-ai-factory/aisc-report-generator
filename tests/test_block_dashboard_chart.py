@@ -102,6 +102,17 @@ def test_superset_failing_keeps_the_comments(make_deps):
     assert "First look" in t and s["status"] == "error"
 
 
+def test_a_chart_on_run_data_shows_its_table_without_local_runs_instead_of_a_screenshot(make_deps):
+    """A screenshot cannot leave out runs on a local model file; the chart data can, so the block shows it."""
+    WouldShow = need("report_renderer.superset", "ImageWouldShowLocalRuns")
+    data = need("report_renderer.superset", "FakeChartData")(columns=["system_version", "bias_rate"], rows=[[2, 0.125]])
+    deps = make_deps(images=RecordingImages(fail=WouldShow("the chart holds runs")), chart_data=data)
+    t, s, node, _ = render_one(deps, "dashboard_chart", chart_id=CHART)
+    assert node.find("table", class_="chart-data") is not None and "0.125" in t
+    assert node.find("img") is None and "unavailable" not in t and "not enabled" not in t
+    assert s["status"] == "ok"
+
+
 def test_at_most_three_chart_images_at_a_time(make_deps):
     images = RecordingImages(delay=0.3)
     deps = make_deps(images=images)

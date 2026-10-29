@@ -3,9 +3,14 @@
 The stack's Superset cannot render screenshots, so the default image provider is
 NoImageProvider; SupersetScreenshotProvider is used only when REPORT_CHART_IMAGES=superset.
 No message ever carries the password or the access token.
+
+A run on a local model file never reaches a report. The results dataset marks its rows with
+target_status 'local'; the chart data asks the chart's saved query again with those rows left out, and a
+chart on such a dataset gets no screenshot, since a screenshot cannot leave rows out.
 """
 from __future__ import annotations
 
+import json
 import threading
 import time
 
@@ -18,6 +23,43 @@ class ImagesUnavailable(Exception):
 
 class ImagesDisabled(ImagesUnavailable):
     """Chart images are switched off on this platform (not a failure)."""
+
+
+class ImageWouldShowLocalRuns(ImagesUnavailable):
+    """The chart reads run rows, which a screenshot cannot filter: its data is shown instead (not a failure)."""
+
+
+#: The rows of runs on a local model file, left out of every query the report asks
+LOCAL_FILTER = {"col": "target_status", "op": "NOT IN", "val": ["local"]}
+
+
+class _NoChartQuery(Exception):
+    """Superset did not give the chart's query or its dataset's columns."""
+
+
+def _chart_query(send, base_url, chart_id) -> tuple[dict | None, bool]:
+    """(the chart's saved query context or None, whether its dataset holds run rows: a target_status column).
+    `send(method, url, **kw)` is an authenticated request."""
+    r = send("GET", f"{base_url}/api/v1/chart/{int(chart_id)}")
+    if r.status_code != 200:
+        raise _NoChartQuery(f"Superset answered {r.status_code} for the chart")
+    try:
+        chart = r.json()["result"]
+        query = json.loads(chart["query_context"]) if chart.get("query_context") else None
+        if query is not None:
+            dataset_id = int(query["datasource"]["id"])
+        else:
+            dataset_id = int(str(json.loads(chart.get("params") or "{}")["datasource"]).split("__")[0])
+    except (ValueError, KeyError, TypeError):
+        raise _NoChartQuery("Superset gave no query for the chart") from None
+    r = send("GET", f"{base_url}/api/v1/dataset/{dataset_id}")
+    if r.status_code != 200:
+        raise _NoChartQuery(f"Superset answered {r.status_code} for the chart's dataset")
+    try:
+        columns = {c["column_name"] for c in r.json()["result"]["columns"]}
+    except (ValueError, KeyError, TypeError):
+        raise _NoChartQuery("Superset gave no columns for the chart's dataset") from None
+    return query, "target_status" in columns
 
 
 class NoImageProvider:
@@ -69,17 +111,28 @@ class SupersetScreenshotProvider:
                     raise ImagesUnavailable(f"Superset login failed ({type(exc).__name__})") from None
             return {"Authorization": f"Bearer {self._token}"}
 
-    def _get(self, url, **kwargs):
-        """A GET with the token; a 401 (the token expired) logs in again and asks once more."""
-        r = self._http.get(url, headers=self._auth(), **kwargs)
+    def _send(self, method, url, **kwargs):
+        """A request with the token; a 401 (the token expired) logs in again and asks once more."""
+        r = self._http.request(method, url, headers=self._auth(), **kwargs)
         if r.status_code == 401:
             with self._lock:
                 self._token = None
-            r = self._http.get(url, headers=self._auth(), **kwargs)
+            r = self._http.request(method, url, headers=self._auth(), **kwargs)
         return r
+
+    def _get(self, url, **kwargs):
+        return self._send("GET", url, **kwargs)
 
     def image(self, chart_id, width, height) -> bytes:
         start = self._monotonic()
+        try:
+            _, holds_runs = _chart_query(self._send, self.base_url, chart_id)
+        except httpx.HTTPError as exc:
+            raise ImagesUnavailable(f"Superset did not answer ({type(exc).__name__})") from None
+        except _NoChartQuery as exc:
+            raise ImagesUnavailable(str(exc)) from None
+        if holds_runs:
+            raise ImageWouldShowLocalRuns("a screenshot cannot leave out runs on a local model file")
         q = f"(window_size:!({int(width)},{int(height)}),thumb_size:!({int(width)},{int(height)}))"
         try:
             r = self._get(f"{self.base_url}/api/v1/chart/{int(chart_id)}/cache_screenshot/", params={"q": q})
@@ -148,24 +201,40 @@ class SupersetChartData:
     def __repr__(self):
         return f"SupersetChartData({self.base_url!r})"
 
+    def _send(self, method, url, **kwargs):
+        """A request with the token; a 401 (the token expired) logs in again and asks once more."""
+        for _ in range(2):
+            if self._token is None:
+                self._token = _login(self._http, self.base_url, self._username, self._password)
+            r = self._http.request(method, url, headers={"Authorization": f"Bearer {self._token}"}, **kwargs)
+            if r.status_code != 401:
+                break
+            self._token = None
+        return r
+
     def data(self, chart_id) -> dict:
+        """The chart's saved query asked again, without the rows of runs on a local model file."""
         try:
-            url = f"{self.base_url}/api/v1/chart/{int(chart_id)}/data/"
-            for _ in range(2):                                        # a 401: the token expired, log in again
-                if self._token is None:
-                    self._token = _login(self._http, self.base_url, self._username, self._password)
-                r = self._http.get(url, params={"format": "json"}, headers={"Authorization": f"Bearer {self._token}"})
-                if r.status_code != 401:
-                    break
-                self._token = None
+            query, holds_runs = _chart_query(self._send, self.base_url, chart_id)
+            if query is None:
+                raise ChartDataUnavailable("the chart has no saved query")
+            if holds_runs:
+                for q in query.get("queries") or []:
+                    q["filters"] = [*(q.get("filters") or []), dict(LOCAL_FILTER)]
+            query.update(result_format="json", result_type="full")
+            r = self._send("POST", f"{self.base_url}/api/v1/chart/data", json=query)
             if r.status_code != 200:
                 raise ChartDataUnavailable(f"Superset answered {r.status_code} for the chart data")
             result = r.json()["result"][0]
             columns = list(result["colnames"])
+            status = columns.index("target_status") if "target_status" in columns else None
             rows = []
-            for row in result["data"][: self.MAX_ROWS]:
-                rows.append([row.get(c) for c in columns] if isinstance(row, dict) else list(row))
-            return {"columns": columns, "rows": rows}
+            for row in result["data"]:
+                row = [row.get(c) for c in columns] if isinstance(row, dict) else list(row)
+                if status is not None and row[status] == "local":
+                    continue
+                rows.append(row)
+            return {"columns": columns, "rows": rows[: self.MAX_ROWS]}
         except ChartDataUnavailable:
             raise
         except Exception as exc:

@@ -2,7 +2,9 @@
 
 A chart plots every version at once, so its comments are matched to the AI card version that was
 current when each was written, and filtered by the report's selection like runs: the report's version,
-inside its period; with other versions on, all of them, each marked with its version. A reply goes with its comment."""
+inside its period; with other versions on, all of them, each marked with its version. A reply goes with its comment.
+Runs on a local model file are left out: the chart's data leaves out their rows, and a chart on run data is shown
+as its data table, never as a screenshot (report_renderer/superset.py)."""
 from __future__ import annotations
 
 import base64
@@ -13,7 +15,7 @@ from markupsafe import escape
 from aisc_report_plugin_interface import BaseBlockRenderer, BlockResult
 
 from ..errors import new_error_ref
-from ..superset import ImagesDisabled
+from ..superset import ImagesDisabled, ImageWouldShowLocalRuns
 from ..views import selection_of, version_suffix
 
 logger = logging.getLogger("report_renderer.blocks.dashboard_chart")
@@ -111,6 +113,8 @@ class DashboardChartBlock(BaseBlockRenderer):
             data["image"] = ctx.data.images.image(chart_id, options["width"], options["height"])
         except ImagesDisabled:
             data["disabled"] = True
+        except ImageWouldShowLocalRuns:
+            pass                                       # its data table leaves them out; it is shown instead
         except Exception:
             ref = new_error_ref()
             logger.error("chart image %s failed, ref %s", chart_id, ref, exc_info=True)

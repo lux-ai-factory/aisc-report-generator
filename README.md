@@ -161,7 +161,7 @@ folders up; elsewhere, set `AISC_INSTALL_DIR` to an aisc checkout. Docker must b
 
 The tests need the report plugin interface from `shared/report-plugin-interface` and the test beds of the
 aisc repository, both only in a full aisc checkout. So the CI (`.github/workflows/ci.yml`) checks out aisc's
-`feat/unified-modules` around this commit and runs the command above, with `--locked`, in it; locally, run it in a full aisc
+`pilot` around this commit and runs the command above, with `--locked`, in it; locally, run it in a full aisc
 checkout.
 
 **Never point the tests at the live database** (port 5432 of the running stack). The bed refuses to
@@ -188,7 +188,7 @@ tests.
 
 ## Contributing
 
-- `feat/unified-modules` is the only branch to work on; the aisc repository pins this submodule on it.
+- `pilot` is the only branch to work on; the aisc repository pins this submodule on it.
 - The renderer reads the other modules' tables; it has no migrations of its own. When a module's
   schema changes, update the queries in `report_renderer/data/` and the report bed in aisc's
   `scripts/lib/`.

@@ -6,7 +6,7 @@ name: ci
 
 on:
   push:
-    branches: [feat/unified-modules, main, master]
+    branches: [pilot, main, master]
   pull_request:
   workflow_dispatch:
 
@@ -16,7 +16,7 @@ permissions:
 env:
   UV_PYTHON: "3.12"
   # the AISC branch around this commit; a repository variable can move it
-  AISC_REF: ${{ vars.AISC_REF || 'feat/unified-modules' }}
+  AISC_REF: ${{ vars.AISC_REF || 'pilot' }}
   GIT_LFS_SKIP_SMUDGE: "1"
 
 jobs:

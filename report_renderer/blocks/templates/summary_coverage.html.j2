@@ -1,7 +1,7 @@
 <table class="coverage">
-  <thead><tr><th>{{ t("Objective") }}</th><th>{{ t("Label") }}</th><th>{{ t("Description") }}</th></tr></thead>
+  <thead><tr><th>{{ t("Objective") }}</th><th>{{ t("Label") }}</th><th>{{ t("Description") }}</th><th>{{ t("Tests") }}</th><th>{{ t("Checklists") }}</th><th>{{ t("Coverage") }}</th></tr></thead>
   <tbody>
-  {% for r in rows %}<tr data-objective="{{ r.id }}"><td>{{ r.id }}</td><td>{{ r.label }}</td><td>{{ r.description }}</td></tr>
+  {% for r in rows %}<tr data-objective="{{ r.id }}"><td>{{ r.id }}</td><td>{{ r.label }}</td><td>{{ r.description }}</td><td>{{ r.tests | join(", ") }}</td><td>{{ r.checklists | join(", ") }}</td><td data-coverage="{{ r.status }}">{{ t(r.status) }}</td></tr>
   {% endfor %}
   </tbody>
 </table>

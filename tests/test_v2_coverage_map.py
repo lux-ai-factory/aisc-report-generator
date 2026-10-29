@@ -21,7 +21,7 @@ def statuses(node):
     return {el["data-objective"]: status_word(text(el)) for el in node.find_all(attrs={"data-objective": True})}
 
 
-# The summary shows no coverage any more; which map it reads shows in what "only objectives without evidence" keeps.
+# Which map the summary reads shows in what "only objectives without evidence" keeps.
 WITHOUT_EVIDENCE = sorted(o for o, st in MIKE_V2_STATUSES.items() if st in ("not covered", "no evidence"))
 
 

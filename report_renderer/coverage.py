@@ -44,6 +44,20 @@ def _merged(objective_ids, links) -> dict[str, dict]:
     return merged
 
 
+def _link_keys(name) -> set:
+    """A link names a plugin by its display name (older maps) or its package (step 4 links)."""
+    return {normalise_tool_name(name)} | tool_keys(package_name=name)
+
+
+def tool_label(name, plugins) -> str:
+    """The label of a linked test: the display name of the plugin it names, or the name itself."""
+    keys = _link_keys(name)
+    for p in plugins:
+        if p.get("display_name") and keys & tool_keys(p["display_name"], p.get("name"), p.get("package_name")):
+            return p["display_name"]
+    return name
+
+
 def coverage_for(ctx, objective_ids, links) -> dict[str, Coverage]:
     merged = _merged(objective_ids, links)
     any_test = any(m["tests"] for m in merged.values())
@@ -58,8 +72,7 @@ def coverage_for(ctx, objective_ids, links) -> dict[str, Coverage]:
     for oid, m in merged.items():
         tests, lists, attention = [], [], False
         for name in m["tests"]:
-            # a link names a plugin by its display name (older maps) or its package (step 4 links)
-            keys = {normalise_tool_name(name)} | tool_keys(package_name=name)
+            keys = _link_keys(name)
             matching = [rv for rv in runs
                         if keys & tool_keys(rv.tool.get("display_name"), rv.tool.get("name"),
                                             rv.tool.get("package_name"))]

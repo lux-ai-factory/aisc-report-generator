@@ -259,3 +259,10 @@ def tool_choices(project_id, system_id, *, sources) -> list[dict]:
                    f" WHERE {_scope(_EVERY_VERSION)} AND NOT {_local('ep')} AND pl.display_name IS NOT NULL ORDER BY pl.display_name",
                    _params(project_id, system_id))
     return [{"value": r["display_name"], "label": r["display_name"]} for r in rows]
+
+
+def plugins(project_id, system_id, *, sources) -> list[dict]:
+    """The project's installed test plugins (their names only): what a coverage link's test is labelled by."""
+    return db.project_rows(sources, check_uuid(project_id), "engine",
+                           "SELECT pl.display_name, pl.name, pl.package_name FROM engine.aisc_backend_plugin pl"
+                           " ORDER BY pl.id", _params(project_id, system_id))

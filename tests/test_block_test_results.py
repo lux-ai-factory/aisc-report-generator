@@ -4,7 +4,6 @@ Alpha v2 has two Done evaluations (on the 9th of September without plugin config
 LangBiTe and Mystery Tool) and one Failed (on the 11th); v1, v3, unversioned and Beta evaluations carry markers.
 """
 import re
-import textwrap
 from importlib.metadata import EntryPoint
 
 import pytest
@@ -109,9 +108,9 @@ def test_the_mla_reject_section_comes_from_its_tool_renderer(deps):
     assert "No dedicated renderer for MLA-Reject" not in t
 
 
-def _registry(entry_points=(), plugin_dirs=()):
+def _registry(entry_points=()):
     build = need("report_renderer.registry", "build_registry")
-    return build(entry_points=list(entry_points), plugin_dirs=list(plugin_dirs))
+    return build(entry_points=list(entry_points))
 
 
 def _tool_ep(value, name):
@@ -134,39 +133,6 @@ def test_a_failing_tool_renderer_falls_back_to_the_generic_table(make_deps):
     assert "mystery_metric" in t                       # other tools unaffected
     assert "LANGBITE-RENDERER-BOOM" not in result["html"]
     assert s["status"] != "error"
-
-
-LEGACY = '''
-from aisc_report_plugin_interface import BaseReporterPlugin
-class LANGBITEReportPlugin(BaseReporterPlugin):
-    def get_template_relative_path(self): return "x.html.j2"
-    def build_template_context(self, **kw): return {}
-    def generate_content(self, **kw):
-        run = kw.get("run")
-        return "<p>LEGACY-LANGBITE-OUTPUT %d</p>" % len(run.measurements)
-'''
-
-
-def test_a_legacy_plugin_is_called_through_the_adapter(make_deps, tmp_path):
-    (tmp_path / "legacy_langbite.py").write_text(LEGACY)
-    deps = make_deps(registry=_registry(plugin_dirs=[tmp_path]))
-    t, *_ = render_one(deps, "test_results", selection=window("2026-09-10T09:00", "2026-09-10T09:01"))
-    assert "LEGACY-LANGBITE-OUTPUT 1" in t
-
-
-# the legacy MLA-Reject plugin raises without a session; the adapter falls back to the generic table
-def test_a_legacy_plugin_that_raises_falls_back(make_deps, tmp_path):
-    (tmp_path / "legacy_raise.py").write_text(textwrap.dedent('''
-        from aisc_report_plugin_interface import BaseReporterPlugin
-        class LANGBITEReportPlugin(BaseReporterPlugin):
-            def get_template_relative_path(self): return "x.html.j2"
-            def build_template_context(self, **kw): raise RuntimeError("No database session available")
-            def generate_content(self, **kw): return self.build_template_context(**kw)
-    '''))
-    deps = make_deps(registry=_registry(plugin_dirs=[tmp_path]))
-    t, s, *_ = render_one(deps, "test_results", selection=window("2026-09-10T09:00", "2026-09-10T09:01"))
-    assert re.search(r"The LangBiTe renderer failed \(ref [0-9a-f]{8}\)\.", t + " ".join(s["notices"]))
-    assert "0.125" in t
 
 
 # the choices offered for this block

@@ -5,7 +5,6 @@ description = "MLAReject report plugin for the AISC report generator"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "sqlalchemy>=2.0.48",
     "aisc-report-plugin-interface",
 ]
 

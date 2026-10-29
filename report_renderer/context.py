@@ -37,13 +37,12 @@ class Deps:
 
     @classmethod
     def from_env(cls, env) -> "Deps":
-        plugin_dirs = [p for p in env.get("REPORT_PLUGIN_PATH", "").split(":") if p]
         logo = None
         logo_path = env.get("REPORT_LOGO_PATH")
         if logo_path and Path(logo_path).is_file():
             mime = "image/svg+xml" if logo_path.lower().endswith(".svg") else "image/png"
             logo = (mime, Path(logo_path).read_bytes())
-        return cls(registry=build_registry(plugin_dirs=plugin_dirs), sources=Sources.from_env(env),
+        return cls(registry=build_registry(), sources=Sources.from_env(env),
                    images=image_provider_from_env(env), chart_data=chart_data_from_env(env),
                    clock=lambda: datetime.now(timezone.utc), logo=logo)
 

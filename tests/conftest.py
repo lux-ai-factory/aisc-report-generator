@@ -16,7 +16,7 @@ The API the tests use of `report_renderer`:
     report_renderer.data.Sources(platform_dsn, superset_dsn, project_db_template,
                                  airo_vocab_path, objectives_csv_path, superset_url=None)
     report_renderer.data.Sources.from_env(env)
-    report_renderer.registry.build_registry(builtins=True, entry_points=None, plugin_dirs=())
+    report_renderer.registry.build_registry(builtins=True, entry_points=None)
         -> Registry(.block(type_id), .block_types(), .tool_for(plugin_row), .register_block(cls, origin),
                     .register_tool(cls, origin))
     report_renderer.superset.NoImageProvider(), FakeImageProvider(png), SupersetScreenshotProvider(...),

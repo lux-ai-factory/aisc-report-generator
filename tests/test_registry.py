@@ -1,6 +1,5 @@
 """Block types and tool renderers the renderer knows, and the options each block type declares."""
 import logging
-import textwrap
 from importlib.metadata import EntryPoint
 
 import pytest
@@ -132,20 +131,6 @@ def test_a_package_that_fails_to_import_is_skipped(caplog):
     assert "no_such_package" in caplog.text
 
 
-def test_blocks_from_the_plugin_directory(tmp_path):
-    (tmp_path / "dir_block.py").write_text(textwrap.dedent('''
-        from aisc_report_plugin_interface import BaseBlockRenderer, BlockResult
-        class DirBlock(BaseBlockRenderer):
-            type_id = "dir_block"; title = "Dir"; contract_version = 1
-            options_schema = {"type": "object"}; default_options = {}; reads = ()
-            def load(self, ctx, options): return None
-            def render(self, data, options, ctx): return BlockResult(html="<p>d</p>", status="ok")
-    '''))
-    (tmp_path / "broken.py").write_text("raise ImportError('broken plugin')\n")
-    reg = build(entry_points=[], plugin_dirs=[tmp_path])
-    assert reg.block("dir_block").__name__ == "DirBlock"
-
-
 def test_a_duplicate_type_id_refuses_to_start(caplog):
     Duplicate = need(REG, "DuplicateBlockType")
     caplog.set_level(logging.ERROR)
@@ -172,43 +157,8 @@ def test_an_unknown_tool_has_no_renderer():
     assert reg.tool_for({"display_name": "Nobody", "name": "NobodyPlugin", "package_name": "aisc-plugin-nobody"}) is None
 
 
-LEGACY = '''
-from aisc_report_plugin_interface import BaseReporterPlugin
-class LANGBITEReportPlugin(BaseReporterPlugin):
-    def get_template_relative_path(self): return "x.html.j2"
-    def build_template_context(self, **kw): return {}
-    def generate_content(self, **kw): return "<p>LEGACY-LANGBITE-OUTPUT</p>"
-'''
-
-
-# a legacy {KEY}ReportPlugin in the plugin directory is found by the same keys
-def test_legacy_plugins_are_found_by_the_tool_keys(tmp_path):
-    (tmp_path / "legacy_langbite.py").write_text(LEGACY)
-    reg = build(entry_points=[], plugin_dirs=[tmp_path])
-    assert reg.tool_for(LANGBITE) is not None
-
-
-def test_a_tool_renderer_wins_over_a_legacy_plugin(tmp_path):
-    (tmp_path / "legacy_langbite.py").write_text(LEGACY)
-    reg = build(entry_points=[ep("plugins_fixture.tools:LangBiTeTool", group="aisc_report.tools")],
-                plugin_dirs=[tmp_path])
-    chosen = reg.tool_for(LANGBITE)
-    Base = need("aisc_report_plugin_interface", "BaseToolRenderer")
-    assert isinstance(chosen, Base) or (isinstance(chosen, type) and issubclass(chosen, Base))
-
-
 def test_two_tool_renderers_for_one_tool_refuse_to_start():
     Duplicate = need(REG, "DuplicateToolRenderer")
     with pytest.raises(Duplicate):
         build(entry_points=[ep("plugins_fixture.tools:LangBiTeTool", group="aisc_report.tools", name="a"),
                             ep("plugins_fixture.tools:BrokenLangBiTeTool", group="aisc_report.tools", name="b")])
-
-
-def test_two_legacy_plugins_for_one_tool_refuse_to_start(tmp_path):
-    Duplicate = need(REG, "DuplicateToolRenderer")
-    a, b = tmp_path / "a", tmp_path / "b"
-    a.mkdir(), b.mkdir()
-    (a / "legacy_one.py").write_text(LEGACY)
-    (b / "legacy_two.py").write_text(LEGACY)
-    with pytest.raises(Duplicate):
-        build(entry_points=[], plugin_dirs=[a, b])

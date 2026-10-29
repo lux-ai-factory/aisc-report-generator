@@ -1,24 +1,16 @@
 """The block types and tool renderers the renderer knows.
 
 Built-in blocks first, then installed packages (entry-point groups `aisc_report.blocks` and
-`aisc_report.tools`), then the plugin directories (REPORT_PLUGIN_PATH). A package that fails to
-import is skipped with a warning; two declarations of one block type or two renderers of one
-tool refuse to start.
+`aisc_report.tools`). A package that fails to import is skipped with a warning; two declarations
+of one block type or two renderers of one tool refuse to start.
 """
 from __future__ import annotations
 
 import importlib.metadata
-import importlib.util
-import inspect
 import logging
-import sys
 from collections.abc import Mapping
-from pathlib import Path
 
-from aisc_report_plugin_interface import (BaseBlockRenderer, BaseReporterPlugin, BaseToolRenderer,
-                                          normalise_tool_name, tool_keys)
-
-from .tools.legacy_adapter import LegacyToolAdapter
+from aisc_report_plugin_interface import normalise_tool_name, tool_keys
 
 logger = logging.getLogger("report_renderer.registry")
 
@@ -36,18 +28,10 @@ class DuplicateToolRenderer(RuntimeError):
     """Two renderers claim the same tool."""
 
 
-def _legacy_key(cls) -> str:
-    name = cls.__name__
-    if name.endswith("ReportPlugin"):
-        name = name[: -len("ReportPlugin")]
-    return normalise_tool_name(name)
-
-
 class Registry:
     def __init__(self):
         self._blocks: dict[str, tuple[type, str]] = {}
         self._tools: list[tuple[type, set[str], str]] = []
-        self._legacy: dict[str, tuple[type, str]] = {}
 
     def register_block(self, cls, origin: str) -> None:
         cls.validate_declaration()
@@ -72,14 +56,6 @@ class Registry:
                 raise DuplicateToolRenderer(message)
         self._tools.append((cls, keys, origin))
 
-    def register_legacy(self, cls, origin: str) -> None:
-        key = _legacy_key(cls)
-        if key in self._legacy:
-            message = f"tool {key} has two legacy report plugins: {self._legacy[key][1]} and {origin}"
-            logger.error(message)
-            raise DuplicateToolRenderer(message)
-        self._legacy[key] = (cls, origin)
-
     def block(self, type_id):
         entry = self._blocks.get(type_id)
         return entry[0] if entry else None
@@ -92,9 +68,6 @@ class Registry:
         for cls, cls_keys, _ in self._tools:
             if cls_keys & keys:
                 return cls()
-        for key, (cls, _) in self._legacy.items():
-            if key in keys:
-                return LegacyToolAdapter(cls)
         return None
 
     def tool_renderers(self) -> list[type]:
@@ -102,20 +75,7 @@ class Registry:
         return [cls for cls, _, _ in self._tools]
 
     def tool_names(self) -> list[str]:
-        names = [n for cls, _, _ in self._tools for n in cls.tool_names]
-        return names + [key for key in self._legacy]
-
-
-def _register_class(reg: Registry, obj, origin: str) -> None:
-    if not inspect.isclass(obj):
-        return
-    if issubclass(obj, BaseBlockRenderer) and obj is not BaseBlockRenderer and not inspect.isabstract(obj):
-        reg.register_block(obj, origin)
-    elif issubclass(obj, BaseToolRenderer) and obj is not BaseToolRenderer and not inspect.isabstract(obj):
-        reg.register_tool(obj, origin)
-    elif (issubclass(obj, BaseReporterPlugin) and obj is not BaseReporterPlugin
-          and obj.__name__.endswith("ReportPlugin")):
-        reg.register_legacy(obj, origin)
+        return [n for cls, _, _ in self._tools for n in cls.tool_names]
 
 
 def _load_entry_points(reg: Registry, entry_points) -> None:
@@ -131,47 +91,7 @@ def _load_entry_points(reg: Registry, entry_points) -> None:
             reg.register_tool(obj, ep.value)
 
 
-def _import_path(path: Path, index: int):
-    name = f"report_plugin_{index}_{path.stem}"
-    if path.is_dir():
-        spec = importlib.util.spec_from_file_location(name, path / "__init__.py",
-                                                      submodule_search_locations=[str(path)])
-    else:
-        spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    try:
-        spec.loader.exec_module(module)
-    except BaseException:
-        sys.modules.pop(name, None)
-        raise
-    return module
-
-
-_counter = iter(range(10**9))
-
-
-def _load_plugin_dirs(reg: Registry, plugin_dirs) -> None:
-    for d in plugin_dirs:
-        d = Path(d)
-        if not d.is_dir():
-            logger.warning("skipping report plugin directory %s: not a directory", d)
-            continue
-        candidates = sorted(p for p in d.iterdir()
-                            if (p.is_file() and p.suffix == ".py" and p.name != "__init__.py")
-                            or (p.is_dir() and (p / "__init__.py").is_file()))
-        for path in candidates:
-            try:
-                module = _import_path(path, next(_counter))
-            except Exception as exc:
-                logger.warning("skipping report plugin %s: %s", path, exc)
-                continue
-            for _, obj in inspect.getmembers(module, inspect.isclass):
-                if obj.__module__ == module.__name__:
-                    _register_class(reg, obj, str(path))
-
-
-def build_registry(builtins=True, entry_points=None, plugin_dirs=()) -> Registry:
+def build_registry(builtins=True, entry_points=None) -> Registry:
     reg = Registry()
     if builtins:
         from .blocks import BUILTIN_BLOCKS
@@ -182,5 +102,4 @@ def build_registry(builtins=True, entry_points=None, plugin_dirs=()) -> Registry
         entry_points = list(importlib.metadata.entry_points(group=BLOCKS_GROUP)) + \
             list(importlib.metadata.entry_points(group=TOOLS_GROUP))
     _load_entry_points(reg, entry_points)
-    _load_plugin_dirs(reg, plugin_dirs)
     return reg

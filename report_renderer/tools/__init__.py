@@ -1,1 +1,1 @@
-"""Tool sections inside the Test results block: the generic table and the legacy adapter."""
+"""Tool sections inside the Test results block: the generic table."""

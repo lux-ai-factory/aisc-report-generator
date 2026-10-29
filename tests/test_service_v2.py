@@ -4,6 +4,7 @@ and help texts of block options.
 import logging
 import textwrap
 import tomllib
+from importlib.metadata import EntryPoint
 from pathlib import Path
 
 import pytest
@@ -102,10 +103,17 @@ TOOLS_V = textwrap.dedent('''
 ''')
 
 
-def test_contract_1_and_2_load_a_higher_one_is_skipped(tmp_path, caplog):
-    (tmp_path / "tools_v.py").write_text(TOOLS_V)
+def _tool_entry_points(tmp_path, monkeypatch, module, source, classes):
+    (tmp_path / f"{module}.py").write_text(source)
+    monkeypatch.syspath_prepend(str(tmp_path))
+    return [EntryPoint(name=c, value=f"{module}:{c}", group="aisc_report.tools") for c in classes]
+
+
+def test_contract_1_and_2_load_a_higher_one_is_skipped(tmp_path, monkeypatch, caplog):
+    eps = _tool_entry_points(tmp_path, monkeypatch, "tools_v", TOOLS_V,
+                             ["OldToolRenderer", "NewToolRenderer", "FutureToolRenderer"])
     caplog.set_level(logging.WARNING)
-    reg = need("report_renderer.registry", "build_registry")(entry_points=[], plugin_dirs=[tmp_path])
+    reg = need("report_renderer.registry", "build_registry")(entry_points=eps)
     names = reg.tool_names()
     assert "OldTool" in names and "NewTool" in names
     assert "FutureTool" not in names
@@ -140,12 +148,12 @@ DUP = textwrap.dedent('''
 ''')
 
 
-def test_two_contract_2_renderers_of_one_tool_refuse_to_start(tmp_path):
+def test_two_contract_2_renderers_of_one_tool_refuse_to_start(tmp_path, monkeypatch):
     """Contract 2 renderers are refused like any others when two claim one tool."""
-    (tmp_path / "dup.py").write_text(DUP)
+    eps = _tool_entry_points(tmp_path, monkeypatch, "dup", DUP, ["FirstLangbite", "SecondLangbite"])
     Duplicate = need("report_renderer.registry", "DuplicateToolRenderer")
     with pytest.raises(Duplicate):
-        need("report_renderer.registry", "build_registry")(entry_points=[], plugin_dirs=[tmp_path])
+        need("report_renderer.registry", "build_registry")(entry_points=eps)
 
 
 # Labels, help texts and "More options".

@@ -55,6 +55,11 @@ def test_no_database_dependency():
         assert db not in deps
 
 
+def test_the_lock_file_pins_no_database_library():
+    names = {p["name"] for p in tomllib.loads((ROOT / "uv.lock").read_text())["package"]}
+    assert not names & {"sqlalchemy", "psycopg", "psycopg2"}
+
+
 def test_templates_and_catalogues_ship_with_the_package():
     d = _package_dir()
     assert list((d / "templates").glob("*.j2")), "missing feature: templates/*.j2"

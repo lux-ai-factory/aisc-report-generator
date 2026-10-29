@@ -97,16 +97,22 @@ def lazily(make):
 # The database bed.
 
 
-@pytest.fixture(scope="session")
-def bed():
+def build_bed(label: str = "renderer"):
+    """The throwaway bed the suite renders on (tests/golden/capture.py captures the goldens on it too)."""
     if report_bed_isolated is None:
         pytest.fail(f"AISC_INSTALL_DIR ({AISC_INSTALL}) must point at an install with"
                     " scripts/lib/report_bed_isolated.py (the superproject, ~/aisc-definitive)", pytrace=False)
     report_bed.check_dsn_env()
-    b = report_bed_isolated.build_isolated("renderer", modules=True, no_database=frozenset())
+    b = report_bed_isolated.build_isolated(label, modules=True, no_database=frozenset())
     # the dashboard adds this column when it starts (superset_config.py); the bed's schema dump predates it
     b.psql("superset", "ALTER TABLE aisc_comment ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP")
     controls_keep_closed_answers(b)
+    return b
+
+
+@pytest.fixture(scope="session")
+def bed():
+    b = build_bed()
     yield b
     b.stop()
 
@@ -137,7 +143,12 @@ def controls_keep_closed_answers(b):
 
 @pytest.fixture(scope="session")
 def sources(bed):
-    return lazily(lambda: _sources(bed.env()))
+    return lazily(lambda: bed_sources(bed))
+
+
+def bed_sources(bed):
+    """The renderer's data sources on a bed."""
+    return _sources(bed.env())
 
 
 def _sources(env):

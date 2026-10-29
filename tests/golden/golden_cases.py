@@ -11,15 +11,9 @@ A 7-block layout as the composer stored it, with and without a template's look, 
 from __future__ import annotations
 
 import copy
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "aisc-install/scripts/lib"))
-import report_bed  # noqa: E402
+from conftest import FIXED_NOW, IDS  # noqa: F401  (FIXED_NOW: the time the goldens are rendered at)
 
-IDS = report_bed.IDS
-FIXED_NOW = datetime(2026, 9, 20, 10, 30, tzinfo=timezone.utc)
 LAYOUT_ID = "11111111-1111-4111-8111-111111111111"
 
 LIVE_LAYOUT = [

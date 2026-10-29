@@ -94,13 +94,12 @@ def test_severity_out_of_range_is_invalid(deps):
 # Severity shown.
 
 def test_show_severity(deps):
-    """show_severity shows the rating (impact x likelihood, an unrated part counting 3)."""
+    """show_severity shows the rating (impact x likelihood); a risk with a part unset is "Not rated", as in step 2."""
     t, *_ = one(deps, "control_objectives", group_by="risk", show_severity=True)
     assert "Impact 5, likelihood 4: rating 20 (Critical)" in t
-    assert "Impact 3, likelihood not rated: rating 9 (Medium)" in t
     assert "Impact 1, likelihood 2: rating 2 (Low)" in t
-    assert "Impact 4, likelihood not rated: rating 12 (High)" in t
-    assert "Not rated" in t
+    assert t.count("Not rated") == 3                     # R-2 and R-5 (impact only) and R-4
+    assert "rating 9" not in t and "rating 12" not in t and "likelihood not rated" not in t
     assert "Severity" not in t
     t, *_ = one(deps, "control_objectives", group_by="risk")
     assert "rating" not in t and "Not rated" not in t

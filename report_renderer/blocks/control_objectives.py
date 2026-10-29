@@ -123,15 +123,11 @@ class ControlObjectivesBlock(BaseBlockRenderer):
 
     @staticmethod
     def _rating(t, risk) -> str:
-        """e.g. "Impact 5, likelihood 4: rating 20 (Critical)"; "Not rated" with both parts unrated."""
+        """e.g. "Impact 5, likelihood 4: rating 20 (Critical)"; "Not rated" until both parts are set."""
         if risk["rating"] is None:
             return t("Not rated")
-
-        def part(v):
-            return t("not rated") if v is None else str(v)
-
-        return t("Impact {impact}, likelihood {likelihood}: rating {rating} ({band})", impact=part(risk["impact"]),
-                 likelihood=part(risk["likelihood"]), rating=risk["rating"], band=t(risk["band"]))
+        return t("Impact {impact}, likelihood {likelihood}: rating {rating} ({band})", impact=risk["impact"],
+                 likelihood=risk["likelihood"], rating=risk["rating"], band=t(risk["band"]))
 
     def choices(self, ctx, option_name) -> list[dict]:
         labels = ctx.data.objectives

@@ -1,6 +1,6 @@
 """The Key figures block.
 
-Mike v2: release 1.0 of the 18th of September; 5 risks (rated Critical, High, Medium, Low, not rated); 4 objectives in 4 groups;
+Mike v2: release 1.0 of the 18th of September; 5 risks (rated Critical and Low, 3 not rated: two have an impact only); 4 objectives in 4 groups;
 4 Done evaluations (LangBiTe, StrongREJECT, Promptfoo); checklists cl-m1 (2 of 2, scores 4 and 5) and
 cl-m2 (1 of 1, score 3). Markup contract: tiles carry data-figure (see v2_block_helpers).
 """
@@ -41,8 +41,8 @@ def test_risks_tile(deps):
     _, _, node, _ = one(deps, "key_figures", figures=["risks"])
     t = figure(node, "risks")
     assert "5" in t
-    # counts by rating band (impact x likelihood)
-    assert "by rating: Critical: 1, High: 1, Medium: 1, Low: 1, not rated: 1" in t
+    # counts by rating band (impact x likelihood); a risk with a part unset is not rated
+    assert "by rating: Critical: 1, Low: 1, not rated: 3" in t
     assert "severity" not in t
 
 
@@ -164,4 +164,4 @@ def test_english_label_value_texts_are_unchanged(deps):
     pytest.importorskip("aisc_report_plugin_strongreject", reason="optional tool renderer, not installed")
     texts = _label_value_sections(deps)
     kf = next(v for k, v in texts.items() if k.startswith("key_figures"))
-    assert "by rating: Critical: 1, High: 1" in kf and "no evidence: 1" in kf and "StrongREJECT: " in kf, kf
+    assert "by rating: Critical: 1, Low: 1" in kf and "no evidence: 1" in kf and "StrongREJECT: " in kf, kf

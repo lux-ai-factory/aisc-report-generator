@@ -60,8 +60,8 @@ def test_mappings_expose_impact_likelihood_rating_and_band(sources):
     mappings = need("report_renderer.data.control_objectives", "mappings")
     rows = {r["risk_id"]: r for r in mappings(IDS["M"], IDS["M_V2"], sources=sources)}
     got = {rid: (r["impact"], r["likelihood"], r["rating"], r["band"]) for rid, r in rows.items()}
-    assert got == {"R-1": (5, 4, 20, "Critical"), "R-2": (3, None, 9, "Medium"), "R-3": (1, 2, 2, "Low"),
-                   "R-4": (None, None, None, None), "R-5": (4, None, 12, "High")}
+    assert got == {"R-1": (5, 4, 20, "Critical"), "R-2": (3, None, None, None), "R-3": (1, 2, 2, "Low"),
+                   "R-4": (None, None, None, None), "R-5": (4, None, None, None)}
     assert all("severity" not in r for r in rows.values())
 
 

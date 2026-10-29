@@ -1,6 +1,6 @@
 """A risk's rating, from its rating_impact and rating_likelihood.
 
-rating = impact x likelihood (1 to 25), an unrated part counts 3; both unrated is "not rated" (None).
+rating = impact x likelihood (1 to 25); until both are set the risk is "not rated" (None), as in step 2.
 Bands: Low 1-4, Medium 5-9, High 10-16, Critical 17-25. Pure, no database.
 """
 import pytest
@@ -17,9 +17,9 @@ def band(*a):
 
 
 @pytest.mark.parametrize("impact,likelihood,expected", [
-    (5, 4, 20), (1, 1, 1), (5, 5, 25), (5, None, 15), (None, 4, 12), (3, None, 9), (None, None, None),
+    (5, 4, 20), (1, 1, 1), (5, 5, 25), (5, None, None), (None, 4, None), (3, None, None), (None, None, None),
 ])
-def test_rating_is_impact_times_likelihood_with_unrated_as_3(impact, likelihood, expected):
+def test_rating_is_impact_times_likelihood_once_both_are_set(impact, likelihood, expected):
     assert rating(impact, likelihood) == expected
 
 
@@ -33,3 +33,9 @@ def test_band_edges(value, expected):
 
 def test_bands_in_report_order():
     assert need("report_renderer.rating", "BANDS") == ("Critical", "High", "Medium", "Low")
+
+
+def test_no_value_stands_in_for_a_missing_part():
+    import report_renderer.rating as module
+
+    assert not hasattr(module, "UNRATED_COUNTS_AS")

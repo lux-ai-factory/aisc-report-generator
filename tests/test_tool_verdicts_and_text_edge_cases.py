@@ -194,7 +194,7 @@ def _placeholder_layout(text_value=PLACEHOLDER):
 @pytest.mark.parametrize("value", [PLACEHOLDER, "  Write this section.\n"])
 def test_an_unwritten_free_text_is_left_out_of_the_preview(deps, value):
     blocks, ids = _placeholder_layout(value)
-    result = do_render(deps, snap(blocks, document={"toc": "on", "numbering": True}, snapshot_version=2))
+    result = do_render(deps, snap(blocks, document={"toc": "on", "numbering": True}))
     doc = soup(result["html"])
     assert doc.find(id=f"block-{ids[2]}") is None, "the unwritten section is still printed"
     assert "Unwritten" not in text(doc.find(id="toc")) and PLACEHOLDER not in result["html"]
@@ -209,7 +209,7 @@ def test_an_unwritten_free_text_is_left_out_of_the_preview(deps, value):
 @pytest.mark.db
 def test_an_unwritten_free_text_is_left_out_of_pdf_and_docx(deps):
     blocks, _ = _placeholder_layout()
-    s = snap(blocks, document={"toc": "on", "numbering": True}, snapshot_version=2)
+    s = snap(blocks, document={"toc": "on", "numbering": True})
     pdf_text = " ".join(pdf_pages(do_render(deps, dict(s, mode="pdf"))))
     assert PLACEHOLDER not in pdf_text and "Unwritten" not in pdf_text
     body = docx_all_text(docx_of(do_render(deps, dict(s, mode="docx"))))
@@ -254,7 +254,7 @@ PRESETS = {
 @pytest.mark.parametrize("preset", sorted(PRESETS))
 def test_a_preset_layout_generated_at_once_has_no_placeholder(deps, preset):
     blocks = [blk(bt, **opts) for bt, opts in PRESETS[preset]]
-    s = snap(blocks, project="M", system="M_V2", snapshot_version=2, document={"toc": "on", "numbering": True})
+    s = snap(blocks, project="M", system="M_V2", document={"toc": "on", "numbering": True})
     pdf_text = " ".join(pdf_pages(do_render(deps, dict(s, mode="pdf"))))
     assert PLACEHOLDER not in " ".join(pdf_text.split())
     body = docx_all_text(docx_of(do_render(deps, dict(s, mode="docx"))))

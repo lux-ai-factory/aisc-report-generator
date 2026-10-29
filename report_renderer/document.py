@@ -224,7 +224,7 @@ def render(snapshot: dict, deps) -> dict:
     problems = snapshot_schema.validate(snapshot)
     if problems:
         raise InvalidSnapshot(problems)
-    language = "en"  # English only: any language the schema accepts renders English
+    language = "en"  # reports are English only
     blocks = snapshot["blocks"]
     problems = snapshot_schema.structure_problems(blocks)
     if problems:
@@ -237,7 +237,7 @@ def render(snapshot: dict, deps) -> dict:
     document = snapshot.get("document") or {}
     mode = snapshot["mode"]
     report = {"marking": (look or {}).get("marking") or "none", "document_id": document.get("id"),
-              "toc": document.get("toc") or "auto", "numbering": bool(document.get("numbering", False)),
+              "toc": document.get("toc") or "on", "numbering": bool(document.get("numbering", False)),
               "header_text": (look or {}).get("header_text"), "footer_text": (look or {}).get("footer_text"),
               "show_document_id": bool((look or {}).get("show_document_id", False)), "fingerprint": fingerprint,
               "ledger_anchor": document.get("ledger_anchor"), "declared_charts": snapshot.get("declared_charts"),

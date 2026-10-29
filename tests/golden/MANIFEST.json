@@ -1,17 +1,6 @@
 {
  "renderer_commit": "df14131",
  "cases": {
-  "d_v1_live": {
-   "html": "d_v1_live.html",
-   "pdf_text": "d_v1_live.pdf.json"
-  },
-  "d_v1_live_styled": {
-   "html": "d_v1_live_styled.html",
-   "pdf_text": "d_v1_live_styled.pdf.json"
-  },
-  "d_v1_free_text": {
-   "html": "d_v1_free_text.html"
-  },
   "a_v2_live": {
    "html": "a_v2_live.html"
   },

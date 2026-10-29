@@ -157,7 +157,7 @@ def test_a_system_of_another_project_is_refused_before_any_read(registry, deps):
     assert seen == []
 
 
-def test_a_table_of_contents_after_the_cover_above_three_blocks(deps):
+def test_a_table_of_contents_after_the_cover(deps):
     blocks = [block("cover"), block("free_text", text="a", title="First text"),
               block("free_text", text="b", title="Second text"), block("free_text", text="c", title="Third text")]
     doc = soup(render(deps, blocks)["html"])
@@ -168,9 +168,10 @@ def test_a_table_of_contents_after_the_cover_above_three_blocks(deps):
     assert order[0] == f"block-{blocks[0]['instance_id']}" and order[1] == "toc"
 
 
-def test_no_table_of_contents_up_to_three_blocks(deps):
+def test_the_table_of_contents_is_on_unless_the_document_turns_it_off(deps):
+    """However few blocks: "on" is the composer's default; there is no automatic setting."""
     blocks = [block("cover"), block("free_text", text="a"), block("free_text", text="b")]
-    assert soup(render(deps, blocks)["html"]).find(id="toc") is None
+    assert soup(render(deps, blocks)["html"]).find(id="toc") is not None
 
 
 def test_one_document_with_one_stylesheet(deps):

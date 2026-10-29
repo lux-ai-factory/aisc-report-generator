@@ -1,4 +1,4 @@
-"""Every report is in English, whatever language the snapshot names, and English messages take their
+"""Every report is in English (the snapshot names no language), and English messages take their
 singular form when a count is one (renderer side).
 """
 import hashlib
@@ -30,7 +30,7 @@ def test_health_is_english_only(deps):
     assert [x if isinstance(x, str) else x.get("code") for x in langs] == ["en"]
 
 
-# Any pattern-valid language renders English.
+# A language an older client still sends is a key the schema does not name: it is ignored.
 
 def _blocks():
     ids = [f"00000000-0000-4000-8000-00000000d1{i:02d}" for i in range(6)]
@@ -40,42 +40,39 @@ def _blocks():
             blk("control_objectives", ids[4]), blk("free_text", ids[5], text="Text.")]
 
 
-def _snap(language, mode="preview"):
-    extra = {} if language is None else {"language": language}
-    return snap(_blocks(), project="M", system="M_V2", mode=mode, snapshot_version=2,
+def _snap(mode="preview", **extra):
+    return snap(_blocks(), project="M", system="M_V2", mode=mode,
                 document={"toc": "on", "numbering": True}, **extra)
 
 
 @pytest.mark.db
-@pytest.mark.parametrize("language", ["en", "fr", "de", "xx", "fr-BE"])
-def test_any_pattern_valid_language_is_accepted_and_renders_english(deps, language):
-    r = service(deps).post("/v1/render", headers=H, json=_snap(language))
+@pytest.mark.parametrize("language", ["fr", "French"])
+def test_a_language_sent_is_ignored_and_the_report_is_english(deps, language):
+    r = service(deps).post("/v1/render", headers=H, json=_snap(language=language))
     assert r.status_code == 200, r.text[:300]
     html = r.json()["html"]
     assert soup(html).html.get("lang") == "en"
-    assert html == do_render(deps, _snap(None))["html"]
+    assert html == do_render(deps, _snap())["html"]
 
 
 @pytest.mark.db
-def test_docx_text_and_language_property_are_english_with_fr(deps):
-    en = docx_of(do_render(deps, _snap(None, mode="docx")))
-    fr = docx_of(do_render(deps, _snap("fr", mode="docx")))
-    assert fr.core_properties.language == "en"
-    assert docx_all_text(fr) == docx_all_text(en)
+def test_the_docx_language_property_is_english(deps):
+    document = docx_of(do_render(deps, _snap(mode="docx")))
+    assert document.core_properties.language == "en"
+    assert docx_all_text(document)
 
 
 # The fingerprint is computed over the snapshot as received.
 
 @pytest.mark.db
-def test_the_fingerprint_keeps_its_definition_for_a_fr_snapshot(deps):
-    """The fingerprint of a snapshot with language "fr" is the SHA-256 of
-    the snapshot as received (without mode, requested_by and document), so stored reports keep theirs."""
-    s = _snap("fr")
+def test_the_fingerprint_keeps_its_definition(deps):
+    """The fingerprint is the SHA-256 of the snapshot as received (without mode, requested_by and
+    document), so stored reports keep theirs."""
+    s = _snap()
     canonical = {k: v for k, v in s.items() if k not in ("mode", "requested_by", "document")}
     expected = hashlib.sha256(json.dumps(canonical, sort_keys=True, separators=(",", ":"),
                                          ensure_ascii=False).encode("utf-8")).hexdigest()
     assert do_render(deps, s)["fingerprint"] == expected
-    assert do_render(deps, _snap("en"))["fingerprint"] != expected
 
 
 # The block context is English.

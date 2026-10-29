@@ -130,7 +130,7 @@ def expected_fingerprint(s):
 
 
 def test_the_fingerprint_is_the_sha256_of_the_canonical_snapshot(deps):
-    s = snap([blk("free_text", text="Grüße")], style=look(), document={"id": DOC_ID, "toc": "auto"}, language="en")
+    s = snap([blk("free_text", text="Grüße")], style=look(), document={"id": DOC_ID, "toc": "on"})
     result = do_render(deps, s)
     assert result.get("fingerprint") == expected_fingerprint(s)
 

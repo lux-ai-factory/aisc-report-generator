@@ -35,7 +35,7 @@ def e2e_snapshot(mode):
     blocks = layout()
     for i, b in enumerate(blocks):
         b["instance_id"] = f"00000000-0000-4000-8000-0000000e2e{i:02d}"
-    return snap(blocks, project="M", system="M_V2", mode=mode, snapshot_version=2, language="fr",
+    return snap(blocks, project="M", system="M_V2", mode=mode,
                 document={"id": "3c9d1f2e-7a6b-4c5d-8e9f-0a1b2c3d4e5f", "toc": "on", "numbering": True},
                 coverage_links=[{"objective_id": "R1.1", "tests": ["LangBiTe"], "checklists": ["cl-m1"]}],
                 style={"font": "inter", "font_size_pt": 10, "primary_color": "#000fdf", "accent_color": "#ff007e",

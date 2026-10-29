@@ -3,7 +3,7 @@ DOCX files, and splitting a document into its sections.
 
 Test infrastructure only. The renderer API these tests use:
 
-    snapshot keys: snapshot_version, language, document {id, toc, numbering},
+    snapshot keys: snapshot_version (3), document {id, toc (on/off), numbering},
         coverage_links, style.{header_text, footer_text, marking, show_document_id}; mode "docx"
     document.render(snapshot, deps) -> {..., "fingerprint"} in every mode, "docx_base64" in docx mode
     built-in block types "chapter" and "appendix"; common options "commentary", "commentary_position"
@@ -34,7 +34,7 @@ def blk(block_type: str, instance_id: str | None = None, **options) -> dict:
 
 
 def snap(blocks, project="A", system="A_V2", mode="preview", **extra) -> dict:
-    """A snapshot with any of the v2 keys given as keyword arguments (language=, document=, style=...)."""
+    """A snapshot with any of the v2 keys given as keyword arguments (document=, style=...)."""
     s = snapshot(blocks, project=project, system=system, mode=mode)
     s.update(extra)
     return s

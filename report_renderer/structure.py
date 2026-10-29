@@ -33,7 +33,7 @@ def _kind(section) -> str:
     return "cover" if section["type_id"] == "cover" else "block"
 
 
-def plan(sections: list[dict], *, toc: str = "auto", numbering: bool = False) -> Plan:
+def plan(sections: list[dict], *, toc: str = "on", numbering: bool = False) -> Plan:
     top = 0          # top-level counter of the current part
     sub = 0          # counter inside the current chapter
     in_appendix = False
@@ -75,11 +75,6 @@ def plan(sections: list[dict], *, toc: str = "auto", numbering: bool = False) ->
                 s["number"] = label(top)
             entries.append({**s, "children": []})
 
-    if toc == "off":
-        toc_entries = None
-    elif toc == "on":
-        toc_entries = entries or None
-    else:
-        toc_entries = entries if len(sections) > 3 else None
+    toc_entries = None if toc == "off" else entries or None
     toc_after = next((i for i, s in enumerate(sections) if s["type_id"] == "cover"), None)
     return Plan(toc_entries=toc_entries, toc_after=toc_after)

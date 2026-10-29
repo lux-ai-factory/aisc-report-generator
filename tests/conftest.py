@@ -235,9 +235,9 @@ def snapshot(blocks, project="A", system="A_V2", mode="preview", requested_by="a
         "blocks": blocks,
         "mode": mode,
         "requested_by": requested_by,
+        "snapshot_version": 3,
     }
     if selection is not None:
-        snap["snapshot_version"] = 3
         snap["selection"] = selection
     return snap
 

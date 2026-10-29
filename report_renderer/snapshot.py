@@ -1,6 +1,7 @@
 """The layout snapshot the composer sends, its schema and its checks.
 
-Every key added after version 1 is optional, so a version 1 snapshot still validates."""
+Version 3 is the only one taken (a snapshot that names no version is read as version 3); every key past
+the required ones is optional."""
 from __future__ import annotations
 
 import copy
@@ -40,14 +41,13 @@ SCHEMA = {
         },
         "mode": {"enum": ["preview", "pdf", "docx"]},
         "requested_by": {"type": "string"},
-        "snapshot_version": {"type": "integer", "enum": [1, 2, 3]},
-        "language": {"type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$"},
+        "snapshot_version": {"type": "integer", "enum": [3]},
         "document": {
             "type": "object",
             "additionalProperties": False,
             "properties": {
                 "id": {"type": ["string", "null"], "pattern": UUID_PATTERN},
-                "toc": {"enum": ["auto", "on", "off"]},
+                "toc": {"enum": ["on", "off"]},
                 "numbering": {"type": "boolean"},
                 # the newest entry of the project's ledger when the report was made, printed on it
                 "ledger_anchor": {

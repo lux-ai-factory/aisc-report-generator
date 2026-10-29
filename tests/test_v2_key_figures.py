@@ -114,27 +114,21 @@ def test_unknown_figure_is_invalid(deps):
     assert cls.options_problems({**cls.full_default_options(), "figures": ["version", "weather"]})
 
 
-# Tool tiles follow the report language.
+# Tool tiles.
 
-def _tool_tiles(deps, language):
-    from v2_block_helpers import block, render_snapshot, section
+def _tool_tiles(deps):
+    from v2_block_helpers import block, render_snapshot, section, v2_snapshot
 
     b = block("key_figures", figures=["tests"])
-    result = render_snapshot(deps, v2_snapshot_with_language([b], language))
+    result = render_snapshot(deps, v2_snapshot([b]))
     return None, section(result["html"], b["instance_id"])
-
-
-def v2_snapshot_with_language(blocks, language):
-    from v2_block_helpers import v2_snapshot
-
-    return v2_snapshot(blocks, language=language)
 
 
 def test_english_tool_tiles_are_unchanged(deps):
     import re
 
     need_tool_package("aisc_report_plugin_langbite", "LANGBITEToolRenderer")
-    _, node = _tool_tiles(deps, "en")
+    _, node = _tool_tiles(deps)
     tiles = " | ".join(" ".join(el.get_text(" ").split()) for el in node.find_all(attrs={"data-figure": "tool"}))
     assert re.search(r"\d\.\d", tiles) and "Overall pass rate" in tiles, tiles
 
@@ -148,26 +142,26 @@ def test_a_contract_2_renderer_whose_headline_takes_only_the_run_still_gets_tile
         return original(self, run)
 
     monkeypatch.setattr(cls, "headline", headline)
-    _, node = _tool_tiles(deps, "fr")          # a snapshot saying "fr" renders English
+    _, node = _tool_tiles(deps)
     tiles = " ".join(el.get_text(" ") for el in node.find_all(attrs={"data-figure": "tool"}))
     assert "Overall pass rate" in tiles, tiles
 
 
 # "label: value" goes through one message.
 
-def _label_value_sections(deps, language):
-    from v2_block_helpers import block, render_snapshot, section
+def _label_value_sections(deps):
+    from v2_block_helpers import block, render_snapshot, section, v2_snapshot
 
     blocks = [block("key_figures", figures=["version", "risks", "objectives", "coverage", "tests", "checklists"]),
               block("summary_coverage"), block("control_objectives", show_rationale=True),
               block("control_objectives", group_by="risk")]
-    result = render_snapshot(deps, v2_snapshot_with_language(blocks, language) | {"coverage_links": MIKE_MAP})
+    result = render_snapshot(deps, v2_snapshot(blocks) | {"coverage_links": MIKE_MAP})
     return {f'{b["block_type"]} {b["options"]}': " ".join(section(result["html"], b["instance_id"]).get_text(" ").split())
             for b in blocks}
 
 
 def test_english_label_value_texts_are_unchanged(deps):
     pytest.importorskip("aisc_report_plugin_strongreject", reason="optional tool renderer, not installed")
-    texts = _label_value_sections(deps, "en")
+    texts = _label_value_sections(deps)
     kf = next(v for k, v in texts.items() if k.startswith("key_figures"))
     assert "by rating: Critical: 1, High: 1" in kf and "no evidence: 1" in kf and "StrongREJECT: " in kf, kf

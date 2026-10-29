@@ -58,7 +58,7 @@ class ReportInfo:
     language: str = "en"
     marking: str = "none"
     document_id: str | None = None
-    toc: str = "auto"
+    toc: str = "on"
     numbering: bool = False
     header_text: str | None = None
     footer_text: str | None = None
@@ -190,7 +190,7 @@ def context_for(project_id, system_id, *, deps, mode="preview", layout=None, req
         # know is not a project at all
         raise NotInProject("no such project")
     layout = layout or {}
-    language = "en"  # reports are English only, whatever the snapshot says
+    language = "en"  # reports are English only
     t, messages = languages.translator()
     info = ReportInfo(layout_id=layout.get("id"), layout_name=layout.get("name", ""),
                       revision=layout.get("revision"), requested_by=requested_by or "",

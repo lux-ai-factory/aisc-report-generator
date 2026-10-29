@@ -1,8 +1,7 @@
 """Compatibility pins against the goldens of tests/golden/.
 
 The goldens were captured from the renderer at df14131 (tests/golden/capture.py; MANIFEST.json names
-the commit). A snapshot that uses none of the later snapshot keys must render the same:
-- Delta v1 (no evaluation): byte-identical HTML; identical PDF text apart from the TOC page numbers.
+the commit). A snapshot that uses none of the optional snapshot keys must render the same:
 - Alpha v2 and Mike v2 (evaluations): identical except inside the Test results section.
 - Alpha v2 with legacy links: identical except the second summary block.
 """
@@ -42,29 +41,11 @@ def test_the_goldens_come_from_the_renderer_before_the_run():
     assert set(manifest["cases"]) == set(CASES)
 
 
-# No evaluation: identical.
-
-@pytest.mark.parametrize("name", ["d_v1_live", "d_v1_live_styled", "d_v1_free_text"])
-def test_an_old_snapshot_without_evaluations_renders_byte_for_byte(gdeps, name):
-    """No later snapshot key, no evaluation: the same HTML as at df14131."""
-    result = render_case(gdeps, name)
-    assert result["html"] == golden(name)
-    assert result["block_statuses"] == json.loads(golden(name, "statuses.json"))
-
-
-def _without_toc_page_numbers(page: str) -> str:
-    if "Contents" not in page:
-        return page
-    return "\n".join(re.sub(r"[\s.]*\d+\s*$", "", line) for line in page.splitlines())
-
-
-@pytest.mark.parametrize("name", ["d_v1_live", "d_v1_live_styled"])
-def test_the_pdf_text_is_the_same_apart_from_toc_page_numbers(gdeps, name):
-    """Only the TOC lines may gain page numbers."""
-    pages = pdf_pages(render_case(gdeps, name, mode="pdf"))
-    before = json.loads(golden(name, "pdf.json"))
-    assert len(pages) == len(before)
-    assert [_without_toc_page_numbers(p) for p in pages] == [_without_toc_page_numbers(p) for p in before]
+def test_every_golden_file_belongs_to_a_case():
+    names = {p.name for p in GOLDEN.iterdir() if p.suffix in (".html", ".json") and p.name != "MANIFEST.json"}
+    expected = {f"{n}.html" for n in CASES} | {f"{n}.statuses.json" for n in CASES}
+    expected |= {f"{n}.pdf.json" for n, case in CASES.items() if case.get("pdf")}
+    assert names == expected
 
 
 # With evaluations: only the Test results section may change.

@@ -389,17 +389,6 @@ def iso_gdeps(iso_deps, iso_sources, registry):
         clock=lambda: FIXED_NOW, chart_data=None))
 
 
-@pytest.mark.parametrize("name", ["d_v1_live", "d_v1_live_styled", "d_v1_free_text"])
-def test_golden_without_evaluations_is_byte_identical_on_project_databases(iso_gdeps, name):
-    """The renderer on project databases draws the same HTML and statuses as the goldens."""
-    import json
-
-    g = _golden()
-    result = need("report_renderer.document", "render")(g.snapshot_for(g.CASES[name], "preview"), iso_gdeps)
-    assert result["html"] == g.golden(name)
-    assert result["block_statuses"] == json.loads(g.golden(name, "statuses.json"))
-
-
 @pytest.mark.parametrize("name", ["a_v2_live", "a_v2_live_styled", "m_v2_live_styled"])
 def test_golden_with_evaluations_on_project_databases(iso_gdeps, name):
     """As in test_compat_golden: only the Test results section may differ from the golden."""

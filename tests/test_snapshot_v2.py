@@ -1,6 +1,7 @@
-"""The snapshot, version 2: the docx mode, the document, the style's header and footer, coverage links.
+"""The snapshot, version 3 (the only one): the docx mode, the document, the style's header and footer,
+coverage links.
 
-Every new key is optional and checked by snapshot.SCHEMA; a v1 snapshot passes unchanged.
+Every key past the required ones is optional and checked by snapshot.SCHEMA; a version other than 3 is refused.
 """
 import pytest
 
@@ -22,8 +23,7 @@ def v2(**extra):
 
 
 GOOD_V2 = dict(
-    snapshot_version=2,
-    language="en",
+    snapshot_version=3,
     document={"id": "22222222-2222-4222-8222-222222222222", "toc": "on", "numbering": True},
     coverage_links=[{"objective_id": "R1.1", "tests": ["LangBiTe"], "checklists": ["cl-1"]}],
     style={"font": "inter", "font_size_pt": 10, "primary_color": "#000fdf", "accent_color": "#ff007e",
@@ -32,10 +32,30 @@ GOOD_V2 = dict(
 )
 
 
-def test_a_v1_snapshot_passes_unchanged():
-    """No version 2 key is required."""
+def test_a_snapshot_with_only_the_required_keys_passes():
     s = snapshot([block("free_text", text="x")])
     assert validate(s) == []
+
+
+def test_a_snapshot_that_names_no_version_is_read_as_version_3():
+    s = snapshot([block("free_text", text="x")])
+    del s["snapshot_version"]
+    assert validate(s) == []
+
+
+@pytest.mark.parametrize("version", [1, 2])
+def test_versions_1_and_2_are_refused(version):
+    assert "/snapshot_version" in pointers(validate(v2(snapshot_version=version)))
+
+
+def test_the_snapshot_names_no_language():
+    """Reports are English only: the schema has no language key."""
+    assert "language" not in need("report_renderer.snapshot", "SCHEMA")["properties"]
+
+
+def test_the_table_of_contents_is_on_or_off():
+    assert "/document/toc" in pointers(validate(v2(document={"toc": "auto"})))
+    assert validate(v2(document={"toc": "on"})) == [] and validate(v2(document={"toc": "off"})) == []
 
 
 def test_a_full_v2_snapshot_passes():
@@ -49,9 +69,7 @@ def test_mode_docx_is_accepted():
 
 @pytest.mark.parametrize("extra,pointer", [
     ({"snapshot_version": 4}, "/snapshot_version"),
-    ({"snapshot_version": "2"}, "/snapshot_version"),
-    ({"language": 7}, "/language"),
-    ({"language": "french"}, "/language"),
+    ({"snapshot_version": "3"}, "/snapshot_version"),
     ({"document": {"toc": "sometimes"}}, "/document/toc"),
     ({"document": {"numbering": "yes"}}, "/document/numbering"),
     ({"document": {"id": "not-a-uuid"}}, "/document/id"),
@@ -78,26 +96,6 @@ def test_coverage_links_at_most_200_items():
     assert "/coverage_links" in pointers(validate(v2(coverage_links=links)))
 
 
-def test_an_unknown_language_is_invalid_snapshot_at_language(deps):
-    """A pattern-valid code ("xx") renders 200 in English; "French" (pattern mismatch) is 422
-    invalid_snapshot at /language."""
-    from fastapi.testclient import TestClient
-
-    from v2_core_helpers import H, TOKEN
-
-    client = TestClient(need("report_service", "create_app")(deps=deps, token=TOKEN))
-    ok = client.post("/v1/render", headers=H, json=v2(language="xx"))
-    assert ok.status_code == 200, ok.text[:300]
-    assert 'lang="en"' in ok.json()["html"]
-    r = client.post("/v1/render", headers=H, json=v2(language="French"))
-    assert r.status_code == 422
-    body = r.json()
-    problems = body.get("problems") or body.get("error", {}).get("details") or []
-    assert any(p.get("pointer") == "/language" for p in problems), body
-    code = body.get("error", {}).get("code") or next((p.get("code") for p in problems), None)
-    assert code == "invalid_snapshot"
-
-
 # A lone surrogate anywhere is refused as a validation problem.
 
 def _opts(s, n=0):
@@ -118,7 +116,6 @@ SURROGATES = {
                                 "/blocks/1/options/tools/2", 1),
     "block_type": (lambda s: s["blocks"][0].update(block_type="free\ud800text"), "/blocks/0/block_type", 0),
     "top_level_key": (lambda s: s.update({"k\ud800": 1}), "/k\\ud800", None),
-    "language": (lambda s: s.update(language="e\ud800"), "/language", None),
     "mode": (lambda s: s.update(mode="pdf\ud800"), "/mode", None),
     "coverage_links": (lambda s: s["coverage_links"][0].update(objective_id="R\ud8001"),
                        "/coverage_links/0/objective_id", None),

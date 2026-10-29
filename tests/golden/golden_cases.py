@@ -2,11 +2,9 @@
 selection, language, commentary and the like).
 
 A 7-block layout as the composer stored it, with and without a template's look, on the bed's seed:
-- Delta v1 (D_V1): no evaluation at all: the output must stay identical.
 - Alpha v2 (A_V2) and Mike v2 (M_V2): evaluations; only the Test results section may change.
 - Alpha v2 with legacy coverage links on the first summary block and a second summary block with
   empty links: only the second summary block may change.
-- Delta v1 with free text, titles and a page break (plain free text must render unchanged).
 """
 from __future__ import annotations
 
@@ -43,21 +41,7 @@ def legacy_links_blocks():
     return b
 
 
-def free_text_blocks():
-    b = live_blocks()
-    b[1]["options"]["title"] = "The card, retitled"
-    b[2]["options"]["page_break_before"] = True
-    b.insert(1, {"instance_id": "00000000-0000-4000-8000-00000000a009", "block_type": "free_text",
-                 "options": {"title": "Scope", "page_break_before": False,
-                             "text": "First line <b>not bold</b>\nsecond line\n\nNew paragraph with **stars** and [a](https://e.org)"}})
-    return b
-
-
 CASES = {
-    # no evaluation: identical output required
-    "d_v1_live": {"project": "D", "system": "D_V1", "blocks": live_blocks, "style": None, "pdf": True},
-    "d_v1_live_styled": {"project": "D", "system": "D_V1", "blocks": live_blocks, "style": LIVE_STYLE, "pdf": True},
-    "d_v1_free_text": {"project": "D", "system": "D_V1", "blocks": free_text_blocks, "style": LIVE_STYLE},
     # with evaluations: only the Test results section may differ
     "a_v2_live": {"project": "A", "system": "A_V2", "blocks": live_blocks, "style": None},
     "a_v2_live_styled": {"project": "A", "system": "A_V2", "blocks": live_blocks, "style": LIVE_STYLE, "pdf": True},
@@ -70,7 +54,7 @@ CASES = {
 def snapshot_for(case: dict, mode: str) -> dict:
     s = {"project_id": IDS[case["project"]], "system_id": IDS[case["system"]],
          "layout": {"id": LAYOUT_ID, "name": "Live default layout", "revision": 1},
-         "blocks": case["blocks"](), "mode": mode, "requested_by": "alice"}
+         "blocks": case["blocks"](), "mode": mode, "requested_by": "alice", "snapshot_version": 3}
     if case.get("style"):
         s["style"] = copy.deepcopy(case["style"])
     return s

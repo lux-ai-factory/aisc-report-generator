@@ -1,6 +1,6 @@
 """Document structure.
 
-Settings per layout in snapshot `document` (toc auto/on/off, numbering), the chapter and appendix
+Settings per layout in snapshot `document` (toc on/off, numbering), the chapter and appendix
 block types, nesting in the TOC, numbering, and TOC page numbers in the PDF only.
 """
 import re
@@ -29,7 +29,7 @@ def toc(html):
     return soup(html).find(id="toc")
 
 
-# toc auto / on / off.
+# toc on / off.
 
 def test_toc_on_shows_it_for_two_blocks(deps):
     html = do_render(deps, snap([ft("a"), ft("b")], document={"toc": "on"}))["html"]

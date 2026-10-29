@@ -81,7 +81,7 @@ def test_a_catalogue_in_report_i18n_path_is_ignored(deps, tmp_path, monkeypatch)
     langs = client.get("/health", headers=H).json()["languages"]
     assert langs == [{"code": "en", "name": "English"}]
     r = client.post("/v1/render", headers=H,
-                    json=snap([blk("free_text", title=x, text=x) for x in "abcd"], language="de"))
+                    json=snap([blk("free_text", title=x, text=x) for x in "abcd"]))
     assert r.status_code == 200, r.text[:300]
     html = r.json()["html"]
     assert text(soup(html).find(id="toc").find("h2")) == "Contents"
@@ -98,12 +98,12 @@ def test_english_stays_the_default(deps):
 
 
 @pytest.mark.db
-def test_fixed_texts_are_english_when_the_snapshot_says_fr(deps):
+def test_fixed_texts_are_english(deps):
     cover = blk("cover", report_title="Rapport Example Assistant")
     ft = blk("free_text", title="Mon titre", text="User text stays as written.")
     tr = blk("test_results")
     card = blk("ai_card")
-    result = do_render(deps, snap([cover, ft, card, tr], project="A", system="A_V1", language="fr"))
+    result = do_render(deps, snap([cover, ft, card, tr], project="A", system="A_V1"))
     html = result["html"]
     doc = soup(html)
     assert doc.html.get("lang") == "en"
@@ -117,18 +117,18 @@ def test_fixed_texts_are_english_when_the_snapshot_says_fr(deps):
 
 
 @pytest.mark.db
-def test_dates_stay_iso_numbers_use_the_decimal_point_with_fr(deps):
+def test_dates_stay_iso_numbers_use_the_decimal_point(deps):
     tr = blk("test_results", tools="all")
     cover = blk("cover")
-    html = do_render(deps, snap([cover, tr], language="fr"))["html"]
+    html = do_render(deps, snap([cover, tr]))["html"]
     sec_text = text(soup(html).find(id=f"block-{tr['instance_id']}"))
     assert "0.125" in sec_text and "0,125" not in sec_text
     assert "2026-09-20" in text(soup(html).find(id=f"block-{cover['instance_id']}"))
 
 
 @pytest.mark.db
-def test_page_x_of_y_is_english_in_the_pdf_css_with_fr(deps):
-    html = do_render(deps, snap([blk("free_text", text="x")], language="fr"))["html"]
+def test_page_x_of_y_is_english_in_the_pdf_css(deps):
+    html = do_render(deps, snap([blk("free_text", text="x")]))["html"]
     css = soup(html).find("style").string
     assert '"Page " counter(page) " of "' in css
 

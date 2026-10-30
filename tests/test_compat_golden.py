@@ -1,6 +1,6 @@
 """Compatibility pins against the goldens of tests/golden/.
 
-The goldens were captured from the renderer at df14131 (tests/golden/capture.py; MANIFEST.json names
+The goldens were captured from the renderer at 41d11b9 (tests/golden/capture.py; MANIFEST.json names
 the commit). A snapshot that uses none of the optional snapshot keys must render the same:
 - Alpha v2 and Mike v2 (evaluations): identical except inside the Test results section.
 - Alpha v2 with legacy links: identical except the second summary block.
@@ -37,7 +37,7 @@ def render_case(gdeps, name, mode="preview"):
 
 def test_the_goldens_come_from_the_renderer_before_the_run():
     manifest = json.loads((GOLDEN / "MANIFEST.json").read_text())
-    assert manifest["renderer_commit"] == "df14131"
+    assert manifest["renderer_commit"] == "41d11b9"
     assert set(manifest["cases"]) == set(CASES)
 
 
@@ -101,7 +101,7 @@ def _flow_lines(pages) -> list[str]:
     return out
 
 
-_TABLE_HEADS = {"Objective Label Tests Checklists Status", "Question Article Answer Score", "Metric Value Unit",
+_TABLE_HEADS = {"Objective Label Description Tests Checklists Coverage", "Question Article Answer Score", "Metric Value Unit",
                 "Name Type AIRO property Object"}
 
 
@@ -127,7 +127,7 @@ def _outside_test_results(lines) -> tuple[list[str], list[str]]:
 
 
 def test_pdf_text_with_evaluations_only_the_test_results_section_may_change(gdeps):
-    """The same rule on the PDF (a_v2_live_styled.pdf.json, captured at df14131): every text outside
+    """The same rule on the PDF (a_v2_live_styled.pdf.json, captured at 41d11b9): every text outside
     the Test results section is the same, and the section still starts and ends in the same place."""
     now = _flow_lines(pdf_pages(render_case(gdeps, "a_v2_live_styled", mode="pdf")))
     then = _flow_lines(json.loads(golden("a_v2_live_styled", "pdf.json")))

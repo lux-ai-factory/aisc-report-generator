@@ -22,7 +22,8 @@ from .errors import PlatformUnavailable, SourceUnavailable
 from .registry import Registry, build_registry
 from .superset import BoundedImages, NoChartData, chart_data_from_env, image_provider_from_env
 
-DATA_MODULES = ("platform", "qualification", "control_objectives", "engine", "controls", "superset_db")
+DATA_MODULES = ("platform", "qualification", "control_objectives", "engine", "controls", "superset_db",
+                "evidence")
 
 
 @dataclass

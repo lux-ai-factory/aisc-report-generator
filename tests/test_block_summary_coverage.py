@@ -7,6 +7,8 @@ Alpha v2: objectives R1.1, R2.1, R4.1, R5.1; cl-1's v2 mean score is 2.5 (below 
 """
 from importlib.metadata import EntryPoint
 
+import psycopg
+
 import pytest
 
 from conftest import IDS, block, need, render, render_one, section, text
@@ -118,3 +120,60 @@ def test_choices_for_links(deps):
     assert {"LangBiTe", "Mystery Tool"} <= tools
     assert "cl-1" in checklists and "cl-b" not in checklists
 
+
+# Who reviewed the evidence map of the version (evidence.review), under the table.
+
+def _project_db(bed, key="A"):
+    db = need("report_bed", "project_db")(IDS[key])
+    return psycopg.connect(bed.su_dsn(db), autocommit=True)
+
+
+@pytest.fixture
+def alpha_v2_reviewed(bed):
+    """A review of Alpha v2's evidence map; the table is made when the bed's templates have none."""
+    conn = _project_db(bed)
+    made = conn.execute("SELECT to_regclass('evidence.review')").fetchone()[0] is None
+    if made:
+        conn.execute("CREATE SCHEMA IF NOT EXISTS evidence")
+        conn.execute("CREATE TABLE evidence.review (system_id uuid PRIMARY KEY REFERENCES project.system(pid),"
+                     " reviewed_by text NOT NULL, reviewed_by_name text NOT NULL, reviewed_at timestamptz NOT NULL)")
+        conn.execute("DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'report_ro') THEN"
+                     " GRANT USAGE ON SCHEMA evidence TO report_ro;"
+                     " GRANT SELECT ON evidence.review TO report_ro; END IF; END $$")
+    conn.execute("INSERT INTO evidence.review VALUES (%s, 'bob-sub', 'Bob <Reviewer>', '2026-09-18 23:30+00')",
+                 (IDS["A_V2"],))
+    yield
+    if made:
+        conn.execute("DROP TABLE evidence.review")
+    else:
+        conn.execute("DELETE FROM evidence.review WHERE system_id = %s", (IDS["A_V2"],))
+    conn.close()
+
+
+def review_line(node):
+    el = node.find(attrs={"data-review": True})
+    return (el["data-review"], " ".join(el.get_text(" ").split())) if el is not None else None
+
+
+def test_the_reviewer_of_the_evidence_map_and_when(deps, alpha_v2_reviewed):
+    _, _, node, result = render_one(deps, "summary_coverage")
+    assert review_line(node) == ("reviewed", "Evidence map reviewed by Bob <Reviewer> on 2026-09-18.")
+    assert "Bob &lt;Reviewer&gt;" in result["html"]
+
+
+def test_an_unreviewed_map_says_so(deps):
+    _, _, node, _ = render_one(deps, "summary_coverage")
+    assert review_line(node) == ("not reviewed", "The evidence map of version 2 is not reviewed.")
+
+
+def test_own_links_name_no_reviewer(deps, alpha_v2_reviewed):
+    """Links set on the block are not the evidence map: no review is named for them."""
+    _, _, node, _ = render_one(deps, "summary_coverage", links=LINKS)
+    assert review_line(node) is None
+
+
+def test_the_review_is_read_from_the_version(sources, alpha_v2_reviewed):
+    review = need("report_renderer.data.evidence", "review")
+    got = review(IDS["A"], IDS["A_V2"], sources=sources)
+    assert got["reviewed_by_name"] == "Bob <Reviewer>" and got["reviewed_at"].year == 2026
+    assert review(IDS["A"], IDS["A_V1"], sources=sources) is None

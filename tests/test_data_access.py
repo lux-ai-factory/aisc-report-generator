@@ -8,7 +8,8 @@ import pytest
 from conftest import IDS, _sources, block, need, render, status_of
 
 pytestmark = pytest.mark.db
-DATA_MODULES = ["platform", "qualification", "control_objectives", "engine", "controls", "superset_db"]
+DATA_MODULES = ["platform", "qualification", "control_objectives", "engine", "controls", "superset_db",
+                "evidence"]
 
 
 @pytest.mark.parametrize("name", DATA_MODULES)

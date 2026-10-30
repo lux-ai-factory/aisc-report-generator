@@ -5,3 +5,5 @@
   {% endfor %}
   </tbody>
 </table>
+{% if review %}<p class="coverage-review" data-review="{{ review[0] }}">{{ review[1] }}</p>
+{% endif %}

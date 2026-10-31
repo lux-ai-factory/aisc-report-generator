@@ -2,7 +2,7 @@
 
 Blocks render strictly in list order, each in its own <section>; a failing block becomes an error
 box with a reference, the traceback only in the log. The document has one stylesheet, a running
-header with the project and version, page numbers, and a table of contents above three blocks.
+header with the project and version, page numbers, and a table of contents unless document.toc is off.
 Optional features: chapters, an appendix, numbering, header and footer texts, a marking, the
 document id line, commentary and the fingerprint. A feature's CSS is appended only when the
 document uses it, so a snapshot that uses none keeps its exact output (the golden tests check this).

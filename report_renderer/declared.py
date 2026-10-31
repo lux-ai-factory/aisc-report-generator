@@ -3,7 +3,8 @@
 A plugin declares its charts in its contract (aisc-plugin-interface: get_metric_visualizations), the same
 charts the results dashboard opens a plugin's tile with. The snapshot carries them per plugin configuration
 (`declared_charts`, gathered by the composer through the platform), so the report draws what the plugin
-says about its own results, with no report code per tool.
+says about its own results, with no report code per tool. For now only the tools in TOOLS (LangBiTe and
+Data Drift) are drawn this way; the declared charts of any other plugin are left out.
 
 What is drawn, from the run's measures of the chart's metrics (and its filter_dimensions):
 - a table chart: a row per group of group_by_dimensions, a column per metric with the mean score; a metric

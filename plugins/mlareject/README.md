@@ -11,8 +11,8 @@ The section is computed from the run's measurements alone (no database read). On
 metric is `score`; its language, jailbreak method and harm category come from the measurement's dimensions
 (`language`, `jailbreak`, `category`; "unknown" when missing).
 
-- **Executive summary**: total observations, mean score, empty and effective jailbreaks with their shares, and
-  the languages, jailbreak methods and categories seen.
+- **Executive summary**: total observations, mean score, empty and effective jailbreaks, the share of empty
+  ones, and the languages, jailbreak methods and categories seen.
 - **Aggregate score by jailbreak method**, **Most susceptible harm categories** and **Scores by language**: per
   group, the cases, the harmful cases, the empty cases and the mean score, highest mean first.
 

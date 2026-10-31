@@ -8,7 +8,6 @@ of the same numbers (also what DOCX falls back to).
 """
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping
 
 from markupsafe import Markup, escape
@@ -18,7 +17,6 @@ from ..coverage import STATUSES, coverage_for
 from ..views import evaluation_names, load_answers, load_runs, metric_choices
 from ._common import empty_result, finish
 
-logger = logging.getLogger("report_renderer.blocks.chart")
 DATASETS = ["coverage_status", "checklist_scores", "tool_chart", "metric_by_evaluation", "metric_by_dimension"]
 DATASET_LABELS = {"coverage_status": "Coverage status of the objectives",
                   "checklist_scores": "Mean score per checklist",

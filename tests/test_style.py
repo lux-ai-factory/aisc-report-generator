@@ -217,3 +217,58 @@ def test_an_svg_logo_of_shapes_and_text_has_no_problem():
     body = ('<defs><linearGradient id="g"><stop offset="0" stop-color="#123456"/></linearGradient></defs>'
             '<rect width="200" height="100" fill="url(#g)"/><text x="10" y="50">AISC</text>')
     assert _logo_problems(_svg_body(body), mime="image/svg+xml") == []
+
+
+def _raster_b64(fmt, side=1):
+    import io
+
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.new("RGB", (side, side)).save(out, fmt)
+    return base64.b64encode(out.getvalue()).decode()
+
+
+def _b64(raw: bytes) -> str:
+    return base64.b64encode(raw).decode()
+
+
+#: Logos and whether the renderer refuses them, as (name, mime, data_base64, refused). The renderer's
+#: POST /v1/style/check answers from the same rule, so tests/test_style_check_route.py runs this table too.
+LOGOS = [
+    ("not base64", "image/png", "!!!", True),
+    ("a PNG", "image/png", _png_b64(), False),
+    ("a JPEG", "image/jpeg", _raster_b64("JPEG"), False),
+    ("a JPEG saved as a PNG", "image/png", _raster_b64("JPEG"), True),
+    ("a PSD saved as a PNG", "image/png", _b64(b"8BPS" + b"\x00" * 40), True),
+    ("text saved as an SVG", "image/svg+xml", _b64(b"not an svg"), True),
+    ("an SVG with an XML declaration", "image/svg+xml",
+     _b64(b'<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'), False),
+    ("an SVG declaring 16000 x 16000 px", "image/svg+xml", _svg('width="16000" height="16000"'), True),
+    ("an SVG with a huge viewBox", "image/svg+xml", _svg('viewBox="0 0 16000 16000"'), True),
+    ("an SVG 200 inches square", "image/svg+xml", _svg('width="200in" height="200in"'), True),
+    ("an SVG with no size", "image/svg+xml", _svg(""), True),
+    ("an SVG whose width is nan", "image/svg+xml", _svg('width="nan" height="10"'), True),
+    ("an SVG 200 x 80 px", "image/svg+xml", _svg('width="200" height="80"'), False),
+    ("an SVG sized by its viewBox", "image/svg+xml", _svg('viewBox="0 0 200 80"'), False),
+    ("an SVG in mm", "image/svg+xml", _svg('width="60mm" height="20mm"'), False),
+    ("an SVG at 100% with a viewBox", "image/svg+xml", _svg('width="100%" height="100%" viewBox="0 0 200 80"'),
+     False),
+    ("an SVG holding a PNG", "image/svg+xml",
+     _svg_body(f'<image width="200" height="100" xlink:href="data:image/png;base64,{_png_b64()}"/>'), True),
+    ("an SVG with a feImage", "image/svg+xml",
+     _svg_body(f'<filter id="f"><feImage href="data:image/png;base64,{_png_b64()}"/></filter>'), True),
+    ("an SVG with a foreignObject", "image/svg+xml",
+     _svg_body('<foreignObject width="10" height="10"><div xmlns="http://www.w3.org/1999/xhtml">x</div>'
+               '</foreignObject>'), True),
+    ("an SVG with a use href", "image/svg+xml", _svg_body('<rect id="r" width="1" height="1"/><use xlink:href="#r"/>'),
+     True),
+    ("an SVG of shapes and text", "image/svg+xml",
+     _svg_body('<defs><linearGradient id="g"><stop offset="0" stop-color="#123456"/></linearGradient></defs>'
+               '<rect width="200" height="100" fill="url(#g)"/><text x="10" y="50">AISC</text>'), False),
+]
+
+
+@pytest.mark.parametrize("mime,data_base64,refused", [c[1:] for c in LOGOS], ids=[c[0] for c in LOGOS])
+def test_the_logo_table(mime, data_base64, refused):
+    assert _logo_problems(data_base64, mime=mime) == (["/style/logo/data_base64"] if refused else [])

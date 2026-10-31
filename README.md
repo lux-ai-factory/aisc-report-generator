@@ -140,6 +140,7 @@ The service refuses to start without `REPORT_SERVICE_TOKEN` or any of the requir
 | `GET /health` | status, block types, tool renderers, plugin interface version, languages |
 | `GET /v1/block-types` | every block type: id, title, contract version, options schema, default options, sources read, description |
 | `GET /v1/fonts` | the fonts a template may choose (those installed in the image) |
+| `POST /v1/style/check` | a snapshot's `style`: `{"problem": ...}`, why its logo cannot be used, or null; the composer asks before saving a template |
 | `POST /v1/choices` | `{project_id, system_id, block_type}`: the values the block's reference options may take |
 | `POST /v1/render` | a snapshot: `{"html", "fingerprint", "block_statuses"}` in preview mode, `{"pdf_base64" or "docx_base64", "sha256", "fingerprint", "block_statuses"}` in pdf or docx mode; 422 with `problems` for a bad snapshot, 404 when the version is not of the project, 503 when the platform database is unreachable; 413 for a body over `REPORT_RENDER_MAX_BYTES`, 503 `busy` when `REPORT_RENDER_CONCURRENCY` renders are already running |
 

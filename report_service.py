@@ -1,7 +1,8 @@
 """The renderer's HTTP interface. Its only caller is the report composer.
 
 Every route needs the shared token in X-Report-Token (compared in constant time). The routes:
-GET /health, GET /v1/block-types, GET /v1/fonts, POST /v1/choices, POST /v1/render.
+GET /health, GET /v1/block-types, GET /v1/fonts, POST /v1/style/check, POST /v1/choices,
+POST /v1/render.
 Nothing is written to disk,
 and no log line carries the token or a database address.
 
@@ -113,6 +114,21 @@ def create_app(deps=None, token=None, max_body_bytes=None, max_concurrent_render
     @app.get("/v1/fonts")
     def fonts():
         return [{"id": f["id"], "label": f["label"]} for f in style.FONTS]
+
+    @app.post("/v1/style/check")
+    async def style_check(request: Request):
+        """Whether a template's logo can be used: the composer asks before saving one, so the rule
+        lives here once. The body is a snapshot's `style`; the answer is why not, or null."""
+        body = await _body_within(request, max_body_bytes)
+        if body is None:
+            return _error(413, "too_large", f"A style may be at most {max_body_bytes} bytes.")
+        try:
+            given = json.loads(body)
+        except ValueError:
+            given = None
+        if not isinstance(given, dict):
+            return _error(422, "invalid_style", "The body must be a JSON object.")
+        return {"problem": await run_in_threadpool(style.logo_problem, given)}
 
     @app.post("/v1/choices")
     def choices(body: dict = Body(...)):

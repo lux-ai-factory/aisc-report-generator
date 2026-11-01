@@ -1,5 +1,13 @@
 # Changelog of the AISC report renderer (report-generator)
 
+## Unreleased: proof files of checklist answers
+
+- The control answers block lists, under each answer, the files that prove it (name, type, size, who attached
+  it, when, SHA-256), read from `controls.submission_answer_file`; the files are never embedded. An answer row
+  that holds only files (no answer, no score) counts as not answered and is not an answer given for another
+  version; its files are listed. A project database without the table (controls migrations before
+  2026-11-01) lists none. Check: `tests/test_block_control_answers.py`.
+
 ## 2026-10-19: closed submissions as they were answered
 
 - The control answers (and what reads them: key figures, coverage, the checklist chart) show a closed

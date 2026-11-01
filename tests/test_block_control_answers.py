@@ -143,3 +143,66 @@ def test_a_closed_submission_shows_its_answers_as_they_were_answered(deps, archi
 def test_a_draft_says_no_template_revision(deps):
     t, *_ = render_one(deps, "control_answers")
     assert "template revision" not in t
+
+
+# Proof files: each question lists the files that prove its answer, never the files themselves
+@pytest.fixture
+def proof_files(bed):
+    """Two files on sub-2's answer to q1 (version 2), one on its answer to q3 (given for version 1, so not
+    shown), and on archived sub-3 an answer row to q2 that holds only a file (no answer, no score, no version).
+    Undone after the test."""
+    db = report_bed.project_db(IDS["A"])
+    bed.psql(db, f"""
+        INSERT INTO controls.submission_answer (id, "submissionId", "questionId", answer, score, system_version_pid,
+               system_version_number, answered_at)
+        VALUES ('a-files-only', 'sub-3', 'q2', NULL, NULL, NULL, NULL, NULL);
+        INSERT INTO controls.submission_answer_file (id, answer_id, file_id, name, mime, size, sha256, uploaded_by,
+               uploaded_at) VALUES
+          ('f-1', 'a-2', '5b7f0b1e-1d7e-4c7a-9a43-0c1f5d0b9e11', 'policy.pdf', 'application/pdf', 2048,
+           '{"ab" * 32}', 'alice@example.org', '2026-11-01 09:30:00+00'),
+          ('f-2', 'a-2', '5b7f0b1e-1d7e-4c7a-9a43-0c1f5d0b9e12', 'Register <b>v2</b>.xlsx',
+           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 30000, '{"cd" * 32}', NULL,
+           '2026-11-01 10:00:00+00'),
+          ('f-3', 'a-4', '5b7f0b1e-1d7e-4c7a-9a43-0c1f5d0b9e13', 'OLDVERSIONFILE.pdf', 'application/pdf', 10,
+           '{"ef" * 32}', 'bob', '2026-10-01 10:00:00+00'),
+          ('f-4', 'a-files-only', '5b7f0b1e-1d7e-4c7a-9a43-0c1f5d0b9e14', 'screenshot.png', 'image/png', 512,
+           '{"01" * 32}', 'carol', '2026-11-01 11:00:00+00');
+    """)
+    try:
+        yield
+    finally:
+        bed.psql(db, """
+            DELETE FROM controls.submission_answer_file WHERE id IN ('f-1', 'f-2', 'f-3', 'f-4');
+            DELETE FROM controls.submission_answer WHERE id = 'a-files-only';
+        """)
+
+
+def test_each_answer_lists_its_proof_files(deps, proof_files):
+    t, *_ = render_one(deps, "control_answers")
+    for expected in ("policy.pdf", "application/pdf", "2.0 KB", "alice@example.org", "2026-11-01 09:30", "ab" * 32,
+                     "29 KB", "uploader not recorded"):
+        assert expected in t, expected
+    assert t.index("policy.pdf") < t.index("Are deployers told the limits?")          # under its own question
+
+
+def test_the_files_of_an_answer_given_for_another_version_are_not_shown(deps, proof_files):
+    t, *_ = render_one(deps, "control_answers")
+    assert "OLDVERSIONFILE" not in t
+
+
+def test_a_question_whose_answer_holds_only_files_is_unanswered_and_lists_them(deps, proof_files):
+    t, s, *_ = render_one(deps, "control_answers", include_archived=True)
+    assert "screenshot.png" in t and "carol" in t
+    assert "answered 1 of 4" in t
+    assert not any("other versions" in n for n in s["notices"])
+
+
+def test_a_file_name_is_text_not_markup(deps, proof_files):
+    _, _, node, _ = render_one(deps, "control_answers")
+    assert "Register <b>v2</b>.xlsx" in text(node)
+    assert node.find("b", string="v2") is None
+
+
+def test_a_project_without_proof_files_lists_none(deps):
+    t, *_ = render_one(deps, "control_answers")
+    assert "Proof files" not in t

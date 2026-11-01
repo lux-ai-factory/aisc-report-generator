@@ -226,7 +226,7 @@ def load_runs(ctx, *, statuses, tools=None, metrics="all", names=None, targets=N
 class ChecklistAnswers:
     checklist: dict
     submission: dict
-    rows: list[dict]              # {question, article, answer, score, answered}
+    rows: list[dict]              # {question, article, answer, score, answered, files}
     other_version_answers: int
     answered: int
     total: int
@@ -268,6 +268,11 @@ def answer_sheet(status: str, questions: list[dict], answers: list[dict]) -> lis
     return sorted(answered + unanswered, key=lambda row: row[0]["position"])
 
 
+def _says_something(answer: dict) -> bool:
+    """An answer or a score: a row with neither only holds the question's proof files."""
+    return answer["answer"] is not None or answer["score"] is not None
+
+
 def load_answers(ctx, *, checklists="all", include_archived=False) -> AnswersView:
     controls = ctx.data.controls
     all_lists = controls.checklists()
@@ -286,19 +291,24 @@ def load_answers(ctx, *, checklists="all", include_archived=False) -> AnswersVie
     shown = [c for c in all_lists if c["id"] in latest]
     questions = controls.questions(checklist_ids=[c["id"] for c in shown])
     answers = controls.answers(submission_ids=[latest[c["id"]]["id"] for c in shown])
+    files: dict[str, list[dict]] = {}
+    for f in controls.answer_files(answer_ids=[a["id"] for a in answers]):
+        files.setdefault(f["answer_id"], []).append(f)
     pinned = ctx.data.system_id
     out = []
     for c in shown:
         sub = latest[c["id"]]
         given = [a for a in answers if a["submission_id"] == sub["id"]]
-        others = sum(1 for a in given if a["system_version_pid"] != pinned)
+        others = sum(1 for a in given if _says_something(a) and a["system_version_pid"] != pinned)
         rows = []
         for q, a in answer_sheet(sub["status"], [q for q in questions if q["checklist_id"] == c["id"]], given):
-            if a is not None and a["system_version_pid"] != pinned:
+            # an answer row that only holds proof files was given under no version: its files are shown
+            if a is not None and _says_something(a) and a["system_version_pid"] != pinned:
                 a = None
+            said = a is not None and _says_something(a)
             rows.append({"question": q["text"], "article": q["article"] or "",
-                         "answer": a["answer"] if a else None, "score": a["score"] if a else None,
-                         "answered": a is not None})
+                         "answer": a["answer"] if said else None, "score": a["score"] if said else None,
+                         "answered": said, "files": files.get(a["id"], []) if a else []})
         scores = [r["score"] for r in rows if r["answered"] and r["score"] is not None]
         out.append(ChecklistAnswers(checklist=c, submission=sub, rows=rows, other_version_answers=others,
                                     answered=sum(1 for r in rows if r["answered"]), total=len(rows),

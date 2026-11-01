@@ -70,6 +70,18 @@ def answers(project_id, system_id, *, sources, submission_ids) -> list[dict]:
                  {"ids": list(submission_ids)}, absent=[])
 
 
+def answer_files(project_id, system_id, *, sources, answer_ids) -> list[dict]:
+    """The proof files linked to these answers, oldest first: what each file is and who attached it when, never
+    its bytes. A database made before proof files existed has no such table and reads as none."""
+    dsn = _dsn(project_id, system_id, sources)
+    if dsn is None or not answer_ids:
+        return []
+    return _read(dsn,
+                 "SELECT f.answer_id, f.name, f.mime, f.size, f.sha256, f.uploaded_by, f.uploaded_at"
+                 " FROM controls.submission_answer_file f WHERE f.answer_id = ANY(%(ids)s::text[])"
+                 " ORDER BY f.answer_id, f.uploaded_at, f.id", {"ids": list(answer_ids)}, absent=[])
+
+
 def newest_newer_answer(project_id, system_id, *, sources, newer) -> int | None:
     numbers = {str(n["pid"]): n["number"] for n in newer}
     if not numbers:

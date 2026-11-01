@@ -6,7 +6,7 @@
   <table class="answers">
     <thead><tr><th>{{ t("Question") }}</th><th>{{ t("Answer") }}</th>{% if show_scores %}<th>{{ t("Score") }}</th>{% endif %}</tr></thead>
     <tbody>
-    {% for r in item.rows %}<tr><td>{{ r.question }}</td><td>{% if r.answered %}{{ r.answer if r.answer is not none else "" }}{% else %}{{ t("Not answered") }}{% endif %}</td>{% if show_scores %}<td>{{ number(r.score) if r.score is not none else "" }}</td>{% endif %}</tr>
+    {% for r in item.rows %}<tr><td>{{ r.question }}</td><td>{% if r.answered %}{{ r.answer if r.answer is not none else "" }}{% else %}{{ t("Not answered") }}{% endif %}{% if r.files %}<div class="proof-files"><p class="meta">{{ t("Proof files") }}</p><ul>{% for f in r.files %}<li>{{ f.name }} | {{ f.mime }} | {{ f.size }} | {{ f.uploaded_by if f.uploaded_by else t("uploader not recorded") }} | {{ f.when }}<br><span class="sha256">SHA-256 {{ f.sha256 }}</span></li>{% endfor %}</ul></div>{% endif %}</td>{% if show_scores %}<td>{{ number(r.score) if r.score is not none else "" }}</td>{% endif %}</tr>
     {% endfor %}
     </tbody>
   </table>

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from aisc_report_plugin_interface import BaseBlockRenderer
 
+from datetime import timezone
+
 from ..views import load_answers
 from ._common import empty_result, finish
 
@@ -10,11 +12,37 @@ from ._common import empty_result, finish
 MAX_ROWS = 1000
 
 
+def file_size(size: int) -> str:
+    """A size as people read it: 512 B, 3.4 KB, 12 MB (as the controls app shows it)."""
+    if size < 1024:
+        return f"{size} B"
+    value, unit = size / 1024, "KB"
+    for bigger in ("MB", "GB"):
+        if value < 1024:
+            break
+        value, unit = value / 1024, bigger
+    return f"{value:.1f} {unit}" if value < 10 else f"{round(value)} {unit}"
+
+
+def _when(value) -> str:
+    if value is None:
+        return ""
+    if value.tzinfo is not None:
+        value = value.astimezone(timezone.utc)
+    return value.strftime("%Y-%m-%d %H:%M")
+
+
+def proof_files(files: list[dict]) -> list[dict]:
+    """A question's proof files as the report lists them: name, type, size, who, when and SHA-256."""
+    return [{"name": f["name"], "mime": f["mime"], "size": file_size(f["size"]), "uploaded_by": f["uploaded_by"],
+             "when": _when(f["uploaded_at"]), "sha256": f["sha256"]} for f in files]
+
+
 class ControlAnswersBlock(BaseBlockRenderer):
     type_id = "control_answers"
     title = "Checklist answers"
     contract_version = 1
-    description = "The answers given to the project's checklists for this version."
+    description = "The answers given to the project's checklists for this version, with the files that prove them."
     options_schema = {
         "type": "object",
         "additionalProperties": False,
@@ -59,7 +87,8 @@ class ControlAnswersBlock(BaseBlockRenderer):
         hidden = 0
         lists = []
         for ca in view.checklists:
-            rows = [r for r in ca.rows if r["answered"] or options["show_unanswered"]]
+            rows = [{**r, "files": proof_files(r.get("files") or [])} for r in ca.rows
+                    if r["answered"] or options["show_unanswered"]]
             kept = rows[:budget]
             hidden += len(rows) - len(kept)
             budget -= len(kept)

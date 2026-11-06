@@ -1,7 +1,7 @@
 # aisc-report-plugin-mlareject
 
 The MLA-Reject tool renderer: it draws the runs of the MLA-Reject test inside the Test results block of an AISC
-report (step 4 Collect evidence, Report). It is one of the four tool renderers bundled with the report renderer
+report (step 4 AI Assessment Sandbox, Report). It is one of the four tool renderers bundled with the report renderer
 (`report-renderer`, `apps/report-generator`), next to LangBiTe, Promptfoo and StrongREJECT, and is installed with
 it. See the renderer's [README](../../README.md) for how reports are drawn.
 

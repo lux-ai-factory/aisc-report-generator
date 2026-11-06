@@ -1,9 +1,9 @@
 # AISC report renderer
 
 The report renderer turns a report layout into one document: HTML for the preview, PDF or DOCX for the
-generated report. It is the back end of the Report in step 4 Collect evidence of AISC, the AI Assessment Sandbox
+generated report. It is the back end of the Report in step 4 AI Assessment Sandbox of AISC, the AI Assessment Sandbox
 Configurator (steps: 1 Qualify the AI system, 2 Set control objectives, 3 Choose tests and checklists,
-4 Collect evidence). It runs as the compose service `report-renderer` and is called only by the report composer
+4 AI Assessment Sandbox). It runs as the compose service `report-renderer` and is called only by the report composer
 (`report-composer`, `apps/report-composer` in the aisc repository).
 
 The composer sends the renderer a request: the layout, the AI card version and the selection, the coverage

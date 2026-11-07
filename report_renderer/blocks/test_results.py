@@ -197,8 +197,11 @@ class TestResultsBlock(BaseBlockRenderer):
                 ref = new_error_ref()
                 logger.error("tool renderer for %s failed, ref %s", name, ref, exc_info=True)
                 notices.append(t("The {tool} renderer failed (ref {ref}).", tool=name, ref=ref))
-                section = render_generic(rv.run.measurements, number=ctx.number, t=t) \
-                    if options["show_measurements"] else None
+                kept, hidden = conversations.without_conversations(rv.run.measurements)
+                if hidden:
+                    self._left_out(notices, hidden, ctx)
+                section = render_generic(kept, number=ctx.number, t=t) \
+                    if options["show_measurements"] and kept else None
         else:
             if not drawn:
                 notice = t("No dedicated renderer for {tool}; showing raw measurements.", tool=name)

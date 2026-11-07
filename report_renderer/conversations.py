@@ -63,6 +63,14 @@ def _register_order(label: str) -> tuple:
     return language, place, register
 
 
+def _slot(d: dict) -> tuple:
+    """A conversation's slot as a sort key: numbers in order (no slot counts as 0), then text, then none."""
+    slot = d.get("slot", 0)
+    if isinstance(slot, (int, float)):
+        return 0, slot, ""
+    return (1, 0, str(slot)) if slot is not None else (2, 0, "")
+
+
 def compare(runs) -> Compared:
     """runs: (model, measurements) per plugin run."""
     overall, registers, categories, communities = (defaultdict(list) for _ in range(4))
@@ -89,15 +97,15 @@ def compare(runs) -> Compared:
             overall[model].append(same)
             registers[(f'{str(d.get("language")).upper()} {d.get("register")}', model)].append(same)
             categories[(category, model)].append(same)
-            communities[((category, name_of(d)), d.get("slot"), model)].append(same)
+            communities[((category, name_of(d)), _slot(d), model)].append(same)
         by_question = defaultdict(list)
         for d in people:
             by_question[(d.get("category"),) + _question(d)].append(d)
         for group in by_question.values():
-            for x, y in combinations(sorted(group, key=lambda d: d.get("slot", 0)), 2):
+            for x, y in combinations(sorted(group, key=_slot), 2):
                 key = (model, str(x.get("category")).capitalize(), name_of(x), name_of(y))
                 pairs[key].append(_orgs(x) == _orgs(y))
-                order[key] = (x.get("slot", 0), y.get("slot", 0))
+                order[key] = (_slot(x), _slot(y))
     out = Compared()
     out.models = sorted(overall)
     out.overall = {m: (_share(v), len(v)) for m, v in overall.items()}
@@ -105,7 +113,7 @@ def compare(runs) -> Compared:
         out.by_register.setdefault(label, {})[model] = _share(v)
     for (label, model), v in sorted(categories.items()):
         out.by_category.setdefault(label, {})[model] = _share(v)
-    for (label, _slot, model), v in sorted(communities.items(), key=lambda kv: (kv[0][0][0], kv[0][1] or 0)):
+    for (label, _place, model), v in sorted(communities.items(), key=lambda kv: (kv[0][0][0], kv[0][1])):
         out.by_community.setdefault(label, {})[model] = _share(v)
     for key in sorted(pairs, key=lambda k: (k[0], k[1], _share(pairs[k]), order[k])):
         model, category, a, b = key

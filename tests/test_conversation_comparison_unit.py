@@ -102,3 +102,8 @@ def test_a_conversation_without_its_baseline_is_left_out_of_the_comparison_with_
 def test_the_other_results_stay_when_the_conversations_are_taken_out():
     other = {"name": "Overall Pass Rate", "score": 0.0}
     assert without_conversations([talk("AGE", "18", 0), other]) == ([other], 1)
+
+
+def test_a_run_with_a_text_slot_and_a_missing_slot_is_still_compared():
+    c = compare([("OpenAI", [base(orgs="A"), talk("AGE", "18", "a", orgs="A"), talk("AGE", "70", None, orgs="B")])])
+    assert c.overall == {"OpenAI": (0.5, 2)}

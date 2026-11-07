@@ -24,7 +24,8 @@ report composer --HTTP + X-Report-Token--> report_service.py (FastAPI, port 8001
           report_renderer/blocks/*  ---reads--->  report_renderer/data/*  (as role report_ro)
                                                     platform database: core.project, pg_database
                                                     project_<hex> database: versions + module data
-                                                    superset database: charts and their comments (deleted ones left out)
+                                                    superset database: charts and their comments (deleted ones left out),
+                                                    and the plots saved with Save to report (aisc_report_plot)
 ```
 
 - `report_service.py` is the HTTP interface. Every route needs the shared token in the `X-Report-Token` header
@@ -49,7 +50,7 @@ report composer --HTTP + X-Report-Token--> report_service.py (FastAPI, port 8001
 
 Built-in block types (`report_renderer/blocks/`): cover, ai_card, risk_classification, control_objectives,
 test_results, test_runs, control_answers, dashboard_chart, summary_coverage, free_text, chapter, appendix,
-chart, key_figures, changes_since. The composer groups them as AI card, Control objectives and checklists,
+chart, key_figures, changes_since, superset_exports. The composer groups them as AI card, Control objectives and checklists,
 Tests run, Results, Summary and Document; a block type from a plugin goes under Other.
 
 - Control objectives rates each risk "Not rated" until both its impact and its likelihood are set, as step 2
@@ -58,6 +59,9 @@ Tests run, Results, Summary and Document; a block type from a plugin goes under 
   `coverage_links`), its coverage, and who reviewed the Evidence map.
 - Test results names each run's target, the AI system or one component of its AI card ("Target: Scoring model
   (Model), card v2"; "Target: not recorded" for a run without one).
+- Exported results (`superset_exports`) shows the plots saved from the results dashboard with Save to report,
+  one subsection per dashboard: each plot's filters as tags, the saved SVG as it was saved, who saved it, when,
+  and the comment. It shows every saved plot, whatever AI card version or period it shows, and says so.
 - Test runs lists the runs with their tools, times and configuration name. A configuration's settings are never
   read: they may hold credentials, and `report_ro` may not read them.
 

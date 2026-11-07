@@ -1,7 +1,5 @@
 """The comparison of conversations a report draws: the rules of the results dashboard's SQL, on a run's Conversation
 results. No database."""
-import pytest
-
 from report_renderer.conversations import CONVERSATION_METRIC, Compared, compare, without_conversations
 
 

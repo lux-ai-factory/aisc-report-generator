@@ -2,7 +2,7 @@
 objective and label together and room for the description. And a figure for a test with conversations."""
 import pytest
 
-from conftest import IDS, render_one
+from conftest import render_one
 from test_results_by_test import AGE, MIJKE, conversations, view_of
 
 pytestmark = pytest.mark.db

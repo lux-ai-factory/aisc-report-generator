@@ -96,13 +96,16 @@ class RiskClassificationBlock(BaseBlockRenderer):
                                   "title": "AI Act risk class",
                                   "description": "The class you state; the qualification does not classify risk.",
                                   "x-aisc-enum-labels": dict(CLASS_LABELS)},
+            "show_classification": {"type": "boolean", "title": "Show operators and risk class",
+                                    "description": "Shows the operators and the AI Act risk class above the risks."},
             "show_chains": {"type": "boolean", "title": "Show risks",
                             "description": "Lists each risk with its source, consequence and controls."},
             "show_impact_areas": {"type": "boolean", "title": "Show impact areas",
                                   "description": "Adds the impact areas of each risk.", "x-aisc-more": True},
         },
     }
-    default_options = {"show_chains": True, "show_impact_areas": True, "stated_risk_class": "not_determined"}
+    default_options = {"show_chains": True, "show_impact_areas": True, "stated_risk_class": "not_determined",
+                       "show_classification": True}
     reads = ("platform", "qualification")
     choice_options = ()
 
@@ -139,6 +142,7 @@ class RiskClassificationBlock(BaseBlockRenderer):
                             for f, cls in RISK_TERMS}})
         html = self.render_package_template(
             "templates/risk_classification.html.j2", operators=ops, risk_class=risk_class, chains=rows,
+            show_classification=options.get("show_classification", True),
             show_chains=options["show_chains"], show_impact_areas=options["show_impact_areas"],
             no_card=(t("No AI card for version {number}.", number=number) if data["card"] is None else None),
             t=t)

@@ -21,9 +21,12 @@ def _role(project_id) -> str:
 
 
 def charts(project_id, system_id, *, sources) -> list[dict]:
+    """The project's charts, the most recently changed first: what a report's chart list offers."""
     return db.rows(sources.superset_dsn, "superset",
-                   "SELECT DISTINCT s.id, s.slice_name FROM slices s JOIN dashboard_slices ds ON ds.slice_id = s.id"
-                   f" WHERE ds.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd) ORDER BY s.slice_name, s.id",
+                   "SELECT DISTINCT s.id, s.slice_name, s.changed_on FROM slices s"
+                   " JOIN dashboard_slices ds ON ds.slice_id = s.id"
+                   f" WHERE ds.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
+                   " ORDER BY s.changed_on DESC NULLS LAST, s.id DESC",
                    {"role": _role(project_id)})
 
 
@@ -33,6 +36,27 @@ def chart(project_id, system_id, *, sources, chart_id) -> dict | None:
                   " FROM slices s JOIN dashboard_slices ds ON ds.slice_id = s.id"
                   f" WHERE s.id = %(c)s AND ds.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
                   " GROUP BY s.id, s.slice_name, s.viz_type", {"role": _role(project_id), "c": int(chart_id)})
+
+
+def export_blocks(project_id, system_id, *, sources) -> list[dict]:
+    """The project's dashboards, by title: what a report can show saved pictures of."""
+    return db.rows(sources.superset_dsn, "superset",
+                   "SELECT d.id, d.dashboard_title FROM dashboards d"
+                   f" WHERE d.id IN (SELECT id FROM ({_DASHBOARDS}) pd) ORDER BY d.dashboard_title, d.id",
+                   {"role": _role(project_id)})
+
+
+def exports(project_id, system_id, *, sources) -> list[dict]:
+    """The plots saved with Save to report on the project's dashboards: the newest per dashboard, chart and filters, in
+    the order they were saved."""
+    return db.rows(sources.superset_dsn, "superset",
+                   "SELECT * FROM (SELECT DISTINCT ON (p.dashboard_id, p.chart, p.tags) p.id, p.dashboard_id,"
+                   " d.dashboard_title, p.chart, p.tab, p.tags, p.svg, p.comment, p.author_name, p.created_at"
+                   " FROM aisc_report_plot p JOIN dashboards d ON d.id = p.dashboard_id"
+                   f" WHERE p.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
+                   " ORDER BY p.dashboard_id, p.chart, p.tags, p.created_at DESC, p.id DESC) newest"
+                   " ORDER BY dashboard_title, created_at, id",
+                   {"role": _role(project_id)})
 
 
 def comments(project_id, system_id, *, sources, chart_id) -> list[dict]:

@@ -10,6 +10,8 @@ the runs whose target has one of the given keys (system, component:<id>) or labe
 Evaluations are headed by their readable name ("Evaluation 2: LangBiTe, StrongREJECT"); the meta line
 keeps the short id as a reference. The block can pick metrics, and passes `show_charts` and `detail`
 to the tool renderers as ctx.tool_options.
+
+A run's conversation results are never listed row by row.
 """
 from __future__ import annotations
 
@@ -20,7 +22,7 @@ from datetime import timezone
 from markupsafe import Markup
 from aisc_report_plugin_interface import BaseBlockRenderer
 
-from .. import declared
+from .. import conversations, declared
 from ..errors import new_error_ref
 from ..tools.generic import render_generic
 from ..views import evaluation_names, kind_label, load_runs, metric_choices, target_choices
@@ -55,6 +57,18 @@ def target_line(target, t) -> str:
     if target.get("status") == "stale":
         line = t("{target}, not on the latest AI card", target=line)
     return line
+
+
+class _LeftOut(str):
+    """The notice that some conversation results are not listed, keeping its numbers so the next run adds to them."""
+
+    def __new__(cls, t, total, runs):
+        text = t("{count} conversation results from {runs} runs are not listed.",
+                 count=total, runs=runs) if runs > 1 else \
+            t("{count} conversation results from 1 run are not listed.", count=total)
+        made = super().__new__(cls, text)
+        made.total, made.runs = total, runs
+        return made
 
 
 class TestResultsBlock(BaseBlockRenderer):
@@ -148,40 +162,7 @@ class TestResultsBlock(BaseBlockRenderer):
         for ev in view.evaluations:
             runs = []
             for rv in ev.runs:
-                name = rv.tool.get("display_name") or rv.tool.get("name") or t("unknown tool")
-                section = None
-                empty = filtered and not rv.run.measurements
-                renderer = ctx.data.tools.tool_for(rv.tool)
-                # the charts the plugin declares, for the tools that use them (declared.py)
-                declared_charts = declared.charts_for(ctx.report, rv.run) \
-                    if options["show_charts"] and declared.uses_declared(rv.tool) else []
-                drawn = declared.render_declared(declared_charts, rv.run.measurements, ctx) if declared_charts else Markup("")
-                run_ctx = dataclasses.replace(tool_ctx, tool_options={**tool_ctx.tool_options, "show_charts": False}) \
-                    if drawn else tool_ctx
-                if empty:
-                    section = None
-                elif renderer is not None:
-                    try:
-                        section = drawn + Markup(renderer.render(rv.run, run_ctx))
-                    except Exception:
-                        ref = new_error_ref()
-                        logger.error("tool renderer for %s failed, ref %s", name, ref, exc_info=True)
-                        notices.append(t("The {tool} renderer failed (ref {ref}).", tool=name, ref=ref))
-                        section = render_generic(rv.run.measurements, number=ctx.number, t=t) \
-                            if options["show_measurements"] else None
-                else:
-                    if not drawn:
-                        notice = t("No dedicated renderer for {tool}; showing raw measurements.", tool=name)
-                        if notice not in notices:
-                            notices.append(notice)
-                    table = render_generic(rv.run.measurements, number=ctx.number, t=t) \
-                        if options["show_measurements"] else None
-                    section = (drawn + table) if table is not None else (drawn or None)
-                runs.append({"tool": name, "components": ", ".join(f"{c['name']} ({c['component_type']})"
-                                                                     for c in rv.components),
-                             "target": target_line(rv.run.target, t),
-                             "status": rv.status, "section": section, "no_metrics": empty,
-                             "artifacts": rv.artifacts if options["show_artifacts"] else []})
+                runs.append(self._run_entry(rv, options, ctx, tool_ctx, notices, filtered))
             unmatched = None
             if ev.unmatched_count:
                 notices.append(t("{count} observations could not be tied to a tool.", count=ev.unmatched_count))
@@ -193,6 +174,55 @@ class TestResultsBlock(BaseBlockRenderer):
                                 "date": _when(e["created_at"]), "runs": runs, "unmatched": unmatched})
         html = self.render_package_template("templates/test_results.html.j2", evaluations=evaluations, t=t)
         return finish(html, notices, newest_newer=data["newest_newer"], t=t)
+
+    def _run_entry(self, rv, options, ctx, tool_ctx, notices, filtered) -> dict:
+        """One run as the templates show it: its tool, target, status and section."""
+        t = ctx.t
+        name = rv.tool.get("display_name") or rv.tool.get("name") or t("unknown tool")
+        section = None
+        empty = filtered and not rv.run.measurements
+        renderer = ctx.data.tools.tool_for(rv.tool)
+        # the charts the plugin declares, for the tools that use them (declared.py)
+        declared_charts = declared.charts_for(ctx.report, rv.run) \
+            if options["show_charts"] and declared.uses_declared(rv.tool) else []
+        drawn = declared.render_declared(declared_charts, rv.run.measurements, ctx) if declared_charts else Markup("")
+        run_ctx = dataclasses.replace(tool_ctx, tool_options={**tool_ctx.tool_options, "show_charts": False}) \
+            if drawn else tool_ctx
+        if empty:
+            section = None
+        elif renderer is not None:
+            try:
+                section = drawn + Markup(renderer.render(rv.run, run_ctx))
+            except Exception:
+                ref = new_error_ref()
+                logger.error("tool renderer for %s failed, ref %s", name, ref, exc_info=True)
+                notices.append(t("The {tool} renderer failed (ref {ref}).", tool=name, ref=ref))
+                section = render_generic(rv.run.measurements, number=ctx.number, t=t) \
+                    if options["show_measurements"] else None
+        else:
+            if not drawn:
+                notice = t("No dedicated renderer for {tool}; showing raw measurements.", tool=name)
+                if notice not in notices:
+                    notices.append(notice)
+            kept, hidden = conversations.without_conversations(rv.run.measurements)
+            if hidden:
+                self._left_out(notices, hidden, ctx)
+            table = render_generic(kept, number=ctx.number, t=t) if options["show_measurements"] and kept else None
+            section = (drawn + table) if table is not None else (drawn or None)
+        return {"tool": name, "components": ", ".join(f"{c['name']} ({c['component_type']})" for c in rv.components),
+                "target": target_line(rv.run.target, t), "status": rv.status, "section": section, "no_metrics": empty,
+                "artifacts": rv.artifacts if options["show_artifacts"] else []}
+
+    @staticmethod
+    def _left_out(notices, count, ctx) -> None:
+        """The one notice of the conversation results not listed: their total, over the runs so far."""
+        t = ctx.t
+        for i, notice in enumerate(notices):
+            if isinstance(notice, _LeftOut):
+                total, runs = notice.total + count, notice.runs + 1
+                notices[i] = _LeftOut(t, total, runs)
+                return
+        notices.append(_LeftOut(t, count, 1))
 
     def choices(self, ctx, option_name) -> list[dict]:
         if option_name == "tools":

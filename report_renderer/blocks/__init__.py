@@ -11,9 +11,10 @@ from .free_text import FreeTextBlock
 from .key_figures import KeyFiguresBlock
 from .risk_classification import RiskClassificationBlock
 from .summary_coverage import SummaryCoverageBlock
+from .superset_exports import SupersetExportsBlock
 from .test_results import TestResultsBlock
 from .test_runs import TestRunsBlock
 
 BUILTIN_BLOCKS = [CoverBlock, AiCardBlock, RiskClassificationBlock, ControlObjectivesBlock, TestResultsBlock,
                   ControlAnswersBlock, DashboardChartBlock, SummaryCoverageBlock, FreeTextBlock, ChapterBlock,
-                  AppendixBlock, ChartBlock, KeyFiguresBlock, ChangesSinceBlock, TestRunsBlock]
+                  AppendixBlock, ChartBlock, KeyFiguresBlock, ChangesSinceBlock, TestRunsBlock, SupersetExportsBlock]

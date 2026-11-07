@@ -12,6 +12,7 @@ from datetime import timezone
 from aisc_report_plugin_interface import BaseBlockRenderer
 from aisc_report_plugin_interface.tools import headline_items
 
+from .. import conversations
 from ..coverage import STATUSES, coverage_for
 from ..errors import SourceUnavailable, new_error_ref
 from ..rating import BANDS
@@ -23,6 +24,10 @@ FIGURES = ["version", "risks", "objectives", "coverage", "tests", "checklists"]
 FIGURE_LABELS = {"version": "Version", "risks": "Risks", "objectives": "Objectives", "coverage": "Coverage",
                  "tests": "Tests", "checklists": "Checklists"}
 MAX_TOOL_ITEMS = 2
+
+
+def _one_decimal(share: float, ctx) -> str:
+    return f"{share * 100:.1f}".rstrip("0").rstrip(".").replace(".", ctx.decimal_separator)
 
 
 class KeyFiguresBlock(BaseBlockRenderer):
@@ -152,7 +157,27 @@ class KeyFiguresBlock(BaseBlockRenderer):
                     out["tools"].append({"label": ctx.t("{label}: {value}", label=name, value=tt(str(item.get("label", "")))),
                                          "value": str(item.get("value", "")),
                                          "note": tt(str(item["note"])) if item.get("note") else ""})
+            self._conversation_figures(view, ctx, out)
         return {"value": ctx.t("{count} evaluations", count=len(view.evaluations)), "note": ", ".join(tools)}
+
+    @staticmethod
+    def _conversation_figures(view, ctx, out) -> None:
+        """A test with conversation results: how often a person is treated like the baseline, per target."""
+        by_tool: dict[str, list] = {}
+        for ev in view.evaluations:
+            for rv in ev.runs:
+                if any(conversations.is_conversation(m) for m in rv.run.measurements):
+                    label = (rv.run.target or {}).get("label") or ctx.t("not recorded")
+                    by_tool.setdefault(rv.tool.get("display_name") or rv.tool.get("name"), []).append(
+                        (label, rv.run.measurements))
+        for name, runs in by_tool.items():
+            overall = conversations.compare(runs).overall
+            if overall:
+                value = "; ".join(f"{model} {ctx.percent_format.replace('{value}', _one_decimal(share, ctx))}"
+                                  for model, (share, _n) in sorted(overall.items()))
+                out["tools"].append({"label": ctx.t("{label}: {value}", label=name,
+                                                    value=ctx.t("Treated like the baseline")),
+                                     "value": value, "note": ""})
 
     def _checklists(self, ctx, options, out):
         view = load_answers(ctx)

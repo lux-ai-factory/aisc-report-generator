@@ -88,7 +88,7 @@ def test_one_not_scored_summary_leaves_the_others():
           F.m("Baseline Harmfulness (no jailbreak)", 0.05, F.OK_BASE), F.jb("none", 0.05)]
     items = cls()().headline(F.run(ms))
     labels = " ".join(i["label"] for i in items).lower()
-    assert "harmfulness" in labels and "resistance" in labels and "worst" not in labels
+    assert labels == "jailbreak resistance"
     assert "not scored: No attacked jailbreaks" in text(soup(render(F.run(ms))))
 
 
@@ -100,10 +100,8 @@ def test_success_text_is_compared_after_trimming():
 
 def test_headline_when_scored():
     items = cls()().headline(F.run())
-    assert 1 <= len(items) <= 4
-    assert all(isinstance(i["label"], str) and isinstance(i["value"], str) for i in items)
-    joined = " ".join(f"{i['label']} {i['value']}" for i in items)
-    assert "0.2" in joined and "0.8" in joined and "pair" in joined
+    assert [i["label"] for i in items] == ["Jailbreak resistance"]
+    assert items[0]["value"] == "0.8"
 
 
 def test_verdict_is_none_and_no_colour_bands():

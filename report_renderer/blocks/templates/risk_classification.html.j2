@@ -1,9 +1,9 @@
-<dl class="card">
+{% if show_classification %}<dl class="card">
   <dt>{{ t("Operators") }}</dt>
   <dd>{% if operators %}{% for role, name in operators %}{{ name }} ({{ t(role) }}){% if not loop.last %}; {% endif %}{% endfor %}{% else %}{{ t("None named in the AI card") }}{% endif %}</dd>
   <dt>{{ t("AI Act risk class") }}</dt><dd>{{ risk_class }}</dd>
 </dl>
-{% if no_card %}<p class="placeholder">{{ no_card }}</p>{% endif %}
+{% endif %}{% if no_card %}<p class="placeholder">{{ no_card }}</p>{% endif %}
 {% if show_chains and chains %}
 <h3 class="risks-title">{{ t("Risks") }}</h3>
 {% for r in chains %}

@@ -9,7 +9,7 @@ from conftest import need
 REG = "report_renderer.registry"
 BUILTINS = ["cover", "ai_card", "risk_classification", "control_objectives", "test_results",
             "control_answers", "dashboard_chart", "summary_coverage", "free_text",
-            "chapter", "appendix", "chart", "key_figures", "changes_since", "test_runs"]
+            "chapter", "appendix", "chart", "key_figures", "changes_since", "test_runs", "superset_exports"]
 LANGBITE = {"display_name": "LangBiTe", "name": "LangBiTeEvaluationPlugin", "package_name": "aisc-plugin-langbite"}
 
 
@@ -39,7 +39,7 @@ def test_every_built_in_declares_a_valid_contract(type_id):
 EXPECTED_DEFAULTS = {
     "cover": {"report_title": "AI system assessment report", "subtitle": "", "show_logo": True, "show_generated_by": True},
     "ai_card": {"show_components": True, "show_tags": True, "show_graph_stats": False},
-    "risk_classification": {"show_chains": True, "show_impact_areas": True, "stated_risk_class": "not_determined"},
+    "risk_classification": {"show_chains": True, "show_impact_areas": True, "stated_risk_class": "not_determined", "show_classification": True},
     "control_objectives": {"group_by": "objective", "show_rationale": True, "show_quotes": False, "show_status": True,
                            "requirements": "all", "objectives": "all", "min_severity": None,
                            "include_unrated": True, "show_severity": False},
@@ -47,7 +47,7 @@ EXPECTED_DEFAULTS = {
                      "metrics": "all", "show_charts": True, "detail": "full"},
     "control_answers": {"checklists": "all", "show_unanswered": True, "show_scores": True, "include_archived": False},
     "dashboard_chart": {"show_comments": True, "include_replies": True, "width": 1200, "height": 700},
-    "summary_coverage": {"links": [], "show_uncovered_only": False, "requirements": "all"},
+    "summary_coverage": {"links": [], "show_uncovered_only": False, "requirements": "all", "merge_label": False},
     "free_text": {"format": "plain"},
     "chart": {"dataset": "coverage_status", "runs": "latest", "show_table": True, "max_bars": 20, "orientation": "auto"},
     "key_figures": {"figures": ["version", "risks", "objectives", "coverage", "tests", "checklists"],
@@ -57,6 +57,7 @@ EXPECTED_DEFAULTS = {
     "chapter": {"title": "Chapter", "intro": "", "page_break_before": True},
     "appendix": {},
     "test_runs": {"detail": "summary"},
+    "superset_exports": {"dashboards": "all"},
 }
 
 
@@ -98,7 +99,7 @@ def test_other_options_are_not_references():
     for cls in reg.block_types():
         for name, prop in cls.options_schema.get("properties", {}).items():
             if (cls.type_id, name) not in {("control_answers", "checklists"),
-                                           ("dashboard_chart", "chart_id"), ("summary_coverage", "links"),
+                                           ("dashboard_chart", "chart_id"), ("summary_coverage", "links"), ("superset_exports", "dashboards"),
                                            ("test_results", "metrics"), ("control_objectives", "objectives"),
                                            ("chart", "tool_chart"), ("chart", "metric"),
                                            # target keys are the project's

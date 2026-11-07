@@ -29,6 +29,9 @@ class SummaryCoverageBlock(BaseBlockRenderer):
         "type": "object",
         "additionalProperties": False,
         "properties": {
+            "merge_label": {"type": "boolean", "title": "Objective and label together",
+                            "description": "One column with the objective and its label; the description gets twice the width.",
+                            "x-aisc-more": True},
             "show_uncovered_only": {"type": "boolean", "title": "Only objectives without evidence",
                                     "description": "Lists only the objectives that are not covered or have no evidence."},
             "requirements": copy.deepcopy(REQUIREMENTS_PROPERTY),
@@ -52,7 +55,7 @@ class SummaryCoverageBlock(BaseBlockRenderer):
             },
         },
     }
-    default_options = {"links": [], "show_uncovered_only": False, "requirements": "all"}
+    default_options = {"links": [], "show_uncovered_only": False, "requirements": "all", "merge_label": False}
     reads = ("platform", "control_objectives", "engine", "controls")
     choice_options = ("links.objective_id", "links.tests", "links.checklists", "requirements")
 
@@ -86,6 +89,7 @@ class SummaryCoverageBlock(BaseBlockRenderer):
                          "tests": [tool_label(name, data["plugins"]) for name, _ in cov.tests],
                          "checklists": [title for _, title, _, _ in cov.checklists], "status": cov.status})
         html = self.render_package_template("templates/summary_coverage.html.j2", rows=rows, t=t,
+                                            merge_label=options.get("merge_label", False),
                                             review=self._review_line(data, ctx))
         notices = [filters.notice(t)] if filters.active else []
         return BlockResult(html=html, status="ok", notices=notices)

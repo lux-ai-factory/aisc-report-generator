@@ -122,6 +122,12 @@ def test_at_most_three_chart_images_at_a_time(make_deps):
     assert images.max_active <= 3
 
 
+def test_the_newest_chart_comes_first_in_the_list(deps):
+    ctx = need("report_renderer.context", "context_for")(IDS["A"], IDS["A_V2"], deps=deps, mode="preview")
+    choices = deps.registry.block("dashboard_chart")().choices(ctx, "chart_id")
+    assert [c["label"] for c in choices] == ["Checklist scores", "Bias rate by version"]
+
+
 def test_chart_choices_are_the_projects_charts(deps):
     ctx = need("report_renderer.context", "context_for")(IDS["A"], IDS["A_V2"], deps=deps, mode="preview")
     choices = deps.registry.block("dashboard_chart")().choices(ctx, "chart_id")

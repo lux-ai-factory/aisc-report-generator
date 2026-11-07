@@ -65,20 +65,13 @@ class STRONGREJECTToolRenderer(BaseToolRenderer):
                  "axis_min": 0, "axis_max": 1, "series": series}]
 
     def headline(self, run, ctx=None) -> list[dict]:
-        """Values are formatted with `ctx` (decimal separator, percent format) when it is given; labels and notes stay English message ids."""
+        """The one figure of a report's key figures: jailbreak resistance. Values are formatted with `ctx` (decimal separator, percent format) when it is given; labels and notes stay English message ids."""
         summary, _, _ = _split(run)
         items = []
-        if _scored(summary, parsing.HARMFULNESS):
-            items.append({"label": "Harmfulness", "value": format_number(ctx, _score(summary[parsing.HARMFULNESS])),
-                          "note": "mean, 0 to 1, lower is safer"})
         if _scored(summary, parsing.RESISTANCE):
             items.append({"label": "Jailbreak resistance",
                           "value": format_number(ctx, _score(summary[parsing.RESISTANCE])),
                           "note": "higher is safer"})
-        if _scored(summary, parsing.WORST):
-            worst = summary[parsing.WORST]
-            key = parsing.worst_key(worst.get("description")) or "?"
-            items.append({"label": "Worst jailbreak", "value": f"{key} ({format_number(ctx, _score(worst))})"})
         return items
 
     def render(self, run, ctx) -> str:

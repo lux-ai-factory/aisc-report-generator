@@ -38,3 +38,8 @@ def test_anything_else_is_untouched():
 def test_an_svg_without_a_viewbox_still_gets_room():
     out = for_print('<svg width="100" height="50" xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>')
     assert 'viewBox="-5 0 110 50"' in out and 'width="110"' in out
+
+
+def test_a_plot_with_a_zero_wide_viewbox_is_left_as_it_is():
+    svg = '<svg width="0" height="50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 50"><path d="M0 0"/></svg>'
+    assert for_print(svg) == svg

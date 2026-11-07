@@ -40,6 +40,8 @@ def _room(svg: str) -> str:
         if width is None or height is None:
             return svg
         box = [0.0, 0.0, width, height]
+    if box[2] <= 0:
+        return svg
     pad = round(box[2] * MARGIN, 2)
     view = f"{box[0] - pad:g} {box[1]:g} {box[2] + 2 * pad:g} {box[3]:g}"
     new = re.sub(r'\sviewBox="[^"]*"', "", head.group(0))

@@ -46,17 +46,26 @@ def export_blocks(project_id, system_id, *, sources) -> list[dict]:
                    {"role": _role(project_id)})
 
 
+#: whether the plots' table has the rows column: the dashboard adds it when it starts, so an install whose dashboard has
+#: not started since reads no count. pg_attribute is readable by every role, whatever its grants.
+_HAS_ROWS = ("SELECT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass('aisc_report_plot')"
+             " AND attname = 'rows' AND NOT attisdropped) AS present")
+
+
 def exports(project_id, system_id, *, sources) -> list[dict]:
     """The plots saved with Save to report on the project's dashboards: the newest per dashboard, chart and filters, in
-    the order they were saved."""
-    return db.rows(sources.superset_dsn, "superset",
-                   "SELECT * FROM (SELECT DISTINCT ON (p.dashboard_id, p.chart, p.tags) p.id, p.dashboard_id,"
-                   " d.dashboard_title, p.chart, p.tab, p.tags, p.svg, p.comment, p.author_name, p.created_at"
-                   " FROM aisc_report_plot p JOIN dashboards d ON d.id = p.dashboard_id"
-                   f" WHERE p.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
-                   " ORDER BY p.dashboard_id, p.chart, p.tags, p.created_at DESC, p.id DESC) newest"
-                   " ORDER BY dashboard_title, created_at, id",
-                   {"role": _role(project_id)})
+    the order they were saved. rows is the number of rows the chart drew when the plot was saved, None when it was
+    saved without one or the table predates the column."""
+    params = {"role": _role(project_id)}
+    with db.connect(sources.superset_dsn, "superset") as conn:
+        rows = "p.rows" if conn.execute(_HAS_ROWS).fetchone()["present"] else "NULL::integer AS rows"
+        return list(conn.execute(
+            "SELECT * FROM (SELECT DISTINCT ON (p.dashboard_id, p.chart, p.tags) p.id, p.dashboard_id,"
+            f" d.dashboard_title, p.chart, p.tab, p.tags, p.svg, p.comment, p.author_name, p.created_at, {rows}"
+            " FROM aisc_report_plot p JOIN dashboards d ON d.id = p.dashboard_id"
+            f" WHERE p.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
+            " ORDER BY p.dashboard_id, p.chart, p.tags, p.created_at DESC, p.id DESC) newest"
+            " ORDER BY dashboard_title, created_at, id", params).fetchall())
 
 
 def comments(project_id, system_id, *, sources, chart_id) -> list[dict]:

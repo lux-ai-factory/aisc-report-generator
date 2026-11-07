@@ -82,3 +82,29 @@ def test_the_blocks_can_be_chosen(deps):
 def test_a_plot_is_never_split_from_its_title_and_tags(deps):
     _, _, node, _ = render_one(deps, "superset_exports")
     assert all("break-inside:avoid" in p.get("style", "").replace(" ", "") for p in plots(node))
+
+
+def test_each_plot_says_the_rows_its_chart_drew_when_it_was_saved(deps):
+    """The seed: the newest OpenAI plot was saved with 2 rows, the Local one with 1, By category without a count."""
+    _, _, node, _ = render_one(deps, "superset_exports")
+    assert [(p.find(class_="export-rows").get_text(strip=True) if p.find(class_="export-rows") else None)
+            for p in plots(node)] == ["2 rows", "1 row", None]
+
+
+def test_a_dashboard_database_made_before_the_rows_column_reads_no_count_and_no_error(bed):
+    """An install whose dashboard has not started since the column was added: aisc_report_plot has no rows."""
+    import dataclasses
+
+    from conftest import bed_sources
+    from report_renderer.data import superset_db
+
+    old = "superset_before_rows"
+    bed.psql("postgres", f"DROP DATABASE IF EXISTS {old}")
+    bed.psql("postgres", f"CREATE DATABASE {old} TEMPLATE superset")
+    try:
+        bed.psql(old, "ALTER TABLE aisc_report_plot DROP COLUMN rows")
+        older = dataclasses.replace(bed_sources(bed), superset_dsn=bed.dsn("report_ro", old))
+        got = superset_db.exports(IDS["A"], IDS["A_V2"], sources=older)
+        assert len(got) == 3 and [g["rows"] for g in got] == [None, None, None]
+    finally:
+        bed.psql("postgres", f"DROP DATABASE IF EXISTS {old}")

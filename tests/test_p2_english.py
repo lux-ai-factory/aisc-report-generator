@@ -116,6 +116,7 @@ SINGULARS = [
     ("{count} selected checklists are not in this project and are not shown.",
      "{count} selected checklist is not in this project and is not shown."),
     ("{name} ({size} bytes)", "{name} ({size} byte)"),
+    ("{count} rows", "{count} row"),
 ]
 
 

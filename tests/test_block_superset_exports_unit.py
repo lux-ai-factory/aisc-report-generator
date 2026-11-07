@@ -30,3 +30,28 @@ def test_two_blocks_with_the_same_title_stay_two_subsections():
 def test_the_block_says_its_plots_are_as_saved_whatever_version_or_period():
     text = render([plot(1, "Results", "By register")]).get_text(" ", strip=True)
     assert "Plots as saved on the dashboards, whatever version or period they show." in text
+
+
+def rows_lines(node):
+    return [(p.find(class_="export-rows").get_text(strip=True) if p.find(class_="export-rows") else None)
+            for p in node.select(".export-plot")]
+
+
+def render_in_english(rows):
+    from report_renderer import languages
+
+    ctx = SimpleNamespace(t=languages.translator()[0])
+    return BeautifulSoup(SupersetExportsBlock().render({"exports": rows}, {"dashboards": "all"}, ctx).html, "html.parser")
+
+
+def test_each_plot_says_the_rows_its_chart_drew_when_it_was_saved():
+    node = render_in_english([{**plot(1, "Results", "A"), "rows": 2}, {**plot(1, "Results", "B"), "rows": 1},
+                              {**plot(1, "Results", "C"), "rows": 0}])
+    assert rows_lines(node) == ["2 rows", "1 row", "0 rows"]
+    first = node.select(".export-plot")[0]
+    assert first.find("img").find_next(class_="export-rows") is first.find(class_="export-rows")   # under the plot
+
+
+def test_a_plot_saved_without_a_count_shows_none():
+    node = render_in_english([{**plot(1, "Results", "A"), "rows": None}, plot(1, "Results", "B")])
+    assert rows_lines(node) == [None, None]

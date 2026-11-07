@@ -1,7 +1,8 @@
 """Exported results: one subsection per Superset block; in it, one saved plot after another.
 
 Each plot: its filters as text tags, the vector file saved from Superset with Save to report (shown as it was saved;
-nothing is drawn here), who saved it and when, and the comment."""
+nothing is drawn here), the number of rows its chart drew then ("N rows", when the plot was saved with one), who saved
+it and when, and the comment."""
 from __future__ import annotations
 
 import base64
@@ -48,6 +49,7 @@ class SupersetExportsBlock(BaseBlockRenderer):
             blocks.setdefault(r["dashboard_id"], {"title": r["dashboard_title"], "plots": []})["plots"].append(
                 {"chart": r["chart"], "tags": list(r["tags"] or []), "comment": r["comment"], "author": r["author_name"],
                  "date": ymd(r["created_at"]),
+                 "rows": t("{count} rows", count=r["rows"]) if r.get("rows") is not None else None,
                  "image": "data:image/svg+xml;base64," + base64.b64encode(
                      for_print(bytes(r["svg"]).decode("utf-8")).encode("utf-8")).decode("ascii")})
         html = self.render_package_template("templates/superset_exports.html.j2", blocks=blocks, t=t)

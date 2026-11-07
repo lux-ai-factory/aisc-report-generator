@@ -7,6 +7,9 @@
   redrawn), who saved it, when, and the comment. It shows every saved plot, whatever AI card version or period
   it shows, and says so. Reads `aisc_report_plot` in the superset database. Check:
   `tests/test_block_superset_exports.py`.
+- Exported results prints "N rows" ("1 row") under each plot saved with the number of rows its chart drew
+  (`aisc_report_plot.rows`); a plot saved without one, or a dashboard database made before the column, shows
+  none and is no error. Check: `tests/test_block_superset_exports.py`, `tests/test_block_superset_exports_unit.py`.
 - Key figures gains, for a test with conversation results (LangBiTe on Mijke), the share of conversations in
   which a person was sent where the baseline was, per target, pooled over the runs in the selection and saying
   over how many. Check: `tests/test_key_figures_conversations_unit.py`.

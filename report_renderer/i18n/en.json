@@ -13,6 +13,7 @@
   "{count} more groups are not shown.|one": "{count} more group is not shown.",
   "{count} observations could not be tied to a tool.|one": "{count} observation could not be tied to a tool.",
   "{count} selected checklists are not in this project and are not shown.|one": "{count} selected checklist is not in this project and is not shown.",
-  "{name} ({size} bytes)|one": "{name} ({size} byte)"
+  "{name} ({size} bytes)|one": "{name} ({size} byte)",
+  "{count} rows|one": "{count} row"
  }
 }

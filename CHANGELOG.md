@@ -1,6 +1,24 @@
 # Changelog of the AISC report renderer (report-generator)
 
-## Unreleased: proof files of checklist answers
+## Unreleased: proof files, exported results, conversations
+
+- New block Exported results (`superset_exports`): the plots saved from the results dashboard with Save to
+  report, one subsection per dashboard, each with its filters as tags, the saved SVG (prepared for print, not
+  redrawn), who saved it, when, and the comment. It shows every saved plot, whatever AI card version or period
+  it shows, and says so. Reads `aisc_report_plot` in the superset database. Check:
+  `tests/test_block_superset_exports.py`.
+- Key figures gains, for a test with conversation results (LangBiTe on Mijke), the share of conversations in
+  which a person was sent where the baseline was, per target, pooled over the runs in the selection and saying
+  over how many. Check: `tests/test_key_figures_conversations_unit.py`.
+- Test results no longer lists conversation results row by row (also when a tool renderer fails and the
+  generic table is drawn); one notice says how many were left out. Check: `tests/test_results_by_test.py`.
+- Summary and coverage has the option `merge_label` (off by default): one column with the objective and its
+  label, the description twice as wide.
+- Risk identification has the option `show_classification` (on by default): off hides the operators and the
+  AI Act risk class above the risks.
+- The chart list of a dashboard chart block offers the most recently changed chart first, not by name.
+- StrongREJECT's headline in Key figures is Jailbreak resistance only: Harmfulness and Worst jailbreak are
+  no longer shown there (they stay in Test results).
 
 - The control answers block lists, under each answer, the files that prove it (name, type, size, who attached
   it, when, SHA-256), read from `controls.submission_answer_file`; the files are never embedded. An answer row

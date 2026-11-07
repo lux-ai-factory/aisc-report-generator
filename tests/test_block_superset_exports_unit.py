@@ -26,3 +26,7 @@ def test_two_blocks_with_the_same_title_stay_two_subsections():
     assert [b.find("h3").get_text(strip=True) for b in blocks] == ["Results", "Results"]
     assert [[h.get_text(strip=True) for h in b.find_all("h4")] for b in blocks] == [["By register"], ["By category"]]
 
+
+def test_the_block_says_its_plots_are_as_saved_whatever_version_or_period():
+    text = render([plot(1, "Results", "By register")]).get_text(" ", strip=True)
+    assert "Plots as saved on the dashboards, whatever version or period they show." in text

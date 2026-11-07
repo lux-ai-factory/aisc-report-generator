@@ -26,10 +26,6 @@ FIGURE_LABELS = {"version": "Version", "risks": "Risks", "objectives": "Objectiv
 MAX_TOOL_ITEMS = 2
 
 
-def _one_decimal(share: float, ctx) -> str:
-    return f"{share * 100:.1f}".rstrip("0").rstrip(".").replace(".", ctx.decimal_separator)
-
-
 class KeyFiguresBlock(BaseBlockRenderer):
     type_id = "key_figures"
     title = "Key figures"
@@ -173,7 +169,7 @@ class KeyFiguresBlock(BaseBlockRenderer):
         for name, runs in by_tool.items():
             overall = conversations.compare(runs).overall
             if overall:
-                value = "; ".join(f"{model} {ctx.percent_format.replace('{value}', _one_decimal(share, ctx))}"
+                value = "; ".join(f"{model} {ctx.percent(share)}"
                                   for model, (share, _n) in sorted(overall.items()))
                 out["tools"].append({"label": ctx.t("{label}: {value}", label=name,
                                                     value=ctx.t("Treated like the baseline")),

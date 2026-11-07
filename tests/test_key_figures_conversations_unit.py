@@ -30,3 +30,11 @@ def _figure(runs):
 def test_the_treated_like_the_baseline_figure_says_how_many_runs_it_pools():
     assert _figure([_run("A"), _run("B")])["note"] == "over 2 runs"
     assert _figure([_run("A")])["note"] == "over 1 run"
+
+
+def test_the_share_is_written_by_the_reports_own_percent_format():
+    out = {"tools": []}
+    ctx = _ctx()
+    ctx.percent = lambda share: f"<{share}>"
+    KeyFiguresBlock._conversation_figures(SimpleNamespace(evaluations=[SimpleNamespace(runs=[_run("A")])]), ctx, out)
+    assert out["tools"][0]["value"] == "OpenAI <1.0>"

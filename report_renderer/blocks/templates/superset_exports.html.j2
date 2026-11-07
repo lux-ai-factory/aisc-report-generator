@@ -1,7 +1,7 @@
-{% for title, plots in blocks.items() %}
+{% for block in blocks.values() %}
 <div class="export-block">
-  <h3>{{ title }}</h3>
-  {% for p in plots %}
+  <h3>{{ block.title }}</h3>
+  {% for p in block.plots %}
   <div class="export-plot" style="break-inside: avoid; page-break-inside: avoid">
     <h4>{{ p.chart }}</h4>
     <p class="export-tags">{% for tag in p.tags %}<span class="tag" style="display:inline-block;border:1px solid #888;border-radius:3px;padding:1px 6px;margin:0 4px 4px 0;font-size:90%">{{ tag }}</span>{% else %}<span class="meta">{{ t("No filters: all the data") }}</span>{% endfor %}</p>

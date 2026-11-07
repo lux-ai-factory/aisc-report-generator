@@ -45,7 +45,7 @@ class SupersetExportsBlock(BaseBlockRenderer):
             return empty_result(t("Nothing saved yet: in the results dashboard, press Save to report on a block."))
         blocks: dict = {}
         for r in rows:
-            blocks.setdefault(r["dashboard_title"], []).append(
+            blocks.setdefault(r["dashboard_id"], {"title": r["dashboard_title"], "plots": []})["plots"].append(
                 {"chart": r["chart"], "tags": list(r["tags"] or []), "comment": r["comment"], "author": r["author_name"],
                  "date": ymd(r["created_at"]),
                  "image": "data:image/svg+xml;base64," + base64.b64encode(

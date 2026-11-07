@@ -5,7 +5,8 @@ results: two conversations of the same run that asked the same question (scenari
 agree when they ended with the same set of organisations, or both with none. Nothing is stored or judged again:
 the outcome and the organisations are the plugin's.
 
-Pure: the block reads the runs and draws (blocks/conversation_comparison.py)."""
+Pure: the readers are blocks/key_figures.py (_conversation_figures, the overall share) and
+blocks/test_results.py (_run_entry, which hides the conversation rows)."""
 from __future__ import annotations
 
 from collections import defaultdict

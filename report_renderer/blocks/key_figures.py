@@ -177,7 +177,9 @@ class KeyFiguresBlock(BaseBlockRenderer):
                                   for model, (share, _n) in sorted(overall.items()))
                 out["tools"].append({"label": ctx.t("{label}: {value}", label=name,
                                                     value=ctx.t("Treated like the baseline")),
-                                     "value": value, "note": ""})
+                                     "value": value,
+                                     "note": ctx.t("over {count} runs", count=len(runs)) if len(runs) > 1
+                                     else ctx.t("over 1 run")})
 
     def _checklists(self, ctx, options, out):
         view = load_answers(ctx)

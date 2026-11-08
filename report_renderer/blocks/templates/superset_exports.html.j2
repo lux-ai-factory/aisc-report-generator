@@ -2,6 +2,7 @@
 {% for block in blocks.values() %}
 <div class="export-block">
   <h3>{{ block.title }}</h3>
+  {% if block.comment %}<div class="commentary export-block-comment">{% for para in block.comment %}<p>{{ para }}</p>{% endfor %}</div>{% endif %}
   {% for p in block.plots %}
   <div class="export-plot" style="break-inside: avoid; page-break-inside: avoid">
     <h4>{{ p.chart }}</h4>

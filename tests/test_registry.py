@@ -57,7 +57,7 @@ EXPECTED_DEFAULTS = {
     "chapter": {"title": "Chapter", "intro": "", "page_break_before": True},
     "appendix": {},
     "test_runs": {"detail": "summary"},
-    "superset_exports": {"dashboards": "all"},
+    "superset_exports": {"dashboards": "all", "comments": {}},
 }
 
 

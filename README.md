@@ -62,6 +62,9 @@ Tests run, Results, Summary and Document; a block type from a plugin goes under 
 - Exported results (`superset_exports`) shows the plots saved from the results dashboard with Save to report,
   one subsection per dashboard: each plot's filters as tags, the saved SVG as it was saved, the rows its chart
   drew then ("N rows", for a plot saved with a count), who saved it, when, and the comment. It shows every saved plot, whatever AI card version or period it shows, and says so.
+  Its `comments` option holds one comment per dashboard (`{"<dashboard id>": "text"}`), written in the composer
+  and printed under that subsection's heading; `x-aisc-per-choice-of: dashboards` tells the composer to draw one
+  box per dashboard.
 - Test runs lists the runs with their tools, times and configuration name. A configuration's settings are never
   read: they may hold credentials, and `report_ro` may not read them.
 

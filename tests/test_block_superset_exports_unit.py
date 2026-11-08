@@ -55,3 +55,59 @@ def test_each_plot_says_the_rows_its_chart_drew_when_it_was_saved():
 def test_a_plot_saved_without_a_count_shows_none():
     node = render_in_english([{**plot(1, "Results", "A"), "rows": None}, plot(1, "Results", "B")])
     assert rows_lines(node) == [None, None]
+
+
+def render_with(rows, options):
+    ctx = SimpleNamespace(t=lambda text, **kw: text.format(**kw))
+    result = SupersetExportsBlock().render({"exports": rows}, {"dashboards": "all", **options}, ctx)
+    return BeautifulSoup(result.html, "html.parser")
+
+
+def block_comments(node):
+    return [(b.find(class_="export-block-comment").get_text(" ", strip=True)
+             if b.find(class_="export-block-comment") else None) for b in node.select(".export-block")]
+
+
+def test_each_block_prints_its_own_comment_under_its_heading():
+    node = render_with([plot(1, "LangBiTe (Mijke)", "By register"), plot(2, "StrongREJECT (Mijke)", "By category")],
+                       {"comments": {"2": "Refusals held in every language."}})
+    assert block_comments(node) == [None, "Refusals held in every language."]
+    second = node.select(".export-block")[1]
+    assert second.find("h3").find_next_sibling() is second.find(class_="export-block-comment")
+
+
+def test_a_block_comment_is_escaped_and_keeps_its_line_breaks():
+    node = render_with([plot(1, "LangBiTe (Mijke)", "By register")],
+                       {"comments": {"1": "First <b>line</b>\nsecond line\n\nNew paragraph"}})
+    comment = node.select_one(".export-block-comment")
+    assert comment.find("b") is None and "<b>line</b>" in comment.get_text()
+    assert [p.decode_contents() for p in comment.find_all("p")] == [
+        "First &lt;b&gt;line&lt;/b&gt;<br/>second line", "New paragraph"]
+
+
+def test_an_empty_or_unwritten_block_comment_prints_nothing():
+    rows = [plot(1, "A", "x"), plot(2, "B", "y"), plot(3, "C", "z")]
+    node = render_with(rows, {"comments": {"1": "", "2": "  \n ", "3": "Write this section."}})
+    assert block_comments(node) == [None, None, None]
+
+
+def test_a_layout_without_comments_renders_as_before():
+    rows = [plot(1, "A", "x"), plot(2, "B", "y")]
+    assert str(render_with(rows, {})) == str(render(rows))
+    assert block_comments(render(rows)) == [None, None]
+
+
+def test_a_comment_for_a_block_not_shown_is_left_out():
+    node = render_with([plot(1, "A", "x"), plot(2, "B", "y")], {"dashboards": ["1"], "comments": {"2": "Hidden"}})
+    assert "Hidden" not in node.get_text()
+
+
+def test_the_comments_option_holds_one_text_per_block_and_defaults_to_none():
+    cls = SupersetExportsBlock
+    assert cls.full_default_options()["comments"] == {}
+    assert cls.options_problems({**cls.full_default_options(), "comments": {"7": "Text"}}) == []
+    assert cls.options_problems({**cls.full_default_options(), "comments": {"7": 3}})
+    prop = cls.full_options_schema()["properties"]["comments"]
+    assert prop["additionalProperties"]["x-aisc-prose"] is True
+    assert prop["x-aisc-per-choice-of"] == "dashboards"          # one box per block the composer offers
+    assert cls.contract_version == 1                              # an optional option with a default: same contract

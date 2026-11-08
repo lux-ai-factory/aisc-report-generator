@@ -2,15 +2,28 @@
 
 Each plot: its filters as text tags, the vector file saved from Superset with Save to report (shown as it was saved;
 nothing is drawn here), the number of rows its chart drew then ("N rows", when the plot was saved with one), who saved
-it and when, and the comment."""
+it and when, and the comment. Under a subsection's heading, the comment written for that block in the report's layout
+(option `comments`, keyed by the block's dashboard id), when there is one."""
 from __future__ import annotations
 
 import base64
+import re
 
+from markupsafe import Markup, escape
 from aisc_report_plugin_interface import BaseBlockRenderer
 
 from ..svg_print import for_print
 from ._common import empty_result, finish, ymd
+from .free_text import is_placeholder
+
+
+def _paragraphs(text) -> list:
+    """A plain text as paragraphs, escaped: a blank line starts a paragraph, a newline is a line break.
+    Nothing for an empty text or one that still holds the placeholder."""
+    if not isinstance(text, str) or not text.strip() or is_placeholder(text):
+        return []
+    return [Markup("<br>").join(escape(line) for line in para.split("\n"))
+            for para in re.split(r"\n\s*\n", text.strip()) if para.strip()]
 
 
 class SupersetExportsBlock(BaseBlockRenderer):
@@ -29,9 +42,18 @@ class SupersetExportsBlock(BaseBlockRenderer):
                 "oneOf": [{"const": "all"},
                           {"type": "array", "items": {"type": "string", "minLength": 1, "x-aisc-prose": False}}],
             },
+            "comments": {
+                "title": "Comment per block",
+                "description": "Your own words about a block, printed under its heading.",
+                "type": "object",
+                "propertyNames": {"minLength": 1},
+                "additionalProperties": {"type": "string", "maxLength": 10000, "x-aisc-prose": True},
+                # the composer draws one text box per choice of `dashboards`, keyed by its value
+                "x-aisc-per-choice-of": "dashboards",
+            },
         },
     }
-    default_options = {"dashboards": "all"}
+    default_options = {"dashboards": "all", "comments": {}}
     reads = ("superset",)
     choice_options = ("dashboards",)
 
@@ -44,9 +66,12 @@ class SupersetExportsBlock(BaseBlockRenderer):
         rows = [r for r in data["exports"] if wanted == "all" or str(r["dashboard_id"]) in set(wanted)]
         if not rows:
             return empty_result(t("Nothing saved yet: in the results dashboard, press Save to report on a block."))
+        comments = options.get("comments") or {}
         blocks: dict = {}
         for r in rows:
-            blocks.setdefault(r["dashboard_id"], {"title": r["dashboard_title"], "plots": []})["plots"].append(
+            blocks.setdefault(r["dashboard_id"], {
+                "title": r["dashboard_title"], "plots": [],
+                "comment": _paragraphs(comments.get(str(r["dashboard_id"])))})["plots"].append(
                 {"chart": r["chart"], "tags": list(r["tags"] or []), "comment": r["comment"], "author": r["author_name"],
                  "date": ymd(r["created_at"]),
                  "rows": t("{count} rows", count=r["rows"]) if r.get("rows") is not None else None,

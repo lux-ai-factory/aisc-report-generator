@@ -2,7 +2,7 @@
 {% endif %}{% if group_by == "risk" %}
 {% for r in risks %}
 <div class="risk" data-risk="{{ r.risk_id }}">
-  <h3>{{ t("{label}: {value}", label=r.risk_id, value=r.text) }}</h3>
+  <h3>{{ t("{label}: {value}", label=t("Risk {number}", number=loop.index), value=r.text) }}</h3>
 {% if show_severity %}  <p class="meta">{{ r.rating_text }}</p>
 {% endif %}  {% if r.objectives %}<ul>{% for o in r.objectives %}<li>{{ o.id }}{% if o.label %} {{ o.label }}{% endif %}{% if o.priority %} <span class="priority">({{ o.priority }})</span>{% endif %}</li>{% endfor %}</ul>{% else %}<p class="placeholder">{{ t("No objective is mapped to this risk.") }}</p>{% endif %}
 </div>

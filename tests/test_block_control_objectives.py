@@ -69,3 +69,10 @@ def test_stale_when_a_newer_assessment_exists(deps):
     t, s, _, _ = render_one(deps, "control_objectives", system="A_V1")
     assert s["status"] == "stale" and "Newer results exist for version 2." in s["notices"]
     assert "R3.1" in t and "R1.1" not in t
+
+
+def test_risk_headings_read_risk_1_risk_2(deps):
+    """A risk is named by its place in the card's order, never by step 2's own id (risk0, R-1...), kept as data-risk."""
+    _, _, node, _ = render_one(deps, "control_objectives", group_by="risk")
+    heads = [h.get_text(" ", strip=True) for h in node.select("[data-risk] h3")]
+    assert heads == ["Risk 1: Bias against applicants", "Risk 2: Opaque refusals"]

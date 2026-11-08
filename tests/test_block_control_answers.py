@@ -206,3 +206,29 @@ def test_a_file_name_is_text_not_markup(deps, proof_files):
 def test_a_project_without_proof_files_lists_none(deps):
     t, *_ = render_one(deps, "control_answers")
     assert "Proof files" not in t
+
+
+# Column widths: the table is laid out fixed, so without widths the three columns take a third each and the
+# Score column, holding one number, is as wide as the answers.
+
+def _widths():
+    import re
+    from pathlib import Path
+
+    css = (Path(__file__).resolve().parents[1] / "report_renderer/templates/report.css").read_text()
+    return {name: float(w) for name, w in re.findall(r"table\.answers col\.(\w+)\s*\{\s*width:\s*([\d.]+)%", css)}
+
+
+def test_the_table_names_its_columns(deps):
+    _, _, node, _ = render_one(deps, "control_answers")
+    assert [c.get("class") for c in node.find("table").find_all("col")] == [["question"], ["answer"], ["score"]]
+
+
+def test_without_scores_there_is_no_score_column(deps):
+    _, _, node, _ = render_one(deps, "control_answers", show_scores=False)
+    assert [c.get("class") for c in node.find("table").find_all("col")] == [["question"], ["answer"]]
+
+
+def test_the_score_column_is_narrow_and_the_answer_the_widest():
+    w = _widths()
+    assert w["score"] <= 10 and w["answer"] > w["question"] and w["question"] + w["answer"] + w["score"] == 100

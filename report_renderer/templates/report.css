@@ -502,3 +502,9 @@ section.risk {
 }
 section.risk h3 { margin: 0 0 0.3em; color: var(--l-aif-primary); }
 section.risk dl.card { margin: 0; }
+
+/* Checklist answers: the answer gets the room, the score holds one number */
+table.answers col.question { width: 35%; }
+table.answers col.answer { width: 56%; }
+table.answers col.score { width: 9%; }
+table.answers td:nth-child(3), table.answers th:nth-child(3) { text-align: right; }

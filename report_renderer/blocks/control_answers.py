@@ -53,6 +53,14 @@ class ControlAnswersBlock(BaseBlockRenderer):
                 "x-aisc-reference": True,
                 "oneOf": [{"const": "all"}, {"type": "array", "items": {"type": "string"}}],
             },
+            "submissions": {
+                "title": "Submissions",
+                "description": "Which submission of each checklist to print. A checklist with none picked here "
+                               "prints its latest.",
+                "x-aisc-reference": True,
+                "x-aisc-all-label": "Latest of each checklist",
+                "oneOf": [{"const": "all"}, {"type": "array", "items": {"type": "string"}}],
+            },
             "show_unanswered": {"type": "boolean", "title": "Show unanswered questions",
                                 "description": "Also lists the questions without an answer."},
             "show_scores": {"type": "boolean", "title": "Show scores",
@@ -61,12 +69,13 @@ class ControlAnswersBlock(BaseBlockRenderer):
                                  "description": "Also reads submissions that were archived.", "x-aisc-more": True},
         },
     }
-    default_options = {"checklists": "all", "show_unanswered": True, "show_scores": True, "include_archived": False}
+    default_options = {"checklists": "all", "submissions": "all", "show_unanswered": True, "show_scores": True, "include_archived": False}
     reads = ("platform", "controls")
-    choice_options = ("checklists",)
+    choice_options = ("checklists", "submissions")
 
     def load(self, ctx, options):
-        view = load_answers(ctx, checklists=options["checklists"], include_archived=options["include_archived"])
+        view = load_answers(ctx, checklists=options["checklists"], include_archived=options["include_archived"],
+                            submissions=options.get("submissions", "all"))
         newest = None
         if not view.missing_db:
             newest = ctx.data.controls.newest_newer_answer(newer=ctx.data.newer)
@@ -79,6 +88,9 @@ class ControlAnswersBlock(BaseBlockRenderer):
         if view.unknown_checklists:
             notices.append(t("{count} selected checklists are not in this project and are not shown.",
                              count=len(view.unknown_checklists)))
+        if view.unknown_submissions:
+            notices.append(t("{count} selected submissions are not in this project or have no answers for this "
+                             "version and are not shown.", count=len(view.unknown_submissions)))
         if view.missing_db or not view.checklists:
             r = empty_result(t("No control answers for version {number}.", number=ctx.system["number"]))
             r.notices.extend(notices)
@@ -104,4 +116,6 @@ class ControlAnswersBlock(BaseBlockRenderer):
     def choices(self, ctx, option_name) -> list[dict]:
         if option_name == "checklists":
             return ctx.data.controls.checklist_choices()
+        if option_name == "submissions":
+            return ctx.data.controls.submission_choices()
         return []

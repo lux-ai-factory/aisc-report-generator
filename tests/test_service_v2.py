@@ -186,7 +186,7 @@ MAIN = {
     "control_objectives": {"group_by", "requirements", "min_severity", "show_status"},
     "test_results": {"tools", "targets", "metrics", "detail"},
     "superset_exports": {"dashboards", "comments"},
-    "control_answers": {"checklists", "show_unanswered", "show_scores"},
+    "control_answers": {"checklists", "submissions", "show_unanswered", "show_scores"},
     "dashboard_chart": {"chart_id", "show_comments"},
     "summary_coverage": {"show_uncovered_only", "requirements"},
     "free_text": {"text"},

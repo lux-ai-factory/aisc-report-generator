@@ -232,3 +232,63 @@ def test_without_scores_there_is_no_score_column(deps):
 def test_the_score_column_is_narrow_and_the_answer_the_widest():
     w = _widths()
     assert w["score"] <= 10 and w["answer"] > w["question"] and w["question"] + w["answer"] + w["score"] == 100
+
+
+# Which submission of each checklist is printed: the latest by default, or the ones picked in the layout
+# (option `submissions`); a checklist none of whose submissions is picked prints its latest.
+
+def test_the_submissions_option_defaults_to_the_latest_of_each_checklist(deps):
+    block = deps.registry.block("control_answers")
+    assert block.default_options["submissions"] == "all"
+    prop = block.options_schema["properties"]["submissions"]
+    assert prop["x-aisc-reference"] is True and prop["x-aisc-all-label"] == "Latest of each checklist"
+
+
+def test_a_picked_submission_is_printed_instead_of_the_latest(deps):
+    t, *_ = render_one(deps, "control_answers", submissions=["sub-3"])
+    assert "Archived answer ARCHMARK" in t and "Archived pass ARCHMARK" in t
+    assert "Second pass" not in t and "Documented in the manual" not in t
+
+
+def test_a_checklist_without_a_picked_submission_prints_its_latest(deps):
+    t, *_ = render_one(deps, "control_answers", system="A_V1", submissions=["sub-1"])
+    assert "First pass" in t and "Yes V1MARK" in t and "Second pass" not in t
+    assert "Oversight pass" in t and "Oversight V1MARK" in t
+
+
+def test_a_picked_submission_not_in_the_project_is_named_in_a_notice(deps):
+    _, s, *_ = render_one(deps, "control_answers", submissions=["sub-nowhere"])
+    assert "1 selected submission is not in this project or has no answers for this version and is not shown." \
+        in s["notices"]
+
+
+def test_submission_choices_are_the_submissions_with_answers_for_the_version(deps):
+    ctx = need("report_renderer.context", "context_for")(IDS["A"], IDS["A_V2"], deps=deps, mode="preview")
+    got = deps.registry.block("control_answers")().choices(ctx, "submissions")
+    assert [c["value"] for c in got] == ["sub-3", "sub-2"]
+    labels = {c["value"]: c["label"] for c in got}
+    assert labels["sub-2"].startswith("Transparency checklist · Second pass · version 2 · Draft · ")
+    assert labels["sub-3"].startswith("Transparency checklist · Archived pass ARCHMARK · version 3 · Closed, archived · ")
+
+
+@pytest.fixture
+def same_version_later(bed):
+    """sub-6: a second submission of cl-1 with the same version number as sub-2, made later, answered for v2."""
+    db = report_bed.project_db(IDS["A"])
+    bed.psql(db, f"""
+        INSERT INTO controls.submission (id, "checklistId", label, status, version, created_at, updated_at)
+        VALUES ('sub-6', 'cl-1', 'Made later LATERMARK', 'Closed', 2, now() + interval '1 hour', now());
+        INSERT INTO controls.submission_answer (id, "submissionId", "questionId", answer, score, system_version_pid,
+               system_version_number, answered_at)
+        VALUES ('a-later', 'sub-6', 'q1', 'Later answer', 3, '{IDS["A_V2"]}', 2, now());
+    """)
+    try:
+        yield
+    finally:
+        bed.psql(db, "DELETE FROM controls.submission_answer WHERE id = 'a-later';"
+                     " DELETE FROM controls.submission WHERE id = 'sub-6';")
+
+
+def test_of_two_submissions_with_the_same_version_the_later_one_is_the_latest(deps, same_version_later):
+    t, *_ = render_one(deps, "control_answers")
+    assert "Made later LATERMARK" in t and "Second pass" not in t

@@ -38,11 +38,12 @@ def submissions_with_answers(project_id, system_id, *, sources, include_archived
         return None
     return _read(dsn,
                  'SELECT sub.id, sub."checklistId" AS checklist_id, sub.label, sub.status::text AS status,'
-                 " sub.version, sub.questions_version FROM controls.submission sub"
+                 " sub.version, sub.questions_version, sub.created_at, sub.archived_at IS NOT NULL AS archived"
+                 " FROM controls.submission sub"
                  " WHERE EXISTS (SELECT 1 FROM controls.submission_answer a"
                  '               WHERE a."submissionId" = sub.id AND a.system_version_pid = %(s)s)'
                  " AND (%(arch)s OR sub.archived_at IS NULL)"
-                 ' ORDER BY sub."checklistId", sub.version DESC',
+                 ' ORDER BY sub."checklistId", sub.version DESC, sub.created_at DESC, sub.id DESC',
                  {"s": check_uuid(system_id), "arch": bool(include_archived)}, absent=None)
 
 
@@ -94,6 +95,18 @@ def newest_newer_answer(project_id, system_id, *, sources, newer) -> int | None:
                   " WHERE system_version_pid = ANY(%(pids)s::uuid[])", {"pids": list(numbers)}, absent=[])
     hits = [numbers[r["pid"]] for r in found if r["pid"] in numbers]
     return max(hits) if hits else None
+
+
+def submission_choices(project_id, system_id, *, sources) -> list[dict]:
+    """Every submission with answers for the version, archived ones too, newest first within each checklist:
+    "<checklist> · <label> · version <n> · <status>[, archived] · <created>"."""
+    titles = {c["id"]: c["title"] for c in checklists(project_id, system_id, sources=sources) or []}
+    subs = submissions_with_answers(project_id, system_id, sources=sources, include_archived=True) or []
+    subs = sorted(subs, key=lambda s: titles.get(s["checklist_id"], ""))   # stable: keeps newest first within each
+    return [{"value": s["id"], "label": " · ".join([
+        titles.get(s["checklist_id"], s["checklist_id"]), s["label"], f"version {s['version']}",
+        s["status"] + (", archived" if s["archived"] else ""), s["created_at"].strftime("%Y-%m-%d %H:%M")])}
+        for s in subs]
 
 
 def checklist_choices(project_id, system_id, *, sources) -> list[dict]:

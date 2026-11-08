@@ -115,6 +115,8 @@ SINGULARS = [
     ("{count} observations could not be tied to a tool.", "{count} observation could not be tied to a tool."),
     ("{count} selected checklists are not in this project and are not shown.",
      "{count} selected checklist is not in this project and is not shown."),
+    ("{count} selected submissions are not in this project or have no answers for this version and are not shown.",
+     "{count} selected submission is not in this project or has no answers for this version and is not shown."),
     ("{name} ({size} bytes)", "{name} ({size} byte)"),
     ("{count} rows", "{count} row"),
 ]

@@ -45,7 +45,7 @@ EXPECTED_DEFAULTS = {
                            "include_unrated": True, "show_severity": False},
     "test_results": {"tools": "all", "targets": "all", "statuses": ["Done"], "show_measurements": True, "show_artifacts": False,
                      "metrics": "all", "show_charts": True, "detail": "full"},
-    "control_answers": {"checklists": "all", "show_unanswered": True, "show_scores": True, "include_archived": False},
+    "control_answers": {"checklists": "all", "submissions": "all", "show_unanswered": True, "show_scores": True, "include_archived": False},
     "dashboard_chart": {"show_comments": True, "include_replies": True, "width": 1200, "height": 700},
     "summary_coverage": {"links": [], "show_uncovered_only": False, "requirements": "all", "merge_label": False},
     "free_text": {"format": "plain"},
@@ -98,7 +98,7 @@ def test_other_options_are_not_references():
     reg = build(entry_points=[])
     for cls in reg.block_types():
         for name, prop in cls.options_schema.get("properties", {}).items():
-            if (cls.type_id, name) not in {("control_answers", "checklists"),
+            if (cls.type_id, name) not in {("control_answers", "checklists"), ("control_answers", "submissions"),
                                            ("dashboard_chart", "chart_id"), ("summary_coverage", "links"), ("superset_exports", "dashboards"),
                                            ("test_results", "metrics"), ("control_objectives", "objectives"),
                                            ("chart", "tool_chart"), ("chart", "metric"),

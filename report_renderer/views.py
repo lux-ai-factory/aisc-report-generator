@@ -238,6 +238,7 @@ class AnswersView:
     checklists: list[ChecklistAnswers] = field(default_factory=list)
     missing_db: bool = False
     unknown_checklists: list[str] = field(default_factory=list)
+    unknown_submissions: list[str] = field(default_factory=list)
 
 
 def answer_sheet(status: str, questions: list[dict], answers: list[dict]) -> list[tuple[dict, dict | None]]:
@@ -273,7 +274,9 @@ def _says_something(answer: dict) -> bool:
     return answer["answer"] is not None or answer["score"] is not None
 
 
-def load_answers(ctx, *, checklists="all", include_archived=False) -> AnswersView:
+def load_answers(ctx, *, checklists="all", include_archived=False, submissions="all") -> AnswersView:
+    """The answers of each chosen checklist: of the submissions picked for it in `submissions`, else of its latest
+    submission with answers for the version (archived ones only with `include_archived`)."""
     controls = ctx.data.controls
     all_lists = controls.checklists()
     if all_lists is None:
@@ -284,20 +287,25 @@ def load_answers(ctx, *, checklists="all", include_archived=False) -> AnswersVie
         unknown = [c for c in checklists if c not in known]
         chosen = set(checklists)
         all_lists = [c for c in all_lists if c["id"] in chosen]
-    subs = controls.submissions_with_answers(include_archived=include_archived) or []
-    latest: dict[str, dict] = {}
+    subs = controls.submissions_with_answers(include_archived=True) or []
+    picked = [] if submissions in (None, "all") else list(submissions)
+    unknown_subs = [p for p in picked if p not in {s["id"] for s in subs}]
+    chosen_subs: dict[str, list[dict]] = {}
+    for s in subs:                                       # newest first within each checklist
+        if s["id"] in picked:
+            chosen_subs.setdefault(s["checklist_id"], []).append(s)
     for s in subs:
-        latest.setdefault(s["checklist_id"], s)
-    shown = [c for c in all_lists if c["id"] in latest]
-    questions = controls.questions(checklist_ids=[c["id"] for c in shown])
-    answers = controls.answers(submission_ids=[latest[c["id"]]["id"] for c in shown])
+        if s["checklist_id"] not in chosen_subs and (include_archived or not s["archived"]):
+            chosen_subs[s["checklist_id"]] = [s]
+    shown = [(c, sub) for c in all_lists for sub in chosen_subs.get(c["id"], [])]
+    questions = controls.questions(checklist_ids=list(dict.fromkeys(c["id"] for c, _ in shown)))
+    answers = controls.answers(submission_ids=[sub["id"] for _, sub in shown])
     files: dict[str, list[dict]] = {}
     for f in controls.answer_files(answer_ids=[a["id"] for a in answers]):
         files.setdefault(f["answer_id"], []).append(f)
     pinned = ctx.data.system_id
     out = []
-    for c in shown:
-        sub = latest[c["id"]]
+    for c, sub in shown:
         given = [a for a in answers if a["submission_id"] == sub["id"]]
         others = sum(1 for a in given if _says_something(a) and a["system_version_pid"] != pinned)
         rows = []
@@ -313,4 +321,4 @@ def load_answers(ctx, *, checklists="all", include_archived=False) -> AnswersVie
         out.append(ChecklistAnswers(checklist=c, submission=sub, rows=rows, other_version_answers=others,
                                     answered=sum(1 for r in rows if r["answered"]), total=len(rows),
                                     mean=round(sum(scores) / len(scores), 1) if scores else None))
-    return AnswersView(checklists=out, unknown_checklists=unknown)
+    return AnswersView(checklists=out, unknown_checklists=unknown, unknown_submissions=unknown_subs)

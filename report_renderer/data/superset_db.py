@@ -39,10 +39,12 @@ def chart(project_id, system_id, *, sources, chart_id) -> dict | None:
 
 
 def export_blocks(project_id, system_id, *, sources) -> list[dict]:
-    """The project's dashboards, by title: what a report can show saved pictures of."""
+    """The project's dashboards with plots saved with Save to report, by title: the tools a report shows a section of."""
     return db.rows(sources.superset_dsn, "superset",
                    "SELECT d.id, d.dashboard_title FROM dashboards d"
-                   f" WHERE d.id IN (SELECT id FROM ({_DASHBOARDS}) pd) ORDER BY d.dashboard_title, d.id",
+                   f" WHERE d.id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
+                   " AND EXISTS (SELECT 1 FROM aisc_report_plot p WHERE p.dashboard_id = d.id)"
+                   " ORDER BY d.dashboard_title, d.id",
                    {"role": _role(project_id)})
 
 

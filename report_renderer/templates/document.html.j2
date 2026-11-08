@@ -1,11 +1,11 @@
-{%- macro commentary(s) -%}
-<div class="commentary"><p class="commentary-caption">{{ t("Commentary") }}</p>{{ s.commentary }}</div>
+{%- macro commentary(body) -%}
+<div class="commentary"><p class="commentary-caption">{{ t("Commentary") }}</p>{{ body }}</div>
 {%- endmacro -%}
 {%- macro section(s) -%}
 <section class="block block-{{ s.type_id }}{% if s.kind %} {{ s.kind }}{% endif %}" id="block-{{ s.instance_id }}" data-status="{{ s.status }}"{% if s.page_break %} style="break-before: page"{% endif %}>
-  {% if s.kind %}<h1 class="chapter-title">{% if s.number %}{{ s.number }} {% endif %}{{ s.title }}</h1>{% else %}<h2>{% if s.number %}{{ s.number }} {% endif %}{{ s.title }}</h2>{% endif %}
+  {% if s.lead %}{{ commentary(s.lead) }}{% endif %}{% if s.kind %}<h1 class="chapter-title">{% if s.number %}{{ s.number }} {% endif %}{{ s.title }}</h1>{% else %}<h2>{% if s.number %}{{ s.number }} {% endif %}{{ s.title }}</h2>{% endif %}
   {% if s.notices %}<ul class="notices">{% for n in s.notices %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
-  {% if s.commentary and s.commentary_position == "before" %}{{ commentary(s) }}{% endif %}{{ s.html }}{% if s.commentary and s.commentary_position != "before" %}{{ commentary(s) }}{% endif %}
+  {% if s.commentary and s.commentary_position == "before" %}{{ commentary(s.commentary) }}{% endif %}{{ s.html }}{% if s.commentary and s.commentary_position != "before" %}{{ commentary(s.commentary) }}{% endif %}
 </section>
 {%- endmacro -%}
 {%- macro entry_list(entries) -%}

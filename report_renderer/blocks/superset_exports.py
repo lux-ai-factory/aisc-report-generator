@@ -1,50 +1,44 @@
-"""Exported results: one subsection per Superset block; in it, one saved plot after another.
+"""Exported results: one section of the report per tool (a block of the results dashboard with saved plots), titled
+with its name; in it, one saved plot after another.
 
 Each plot: its filters as text tags, the vector file saved from Superset with Save to report (shown as it was saved;
 nothing is drawn here), the number of rows its chart drew then ("N rows", when the plot was saved with one), who saved
-it and when, and the comment. Under a subsection's heading, the comment written for that block in the report's layout
-(option `comments`, keyed by the block's dashboard id), when there is one."""
+it and when, and the comment. Each tool's commentary is the text written for it in the report's layout (option
+`comments`, keyed by the tool's dashboard id), printed where a section prints its commentary. With nothing saved the
+block is one section saying how to save."""
 from __future__ import annotations
 
 import base64
-import re
 
-from markupsafe import Markup, escape
+from markupsafe import Markup
 from aisc_report_plugin_interface import BaseBlockRenderer
 
 from ..svg_print import for_print
-from ._common import empty_result, finish, ymd
-from .free_text import is_placeholder
-
-
-def _paragraphs(text) -> list:
-    """A plain text as paragraphs, escaped: a blank line starts a paragraph, a newline is a line break.
-    Nothing for an empty text or one that still holds the placeholder."""
-    if not isinstance(text, str) or not text.strip() or is_placeholder(text):
-        return []
-    return [Markup("<br>").join(escape(line) for line in para.split("\n"))
-            for para in re.split(r"\n\s*\n", text.strip()) if para.strip()]
+from ._common import SectionsResult, empty_result, ymd
 
 
 class SupersetExportsBlock(BaseBlockRenderer):
     type_id = "superset_exports"
     title = "Exported results"
     contract_version = 1
-    description = "What was saved from the results dashboard with Save to report: one subsection per block."
+    description = "What was saved from the results dashboard with Save to report: one section per tool."
     options_schema = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
             "dashboards": {
-                "title": "Blocks",
-                "description": "Which blocks of the results dashboard to show.",
+                "title": "Tools",
+                "description": "Which tools of the results dashboard to show, each as a section of its own.",
                 "x-aisc-reference": True,
+                # each chosen value prints as a numbered section of its own: the composer numbers them in its
+                # outline and draws every choice as a checkbox, all checked for "all"
+                "x-aisc-section-per-choice": True,
                 "oneOf": [{"const": "all"},
                           {"type": "array", "items": {"type": "string", "minLength": 1, "x-aisc-prose": False}}],
             },
             "comments": {
-                "title": "Comment per block",
-                "description": "Your own words about a block, printed under its heading.",
+                "title": "Commentary per tool",
+                "description": "Your own words about a tool, printed with its section as a section's commentary.",
                 "type": "object",
                 "propertyNames": {"minLength": 1},
                 "additionalProperties": {"type": "string", "maxLength": 10000, "x-aisc-prose": True},
@@ -71,14 +65,17 @@ class SupersetExportsBlock(BaseBlockRenderer):
         for r in rows:
             blocks.setdefault(r["dashboard_id"], {
                 "title": r["dashboard_title"], "plots": [],
-                "comment": _paragraphs(comments.get(str(r["dashboard_id"])))})["plots"].append(
+                "commentary": comments.get(str(r["dashboard_id"]))})["plots"].append(
                 {"chart": r["chart"], "tags": list(r["tags"] or []), "comment": r["comment"], "author": r["author_name"],
                  "date": ymd(r["created_at"]),
                  "rows": t("{count} rows", count=r["rows"]) if r.get("rows") is not None else None,
                  "image": "data:image/svg+xml;base64," + base64.b64encode(
                      for_print(bytes(r["svg"]).decode("utf-8")).encode("utf-8")).decode("ascii")})
-        html = self.render_package_template("templates/superset_exports.html.j2", blocks=blocks, t=t)
-        return finish(html, [], newest_newer=None, t=t)
+        parts = [{"title": b["title"], "commentary": b["commentary"] if isinstance(b["commentary"], str) else None,
+                  "html": Markup(self.render_package_template("templates/superset_exports.html.j2", block=b,
+                                                              note=n == 0, t=t))}
+                 for n, b in enumerate(blocks.values())]
+        return SectionsResult(html="".join(str(p["html"]) for p in parts), status="ok", parts=parts)
 
     def choices(self, ctx, option_name) -> list[dict]:
         if option_name == "dashboards":

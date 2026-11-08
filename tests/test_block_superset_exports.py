@@ -1,4 +1,4 @@
-"""Exported results: one subsection per Superset block; in it, one saved plot after another: its filters as text tags,
+"""Exported results: one section per tool (results dashboard block), titled with its name; in it, one saved plot after another: its filters as text tags,
 the plot as the vector file saved from Superset, the comment. Nothing is drawn here."""
 import base64
 
@@ -13,10 +13,10 @@ def plots(node):
     return node.find_all("div", class_="export-plot")
 
 
-def test_each_block_is_a_subsection_with_its_plots_one_after_another(deps):
+def test_each_tool_is_a_section_with_its_plots_one_after_another(deps):
     _, status, node, _ = render_one(deps, "superset_exports")
     assert status["status"] == "ok"
-    assert [h.get_text(strip=True) for h in node.select(".export-block > h3")] == ["Alpha results"]
+    assert node.find("h2").get_text(strip=True) == "Alpha results" and node.find("h3") is None
     assert len(plots(node)) == 3
 
 

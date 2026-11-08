@@ -1,9 +1,20 @@
 """Shared pieces of the built-in blocks."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+
 from markupsafe import escape
 from aisc_report_plugin_interface import BlockResult
 from aisc_report_plugin_interface.i18n import fill
+
+
+@dataclass
+class SectionsResult(BlockResult):
+    """A block that prints as several sections of the report, one per part, in order: each part is
+    {"title", "html", "commentary"} (commentary: the part's own text, or None). The document numbers each part
+    as a section and lists it in the table of contents; `html` stays the whole block, the parts one after
+    another. A result without parts prints as one section, as any other block."""
+    parts: list = field(default_factory=list)
 
 
 def _english(msgid, **params) -> str:

@@ -1,8 +1,5 @@
-<p class="meta">{{ t("Plots as saved on the dashboards, whatever version or period they show.") }}</p>
-{% for block in blocks.values() %}
-<div class="export-block">
-  <h3>{{ block.title }}</h3>
-  {% if block.comment %}<div class="commentary export-block-comment">{% for para in block.comment %}<p>{{ para }}</p>{% endfor %}</div>{% endif %}
+{% if note %}<p class="meta">{{ t("Plots as saved on the dashboards, whatever version or period they show.") }}</p>
+{% endif %}<div class="export-block">
   {% for p in block.plots %}
   <div class="export-plot" style="break-inside: avoid; page-break-inside: avoid">
     <h4>{{ p.chart }}</h4>
@@ -14,4 +11,3 @@
   </div>
   {% endfor %}
 </div>
-{% endfor %}

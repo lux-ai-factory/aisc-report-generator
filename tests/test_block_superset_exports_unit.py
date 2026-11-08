@@ -20,11 +20,30 @@ def render(rows):
     return BeautifulSoup(result.html, "html.parser")
 
 
-def test_two_blocks_with_the_same_title_stay_two_subsections():
-    node = render([plot(1, "Results", "By register"), plot(2, "Results", "By category")])
-    blocks = node.select(".export-block")
-    assert [b.find("h3").get_text(strip=True) for b in blocks] == ["Results", "Results"]
-    assert [[h.get_text(strip=True) for h in b.find_all("h4")] for b in blocks] == [["By register"], ["By category"]]
+def parts(rows, **options):
+    ctx = SimpleNamespace(t=lambda text, **kw: text.format(**kw))
+    return SupersetExportsBlock().render({"exports": rows}, {"dashboards": "all", **options}, ctx).parts
+
+
+def test_each_tool_is_a_part_titled_with_its_name_even_with_the_same_title():
+    got = parts([plot(1, "Results", "By register"), plot(2, "Results", "By category")])
+    assert [p["title"] for p in got] == ["Results", "Results"]
+    assert [[h.get_text(strip=True) for h in BeautifulSoup(p["html"], "html.parser").find_all("h4")] for p in got] == [
+        ["By register"], ["By category"]]
+    assert all(BeautifulSoup(p["html"], "html.parser").find("h3") is None for p in got)   # the section heading is the title
+
+
+def test_the_whole_block_html_is_its_parts_one_after_another():
+    ctx = SimpleNamespace(t=lambda text, **kw: text.format(**kw))
+    result = SupersetExportsBlock().render({"exports": [plot(1, "A", "x"), plot(2, "B", "y")]}, {"dashboards": "all"},
+                                           ctx)
+    assert result.status == "ok" and str(result.html) == "".join(str(p["html"]) for p in result.parts)
+
+
+def test_nothing_saved_has_no_parts():
+    ctx = SimpleNamespace(t=lambda text, **kw: text.format(**kw))
+    result = SupersetExportsBlock().render({"exports": []}, {"dashboards": "all"}, ctx)
+    assert result.status == "empty" and getattr(result, "parts", None) in (None, [])
 
 
 def test_the_block_says_its_plots_are_as_saved_whatever_version_or_period():
@@ -57,49 +76,21 @@ def test_a_plot_saved_without_a_count_shows_none():
     assert rows_lines(node) == [None, None]
 
 
-def render_with(rows, options):
-    ctx = SimpleNamespace(t=lambda text, **kw: text.format(**kw))
-    result = SupersetExportsBlock().render({"exports": rows}, {"dashboards": "all", **options}, ctx)
-    return BeautifulSoup(result.html, "html.parser")
+def test_each_tool_part_carries_its_own_commentary_text():
+    got = parts([plot(1, "LangBiTe (Mijke)", "By register"), plot(2, "StrongREJECT (Mijke)", "By category")],
+                comments={"2": "Refusals held in every language."})
+    assert [p["commentary"] for p in got] == [None, "Refusals held in every language."]
 
 
-def block_comments(node):
-    return [(b.find(class_="export-block-comment").get_text(" ", strip=True)
-             if b.find(class_="export-block-comment") else None) for b in node.select(".export-block")]
+def test_a_comment_for_a_tool_not_shown_is_left_out():
+    got = parts([plot(1, "A", "x"), plot(2, "B", "y")], dashboards=["1"], comments={"2": "Hidden"})
+    assert [p["title"] for p in got] == ["A"] and "Hidden" not in str(got)
 
 
-def test_each_block_prints_its_own_comment_under_its_heading():
-    node = render_with([plot(1, "LangBiTe (Mijke)", "By register"), plot(2, "StrongREJECT (Mijke)", "By category")],
-                       {"comments": {"2": "Refusals held in every language."}})
-    assert block_comments(node) == [None, "Refusals held in every language."]
-    second = node.select(".export-block")[1]
-    assert second.find("h3").find_next_sibling() is second.find(class_="export-block-comment")
-
-
-def test_a_block_comment_is_escaped_and_keeps_its_line_breaks():
-    node = render_with([plot(1, "LangBiTe (Mijke)", "By register")],
-                       {"comments": {"1": "First <b>line</b>\nsecond line\n\nNew paragraph"}})
-    comment = node.select_one(".export-block-comment")
-    assert comment.find("b") is None and "<b>line</b>" in comment.get_text()
-    assert [p.decode_contents() for p in comment.find_all("p")] == [
-        "First &lt;b&gt;line&lt;/b&gt;<br/>second line", "New paragraph"]
-
-
-def test_an_empty_or_unwritten_block_comment_prints_nothing():
-    rows = [plot(1, "A", "x"), plot(2, "B", "y"), plot(3, "C", "z")]
-    node = render_with(rows, {"comments": {"1": "", "2": "  \n ", "3": "Write this section."}})
-    assert block_comments(node) == [None, None, None]
-
-
-def test_a_layout_without_comments_renders_as_before():
-    rows = [plot(1, "A", "x"), plot(2, "B", "y")]
-    assert str(render_with(rows, {})) == str(render(rows))
-    assert block_comments(render(rows)) == [None, None]
-
-
-def test_a_comment_for_a_block_not_shown_is_left_out():
-    node = render_with([plot(1, "A", "x"), plot(2, "B", "y")], {"dashboards": ["1"], "comments": {"2": "Hidden"}})
-    assert "Hidden" not in node.get_text()
+def test_the_plots_note_is_printed_once_in_the_first_tool():
+    got = parts([plot(1, "A", "x"), plot(2, "B", "y")])
+    note = "Plots as saved on the dashboards, whatever version or period they show."
+    assert [note in str(p["html"]) for p in got] == [True, False]
 
 
 def test_the_comments_option_holds_one_text_per_block_and_defaults_to_none():
@@ -109,5 +100,8 @@ def test_the_comments_option_holds_one_text_per_block_and_defaults_to_none():
     assert cls.options_problems({**cls.full_default_options(), "comments": {"7": 3}})
     prop = cls.full_options_schema()["properties"]["comments"]
     assert prop["additionalProperties"]["x-aisc-prose"] is True
-    assert prop["x-aisc-per-choice-of"] == "dashboards"          # one box per block the composer offers
+    assert prop["x-aisc-per-choice-of"] == "dashboards"          # one box per tool the composer offers
+    assert prop["title"] == "Commentary per tool"
+    # each chosen tool is a section of its own: the composer numbers them and checks every tool for "all"
+    assert cls.full_options_schema()["properties"]["dashboards"]["x-aisc-section-per-choice"] is True
     assert cls.contract_version == 1                              # an optional option with a default: same contract

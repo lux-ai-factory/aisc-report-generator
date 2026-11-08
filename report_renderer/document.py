@@ -84,21 +84,40 @@ def _render_block(b: dict, ctx, deps) -> dict:
                                      status="error", notices=[])
     logger.info("block %s %s %s", iid, type_id, result.status)
     kind = type_id if type_id in ("chapter", "appendix") and cls is not None else None
-    text = options.get("commentary") if isinstance(options, dict) else None
-    written = isinstance(text, str) and text.strip() and not is_placeholder(text)
-    commentary = richtext.render(text) if written else None
+    commentary = _commentary(options.get("commentary") if isinstance(options, dict) else None)
     page_break = bool(options.get("page_break_before")) if isinstance(options, dict) else False
     return {"instance_id": iid, "type_id": type_id, "title": title, "status": result.status,
             "notices": list(result.notices), "html": Markup(result.html), "kind": kind,
             "commentary": commentary, "commentary_position": options.get("commentary_position", "after"),
-            "page_break": page_break or kind == "appendix", "omit": False}
+            "page_break": page_break or kind == "appendix", "omit": False,
+            "parts": list(getattr(result, "parts", None) or [])}
+
+
+def _commentary(text):
+    """A written commentary as safe HTML; None when it is empty or still holds the placeholder."""
+    written = isinstance(text, str) and text.strip() and not is_placeholder(text)
+    return richtext.render(text) if written else None
+
+
+def _sections_of(s: dict) -> list[dict]:
+    """A block's sections in the document: itself, or one per part when it prints as several (SectionsResult).
+    Each part is numbered and listed like a block: its title, its html, its own commentary where a section prints
+    one. The first part keeps the block's id, notices and page break, and prints the block's own commentary before
+    its heading (`lead`); the others take the id block-<instance id>-2, -3..."""
+    if not s.get("parts"):
+        return [s]
+    return [{**s, "instance_id": s["instance_id"] if n == 0 else f"{s['instance_id']}-{n + 1}",
+             "title": part["title"], "html": Markup(part["html"]), "notices": s["notices"] if n == 0 else [],
+             "commentary": _commentary(part.get("commentary")), "lead": s["commentary"] if n == 0 else None,
+             "page_break": s["page_break"] if n == 0 else False, "kind": None, "parts": []}
+            for n, part in enumerate(s["parts"])]
 
 
 def _unwritten(b: dict, ctx) -> dict:
     """A free text still holding the placeholder is left out; only its status stays."""
     return {"instance_id": b["instance_id"], "type_id": "free_text", "title": "", "status": "empty",
             "notices": [ctx.t("Not written yet: left out of the report.")], "html": Markup(""), "kind": None,
-            "commentary": None, "commentary_position": "after", "page_break": False, "omit": True}
+            "commentary": None, "commentary_position": "after", "page_break": False, "omit": True, "parts": []}
 
 
 def _section(b: dict, ctx, deps) -> dict:
@@ -251,7 +270,7 @@ def render(snapshot: dict, deps) -> dict:
         raise NotFound("no such system version in this project") from None
 
     every = [_section(b, ctx, deps) for b in blocks]  # omitted blocks still report a status
-    sections = [s for s in every if not s["omit"]]
+    sections = [part for s in every if not s["omit"] for part in _sections_of(s)]
     has_cover = any(s["type_id"] == "cover" for s in sections)
     banner = None
     if ctx.newer_versions and not has_cover:
@@ -259,7 +278,7 @@ def render(snapshot: dict, deps) -> dict:
                        number=ctx.system["number"], newer=max(ctx.newer_versions))
     plan = structure.plan(sections, toc=ctx.report.toc, numbering=ctx.report.numbering)
     features = set()
-    if any(s["commentary"] for s in sections):
+    if any(s["commentary"] or s.get("lead") for s in sections):
         features.add("commentary")
     if any(s["kind"] for s in sections):
         features.add("chapters")

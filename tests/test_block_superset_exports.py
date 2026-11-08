@@ -35,14 +35,32 @@ def test_the_filters_are_text_tags_above_the_plot(deps):
     assert tags.find_next("img") is first.find("img")
 
 
-def test_the_same_plot_with_other_filters_is_another_plot(deps):
-    text, _, node, _ = render_one(deps, "superset_exports")
+def test_each_tool_shows_only_the_plots_of_its_latest_save(deps):
+    """The seed: an older save (By register, By community) and the latest (By register twice, By category)."""
+    text, *_ = render_one(deps, "superset_exports")
+    assert "Newest comment" in text and "older comment" not in text
+    assert "only in the older save" not in text and "By community" not in text
     assert "Model: OpenAI" in text and "Model: Local" in text
 
 
-def test_saving_again_with_the_same_filters_replaces_the_plot(deps):
-    text, *_ = render_one(deps, "superset_exports")
-    assert "Newest comment" in text and "older comment" not in text
+def test_plots_saved_before_saves_had_an_id_count_as_one_save_when_saved_together(bed):
+    """A database whose plots carry no save id: the plots saved within a minute of the tool's newest are its latest save."""
+    import dataclasses
+
+    from conftest import bed_sources
+    from report_renderer.data import superset_db
+
+    old = "superset_before_save_ids"
+    bed.psql("postgres", f"DROP DATABASE IF EXISTS {old}")
+    bed.psql("postgres", f"CREATE DATABASE {old} TEMPLATE superset")
+    try:
+        bed.psql(old, "ALTER TABLE aisc_report_plot DROP COLUMN save_id")
+        older = dataclasses.replace(bed_sources(bed), superset_dsn=bed.dsn("report_ro", old))
+        got = superset_db.exports(IDS["A"], IDS["A_V2"], sources=older)
+        assert [g["chart"] for g in got] == ["By register", "By register", "By category"]
+        assert "older comment" not in [g["comment"] for g in got]
+    finally:
+        bed.psql("postgres", f"DROP DATABASE IF EXISTS {old}")
 
 
 def test_plots_stay_in_the_order_they_were_saved(deps):

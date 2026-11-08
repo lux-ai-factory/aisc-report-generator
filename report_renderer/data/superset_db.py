@@ -54,20 +54,33 @@ _HAS_ROWS = ("SELECT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regc
              " AND attname = 'rows' AND NOT attisdropped) AS present")
 
 
+_HAS_SAVE_ID = ("SELECT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass('aisc_report_plot')"
+                " AND attname = 'save_id' AND NOT attisdropped) AS present")
+
+#: plots saved before saves carried an id count as one save when saved within this of the tool's newest plot
+SAVED_TOGETHER = "60 seconds"
+
+
 def exports(project_id, system_id, *, sources) -> list[dict]:
-    """The plots saved with Save to report on the project's dashboards: the newest per dashboard, chart and filters, in
-    the order they were saved. rows is the number of rows the chart drew when the plot was saved, None when it was
-    saved without one or the table predates the column."""
+    """The plots of each dashboard's latest Save to report (one click saves several plots under one save id), in the
+    order they were saved. A dashboard database whose plots carry no save id (saved before saves had one) takes the
+    plots saved within SAVED_TOGETHER of the dashboard's newest as its latest save. rows is the number of rows the
+    chart drew when the plot was saved, None when it was saved without one or the table predates the column."""
     params = {"role": _role(project_id)}
     with db.connect(sources.superset_dsn, "superset") as conn:
         rows = "p.rows" if conn.execute(_HAS_ROWS).fetchone()["present"] else "NULL::integer AS rows"
+        save = "p.save_id" if conn.execute(_HAS_SAVE_ID).fetchone()["present"] else "NULL::text AS save_id"
         return list(conn.execute(
-            "SELECT * FROM (SELECT DISTINCT ON (p.dashboard_id, p.chart, p.tags) p.id, p.dashboard_id,"
-            f" d.dashboard_title, p.chart, p.tab, p.tags, p.svg, p.comment, p.author_name, p.created_at, {rows}"
+            "WITH plots AS (SELECT p.id, p.dashboard_id, d.dashboard_title, p.chart, p.tab, p.tags, p.svg, p.comment,"
+            f" p.author_name, p.created_at, {rows}, {save}"
             " FROM aisc_report_plot p JOIN dashboards d ON d.id = p.dashboard_id"
-            f" WHERE p.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)"
-            " ORDER BY p.dashboard_id, p.chart, p.tags, p.created_at DESC, p.id DESC) newest"
-            " ORDER BY dashboard_title, created_at, id", params).fetchall())
+            f" WHERE p.dashboard_id IN (SELECT id FROM ({_DASHBOARDS}) pd)),"
+            " latest AS (SELECT DISTINCT ON (dashboard_id) dashboard_id, save_id, created_at FROM plots"
+            " ORDER BY dashboard_id, created_at DESC, id DESC)"
+            " SELECT p.* FROM plots p JOIN latest l ON l.dashboard_id = p.dashboard_id"
+            " WHERE (l.save_id IS NOT NULL AND p.save_id = l.save_id)"
+            f" OR (l.save_id IS NULL AND p.save_id IS NULL AND p.created_at >= l.created_at - interval '{SAVED_TOGETHER}')"
+            " ORDER BY p.dashboard_title, p.created_at, p.id", params).fetchall())
 
 
 def comments(project_id, system_id, *, sources, chart_id) -> list[dict]:

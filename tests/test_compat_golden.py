@@ -1,7 +1,10 @@
 """Compatibility pins against the goldens of tests/golden/.
 
 The goldens were captured from the renderer at 41d11b9 (tests/golden/capture.py; MANIFEST.json names
-the commit). A snapshot that uses none of the optional snapshot keys must render the same:
+the commit). When the card stopped recording the provider's measures, the risk sections of the HTML goldens
+lost their Control and Follow-up control lines by hand, and the PDF text of a_v2_live_styled was captured
+again (the shorter section moved a page break into a table row; the text outside Test results is otherwise
+the same). A snapshot that uses none of the optional snapshot keys must render the same:
 - Alpha v2 and Mike v2 (evaluations): identical except inside the Test results section.
 - Alpha v2 with legacy links: identical except the second summary block.
 """
@@ -127,7 +130,7 @@ def _outside_test_results(lines) -> tuple[list[str], list[str]]:
 
 
 def test_pdf_text_with_evaluations_only_the_test_results_section_may_change(gdeps):
-    """The same rule on the PDF (a_v2_live_styled.pdf.json, captured at 41d11b9): every text outside
+    """The same rule on the PDF (a_v2_live_styled.pdf.json): every text outside
     the Test results section is the same, and the section still starts and ends in the same place."""
     now = _flow_lines(pdf_pages(render_case(gdeps, "a_v2_live_styled", mode="pdf")))
     then = _flow_lines(json.loads(golden("a_v2_live_styled", "pdf.json")))

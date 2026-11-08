@@ -17,6 +17,10 @@
   generic table is drawn); one notice says how many were left out. Check: `tests/test_results_by_test.py`.
 - Summary and coverage has the option `merge_label` (off by default): one column with the objective and its
   label, the description twice as wide.
+- Risk identification no longer prints a Control or Follow-up control under each risk: the AI card stops
+  recording the provider's measures (their `qualification_risk` columns are dropped), so "control" means only
+  the assessment's controls. The reader selects none of those columns. Check: `tests/test_vair_labels.py`,
+  `tests/test_block_risk.py`.
 - Risk identification has the option `show_classification` (on by default): off hides the operators and the
   AI Act risk class above the risks.
 - The chart list of a dashboard chart block offers the most recently changed chart first, not by name.

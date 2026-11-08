@@ -31,7 +31,7 @@ def test_chains_in_position_order_with_labels(deps):
     assert t.index("Bias against applicants") < t.index("Opaque refusals")
     assert "Operator (the company providing or running the system)" in t   # affected, labelled
     assert "User (people who use the system or are affected by it)" in t
-    for free in ("Training data", "Historic bias", "Unfair refusals", "Bias audit", "Quarterly review"):
+    for free in ("Training data", "Historic bias", "Unfair refusals"):
         assert free in t
     assert "Health" in t and "Safety" in t
     assert "fundamental_rights" in t                                        # no label: raw id
@@ -88,7 +88,8 @@ def test_each_risk_is_its_own_section(deps):
     first = risks[0]
     labels = [dt.get_text(strip=True) for dt in first.find_all("dt")]
     assert labels[:4] == ["Source", "Vulnerability", "Consequence", "Affected"]
-    assert "Control" in labels and "Follow-up control" in labels and "Impact areas" in labels
+    assert "Impact areas" in labels
+    assert "Control" not in labels and "Follow-up control" not in labels   # the card records no measure
 
 
 def test_a_risk_section_leaves_out_what_the_card_left_empty(deps):

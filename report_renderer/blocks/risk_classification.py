@@ -9,8 +9,7 @@ from ..data.vocab import vair_label
 from ._common import empty_result, finish
 
 #: A risk field with a VAIR term beside it, and the term's class.
-RISK_TERMS = (("source", "RiskSource"), ("consequence", "Consequence"), ("impact", "Impact"),
-              ("control", "RiskControl"), ("follow_up_control", "RiskControl"))
+RISK_TERMS = (("source", "RiskSource"), ("consequence", "Consequence"), ("impact", "Impact"))
 
 AIRO = "https://w3id.org/airo#"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
@@ -99,7 +98,7 @@ class RiskClassificationBlock(BaseBlockRenderer):
             "show_classification": {"type": "boolean", "title": "Show operators and risk class",
                                     "description": "Shows the operators and the AI Act risk class above the risks."},
             "show_chains": {"type": "boolean", "title": "Show risks",
-                            "description": "Lists each risk with its source, consequence and controls."},
+                            "description": "Lists each risk with its source, consequence and harm."},
             "show_impact_areas": {"type": "boolean", "title": "Show impact areas",
                                   "description": "Adds the impact areas of each risk.", "x-aisc-more": True},
         },

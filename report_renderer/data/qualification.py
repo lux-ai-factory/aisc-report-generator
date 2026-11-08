@@ -43,8 +43,7 @@ def knowledge_graph(project_id, system_id, *, sources) -> dict | None:
 def risks(project_id, system_id, *, sources) -> list[dict]:
     return db.project_rows(sources, check_uuid(project_id), "qualification",
                    'SELECT r.position, r.risk, r.source, r.vulnerability, r.consequence, r.affected,'
-                   ' r."impactAreas" AS impact_areas, r.control, r."followUpControl" AS follow_up_control,'
-                   ' r.source_term, r.consequence_term, r.impact_term, r.control_term, r.follow_up_control_term'
+                   ' r."impactAreas" AS impact_areas, r.source_term, r.consequence_term, r.impact_term'
                    ' FROM qualification.qualification_risk r JOIN qualification.qualification q'
                    ' ON q.id = r."qualificationId"'
                    f" WHERE {_SCOPE} ORDER BY r.position", _params(project_id, system_id))

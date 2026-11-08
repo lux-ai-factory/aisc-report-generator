@@ -15,8 +15,6 @@
     {% if r.consequence %}<dt>{{ t("Consequence") }}</dt><dd>{{ r.consequence }}{% if r.consequence_label %} ({{ t("VAIR") }}: {{ r.consequence_label }}){% endif %}</dd>{% endif %}{% if r.impact_label %}<dt>{{ t("Kind of harm") }}</dt><dd>{{ r.impact_label }}</dd>{% endif %}
     {% if r.affected_label %}<dt>{{ t("Affected") }}</dt><dd>{{ r.affected_label }}</dd>{% endif %}
     {% if show_impact_areas and r.impact_labels %}<dt>{{ t("Impact areas") }}</dt><dd>{{ r.impact_labels | join(", ") }}</dd>{% endif %}
-    {% if r.control %}<dt>{{ t("Control") }}</dt><dd>{{ r.control }}{% if r.control_label %} ({{ t("VAIR") }}: {{ r.control_label }}){% endif %}</dd>{% endif %}
-    {% if r.follow_up_control %}<dt>{{ t("Follow-up control") }}</dt><dd>{{ r.follow_up_control }}{% if r.follow_up_control_label %} ({{ t("VAIR") }}: {{ r.follow_up_control_label }}){% endif %}</dd>{% endif %}
   </dl>
 </section>
 {% endfor %}

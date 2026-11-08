@@ -104,8 +104,19 @@ def test_the_card_and_its_risks_read_the_vair_columns(monkeypatch):
     card_sql, risk_sql = seen
     for col in ("system_type", "purpose"):
         assert f"q.{col}" in card_sql, col
-    for col in ("source_term", "consequence_term", "impact_term", "control_term", "follow_up_control_term"):
+    for col in ("source_term", "consequence_term", "impact_term"):
         assert f"r.{col}" in risk_sql, col
+
+
+def test_the_risks_read_no_provider_measure(monkeypatch):
+    # the card no longer records what the provider does about a risk: its columns are dropped
+    q = pytest.importorskip("report_renderer.data.qualification")
+    seen = []
+    monkeypatch.setattr(q.db, "project_rows", lambda s, p, m, sql, params: seen.append(sql) or [])
+    q.risks("00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002", sources=None)
+    risk_sql = seen[0].lower()
+    for col in ("r.control", "followupcontrol", "follow_up_control", "control_term"):
+        assert col not in risk_sql, col
 
 
 # The AI card block.
@@ -147,9 +158,7 @@ def test_a_card_without_them_shows_no_empty_row(vocab):
 
 RISK = {"position": 0, "risk": "Wrongly refused", "source": "Thin data", "source_term": "ErroneousInputData",
         "vulnerability": None, "consequence": "Refused", "consequence_term": None,
-        "impact_term": "UnfavourableTreatment", "affected": "user", "impact_areas": ["RightToNondiscrimination"],
-        "control": "Human review", "control_term": "HumanOversightMeasure",
-        "follow_up_control": "Override", "follow_up_control_term": "OverridingOutcome"}
+        "impact_term": "UnfavourableTreatment", "affected": "user", "impact_areas": ["RightToNondiscrimination"]}
 
 
 def render_risks(vocab, risk=RISK):
@@ -162,9 +171,14 @@ def render_risks(vocab, risk=RISK):
 def test_each_field_shows_its_text_then_its_vair_term(vocab):
     t = render_risks(vocab)
     assert "Source Thin data (VAIR: Erroneous Input Data)" in t
-    assert "Control Human review (VAIR: Human Oversight Measure)" in t
-    assert "Follow-up control Override (VAIR: Overriding Outcome)" in t
     assert "Consequence Refused" in t and "Refused (VAIR" not in t
+
+
+def test_a_risk_shows_no_provider_measure_even_when_a_row_still_has_one(vocab):
+    t = render_risks(vocab, {**RISK, "control": "Human review", "control_term": "HumanOversightMeasure",
+                             "follow_up_control": "Override", "follow_up_control_term": "OverridingOutcome"})
+    assert "Human review" not in t and "Override" not in t
+    assert "Control" not in t and "Human Oversight Measure" not in t
 
 
 def test_the_kind_of_harm_and_the_areas_are_vair_labels(vocab):

@@ -107,6 +107,7 @@ def build_bed(label: str = "renderer"):
     # the dashboard adds this column when it starts (superset_config.py); the bed's schema dump predates it
     b.psql("superset", "ALTER TABLE aisc_comment ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP")
     controls_keep_closed_answers(b)
+    cards_and_checklists_amend(b)
     return b
 
 
@@ -139,6 +140,110 @@ def controls_keep_closed_answers(b):
     names = b.scalar("platform", "SELECT string_agg(datname, ' ') FROM pg_database WHERE left(datname, 8) = 'project_'")
     for name in (names or "").split():
         b.psql(name, CONTROLS_CLOSED_ANSWERS_SQL)
+
+
+#: What the card revisions migration of apps/qualification and the amendment reason migration of
+#: apps/controls add, which the bed's schema dumps predate: a card has several revisions per version, and a
+#: submission made by an amendment says why and for whom.
+AMENDMENT_COLUMNS_SQL = """
+DO $$
+BEGIN
+  IF to_regclass('qualification.qualification') IS NOT NULL THEN
+    ALTER TABLE qualification.qualification
+      ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS amends_id text,
+      ADD COLUMN IF NOT EXISTS amend_reason text, ADD COLUMN IF NOT EXISTS amend_requested_by text;
+    DROP INDEX IF EXISTS qualification.qualification_system_id_key;
+    CREATE UNIQUE INDEX IF NOT EXISTS qualification_system_id_revision_key
+      ON qualification.qualification (system_id, revision);
+  END IF;
+  IF to_regclass('controls.submission') IS NOT NULL THEN
+    ALTER TABLE controls.submission
+      ADD COLUMN IF NOT EXISTS amend_reason text, ADD COLUMN IF NOT EXISTS amend_requested_by text;
+  END IF;
+END $$;
+"""
+
+
+def cards_and_checklists_amend(b):
+    """AMENDMENT_COLUMNS_SQL in every project database of the bed."""
+    names = b.scalar("platform", "SELECT string_agg(datname, ' ') FROM pg_database WHERE left(datname, 8) = 'project_'")
+    for name in (names or "").split():
+        b.psql(name, AMENDMENT_COLUMNS_SQL)
+
+
+REVISED_CARD_SQL = """
+SET session_replication_role = replica;
+INSERT INTO qualification.qualification
+  (id, "systemName", "systemVersion", company, description, "targetUseCase", "targetUsers", updated_at,
+   "targetSystemTags", "sectorTags", "marketFormTags", "localityTags", "intendedDeployers", system_id,
+   revision, amends_id, amend_reason, amend_requested_by, created_at) VALUES
+  ('q-a2-r2', 'Alpha scorer', '1.0', 'Acme AI', 'Scores loan files, corrected REV2MARK', 'Credit scoring', 'Loan officers',
+   now(), '{scoring}', '{finance}', '{b2b}', '{eu}', 'Retail banks',
+   'a2000000-0000-4000-8000-000000000002', 2, 'q-a2', 'The description named the wrong market', 'carol',
+   '2026-09-12 10:00+00');
+INSERT INTO qualification.qualification_risk (id, "qualificationId", "position", risk, source, vulnerability, consequence, affected, "impactAreas") VALUES
+  ('qr-r2-1', 'q-a2-r2', 1, 'Bias against applicants', 'Training data', 'Vulnerability REV2MARK', 'Unfair refusals', 'operator', '{health}');
+"""
+REMOVE_REVISED_CARD_SQL = """
+SET session_replication_role = replica;
+DELETE FROM qualification.qualification_risk WHERE id = 'qr-r2-1';
+DELETE FROM qualification.qualification WHERE id = 'q-a2-r2';
+"""
+AMENDED_CHECKLIST_SQL = """
+UPDATE controls.submission SET amend_reason = 'A question was misread', amend_requested_by = 'dana',
+  created_at = '2026-09-15 10:00+00' WHERE id = 'sub-2';
+"""
+UNAMENDED_CHECKLIST_SQL = ("UPDATE controls.submission SET amend_reason = NULL, amend_requested_by = NULL,"
+                           " archived_at = NULL WHERE id = 'sub-2';")
+PINNED_AFTER_AMENDMENTS = "2026-09-30T00:00:00+00:00"
+
+
+@pytest.fixture
+def revised_card(bed):
+    """Version 2 of project A gets a second card revision, and is given back as it was."""
+    db = report_bed.project_db(IDS["A"])
+    bed.psql(db, REVISED_CARD_SQL)
+    yield
+    bed.psql(db, REMOVE_REVISED_CARD_SQL)
+
+
+CORRECTED_SYSTEM_SQL = """
+SET session_replication_role = replica;
+UPDATE qualification.qualification SET "systemName" = 'Alpha scorer FIXEDNAME', "systemVersion" = '1.0.1',
+  company = 'FIXEDPROVIDER', description = 'Scores loan files FIXEDDESCRIPTION' WHERE id = 'q-a2-r2';
+CREATE TABLE IF NOT EXISTS public.kept_system_row (LIKE project.system);
+DELETE FROM public.kept_system_row;
+INSERT INTO public.kept_system_row SELECT * FROM project.system WHERE pid = 'a2000000-0000-4000-8000-000000000002';
+UPDATE project.system SET name = 'Alpha scorer FIXEDNAME', version = '1.0.1', provider = 'FIXEDPROVIDER',
+  description = 'Scores loan files FIXEDDESCRIPTION', card_revision = 2
+  WHERE pid = 'a2000000-0000-4000-8000-000000000002';
+"""
+UNCORRECTED_SYSTEM_SQL = """
+SET session_replication_role = replica;
+UPDATE project.system s SET name = k.name, version = k.version, provider = k.provider,
+  description = k.description, card_revision = k.card_revision FROM public.kept_system_row k WHERE s.pid = k.pid;
+DROP TABLE public.kept_system_row;
+"""
+CORRECTION_MARKERS = ("FIXEDNAME", "FIXEDPROVIDER", "FIXEDDESCRIPTION", "1.0.1")
+
+
+@pytest.fixture
+def corrected_system(bed, revised_card):
+    """Version 2 of project A was corrected: its card's revision 2 and project.system carry the new name,
+    release, provider and description (as the platform writes them), and are given back as they were."""
+    db = report_bed.project_db(IDS["A"])
+    bed.psql(db, CORRECTED_SYSTEM_SQL)
+    yield
+    bed.psql(db, UNCORRECTED_SYSTEM_SQL)
+
+
+@pytest.fixture
+def amended_checklist(bed):
+    """The second pass of the transparency checklist of project A was made by an amendment."""
+    db = report_bed.project_db(IDS["A"])
+    bed.psql(db, AMENDED_CHECKLIST_SQL)
+    yield
+    bed.psql(db, UNAMENDED_CHECKLIST_SQL)
 
 
 @pytest.fixture(scope="session")
@@ -227,7 +332,8 @@ def block(block_type: str, **options) -> dict:
 
 
 def snapshot(blocks, project="A", system="A_V2", mode="preview", requested_by="alice",
-             name="Quarterly report", revision=4, selection=None) -> dict:
+             name="Quarterly report", revision=4, selection=None, card_revision=None,
+             pinned_at=None) -> dict:
     snap = {
         "project_id": IDS[project],
         "system_id": IDS[system],
@@ -239,6 +345,10 @@ def snapshot(blocks, project="A", system="A_V2", mode="preview", requested_by="a
     }
     if selection is not None:
         snap["selection"] = selection
+    if card_revision is not None:
+        snap["card_revision"] = card_revision
+    if pinned_at is not None:
+        snap["pinned_at"] = pinned_at
     return snap
 
 
@@ -279,10 +389,12 @@ def status_of(result: dict, instance_id: str) -> dict:
     raise AssertionError(f"no status for {instance_id}")
 
 
-def render_one(deps, block_type, project="A", system="A_V2", mode="preview", selection=None, **options):
+def render_one(deps, block_type, project="A", system="A_V2", mode="preview", selection=None, card_revision=None,
+               pinned_at=None, **options):
     """Render a layout of one block; returns (section text, status entry, section node, result)."""
     b = block(block_type, **options)
-    result = render(deps, [b], project=project, system=system, mode=mode, selection=selection)
+    result = render(deps, [b], project=project, system=system, mode=mode, selection=selection,
+                    card_revision=card_revision, pinned_at=pinned_at)
     node = section(result["html"], b["instance_id"])
     return text(node), status_of(result, b["instance_id"]), node, result
 

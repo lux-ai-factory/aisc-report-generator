@@ -75,3 +75,29 @@ def test_the_marking_labels_are_kept_in_one_place():
     from report_renderer.blocks import cover
 
     assert cover.MARKING_LABELS is document.MARKING_LABELS
+
+
+def test_cover_shows_revision_when_above_one(deps, revised_card):
+    """"Version N, revision R" once the card read is a revision above 1."""
+    t, *_ = render_one(deps, "cover", card_revision=2)
+    assert "Version 2, revision 2" in t
+
+
+def test_cover_unchanged_for_revision_one(deps, revised_card):
+    for pin in (None, 1):
+        t, *_ = render_one(deps, "cover", card_revision=pin)
+        assert "revision 2" not in t.replace("Quarterly report, revision 4", "")
+        assert "Version 2 (1.0)" in t
+
+
+def test_the_cover_names_the_revision_that_was_read_not_the_pin(deps):
+    # version 1 of project C has no revision 2: the card read is revision 1
+    t, *_ = render_one(deps, "cover", project="C", system="C_V1", card_revision=2)
+    assert "Version 1" in t and "revision 2" not in t.replace("Quarterly report, revision 4", "")
+
+
+def test_the_cover_names_a_revision_that_exists(deps, revised_card):
+    t, *_ = render_one(deps, "cover", card_revision=2)
+    assert "Version 2, revision 2" in t
+    t, *_ = render_one(deps, "cover", card_revision=7)
+    assert "Version 2, revision 2" in t

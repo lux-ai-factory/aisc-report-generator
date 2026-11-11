@@ -6,7 +6,7 @@
 {% endif %}  <dl class="card">
     <dt>{{ t("Project") }}</dt><dd>{{ project.name }}</dd>
     <dt>{{ t("AI system") }}</dt><dd>{{ system.name }}</dd>
-    <dt>{{ t("Version") }}</dt><dd>{{ t("Version {number}", number=system.number) }}{% if system.version %} ({{ system.version }}){% endif %}</dd>
+    <dt>{{ t("Version") }}</dt><dd>{% if card_revision > 1 %}{{ t("Version {number}, revision {revision}", number=system.number, revision=card_revision) }}{% else %}{{ t("Version {number}", number=system.number) }}{% endif %}{% if system.version %} ({{ system.version }}){% endif %}</dd>
     {% if system.provider %}<dt>{{ t("Provider") }}</dt><dd>{{ t("Provider: {name}", name=system.provider) }}</dd>{% endif %}
     <dt>{{ t("Date") }}</dt><dd>{{ t("Generated {date}", date=generated) }}</dd>
     <dt>{{ t("Layout") }}</dt><dd>{{ t("Layout: {name}, revision {revision}", name=report.layout_name, revision=report.revision) }}</dd>

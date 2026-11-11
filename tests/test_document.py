@@ -234,3 +234,27 @@ def test_every_pdf_page_names_the_project_and_version(deps):
 def test_preview_is_html_only(deps):
     result = render(deps, [block("free_text", text="x")], mode="preview")
     assert "html" in result and "pdf_base64" not in result
+
+
+def test_a_block_of_another_type_with_nothing_to_print_keeps_its_heading(deps):
+    from aisc_report_plugin_interface import BaseBlockRenderer, BlockResult
+    from conftest import block, render, section
+
+    class Quiet(BaseBlockRenderer):
+        type_id = "quiet_block"
+        title = "Quiet block"
+        contract_version = 1
+        options_schema = {"type": "object", "properties": {}}
+        default_options = {}
+        reads = ()
+
+        def load(self, ctx, options):
+            return None
+
+        def render(self, data, options, ctx):
+            return BlockResult(html="", status="empty")
+
+    deps.registry.register_block(Quiet, "test")
+    b = block("quiet_block")
+    html = render(deps, [b])["html"]
+    assert "Quiet block" in section(html, b["instance_id"]).get_text()

@@ -99,8 +99,8 @@ def test_the_card_and_its_risks_read_the_vair_columns(monkeypatch):
     monkeypatch.setattr(q.db, "project_one", lambda s, p, m, sql, params: seen.append(sql) or None)
     monkeypatch.setattr(q.db, "project_rows", lambda s, p, m, sql, params: seen.append(sql) or [])
     pid, sid = "00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002"
-    q.card(pid, sid, sources=None)
-    q.risks(pid, sid, sources=None)
+    q.card(pid, sid, sources=None, revision=1)
+    q.risks(pid, sid, sources=None, revision=1)
     card_sql, risk_sql = seen
     for col in ("system_type", "purpose"):
         assert f"q.{col}" in card_sql, col
@@ -113,7 +113,8 @@ def test_the_risks_read_no_provider_measure(monkeypatch):
     q = pytest.importorskip("report_renderer.data.qualification")
     seen = []
     monkeypatch.setattr(q.db, "project_rows", lambda s, p, m, sql, params: seen.append(sql) or [])
-    q.risks("00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002", sources=None)
+    q.risks("00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002", sources=None,
+            revision=1)
     risk_sql = seen[0].lower()
     for col in ("r.control", "followupcontrol", "follow_up_control", "control_term"):
         assert col not in risk_sql, col

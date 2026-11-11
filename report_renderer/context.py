@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import importlib
+import inspect
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -16,11 +17,15 @@ from .selection import EMPTY, Selection
 from . import languages
 from .data import Sources
 from .data import platform as platform_data
+from .data import qualification as qualification_data
 from .data.scope import NotInProject
 from .data.vocab import airo_labels, objective_labels, with_own_objectives
 from .errors import PlatformUnavailable, SourceUnavailable
 from .registry import Registry, build_registry
 from .superset import BoundedImages, NoChartData, chart_data_from_env, image_provider_from_env
+
+#: a card revision above any real one: reads the newest card of a version
+NEWEST_REVISION = 2**31 - 1
 
 DATA_MODULES = ("platform", "qualification", "control_objectives", "engine", "controls", "superset_db",
                 "evidence")
@@ -71,24 +76,34 @@ class ReportInfo:
     declared_charts: dict | None = None
     # the data the report covers
     selection: Selection = EMPTY
+    #: the revision of the version's AI card the report is made of (the highest revision up to it is read)
+    card_revision: int = 1
+    #: ISO 8601 date-time the report was pinned at, or None (older reports list no checklist amendments)
+    pinned_at: str | None = None
 
 
 class _Bound:
     """One data module with the project, the version and the sources already filled in."""
 
-    def __init__(self, module, project_id, system_id, sources):
-        self._module, self._p, self._s, self._sources = module, project_id, system_id, sources
+    def __init__(self, module, project_id, system_id, sources, **fixed):
+        self._module, self._p, self._s, self._sources, self._fixed = module, project_id, system_id, sources, fixed
 
     def __getattr__(self, name):
         if name.startswith("_"):
             raise AttributeError(name)
         f = getattr(self._module, name)
-        return functools.partial(f, self._p, self._s, sources=self._sources)
+        # a fixed value (the card revision) goes only to the readers that take it
+        wanted = {k: v for k, v in self._fixed.items() if k in inspect.signature(f).parameters}
+        return functools.partial(f, self._p, self._s, sources=self._sources, **wanted)
 
 
 class ScopedData:
-    def __init__(self, project_id, system, newer, deps: Deps):
+    def __init__(self, project_id, system, newer, deps: Deps, card_revision: int | None = None,
+                 pinned_at: str | None = None):
         self.project_id = project_id
+        self.pinned_at = pinned_at
+        #: the pinned card revision; an earlier version compared with this one reads its newest card
+        self.card_revision = card_revision if card_revision is not None else NEWEST_REVISION
         self.system = MappingProxyType(dict(system))
         self.system_id = system["pid"]
         self.system_number = system["number"]
@@ -106,7 +121,8 @@ class ScopedData:
         if name not in DATA_MODULES:
             raise AttributeError(name)
         module = importlib.import_module(f"report_renderer.data.{name}")
-        bound = _Bound(module, self.project_id, self.system_id, self.sources)
+        bound = _Bound(module, self.project_id, self.system_id, self.sources, revision=self.card_revision,
+                       pinned_at=self.pinned_at)
         self.__dict__[name] = bound
         return bound
 
@@ -161,6 +177,10 @@ class BlockContext:
     #: colours of charts drawn by the renderer and the tool renderers
     chart_colours: dict = field(default_factory=lambda: dict(DEFAULT_CHART_COLOURS))
 
+    @property
+    def card_revision(self) -> int:
+        return self.report.card_revision
+
     def number(self, value) -> str:
         """A number (or its already formatted text) with the report's decimal separator."""
         if value is None:
@@ -176,6 +196,28 @@ class BlockContext:
         if "." in text:
             text = text.rstrip("0").rstrip(".")
         return self.percent_format.replace("{value}", text.replace(".", self.decimal_separator))
+
+
+def _normalise_version(version: str | None) -> str | None:
+    """A version as the platform stores it: trimmed, and nothing rather than empty (platform_service.systems)."""
+    return (version or "").strip() or None
+
+
+def system_as_pinned(project_id, system: dict, revision: int, *, sources) -> dict:
+    """The version as its card read at the pinned revision describes it.
+
+    project.system holds the version as its latest card revision describes it: a correction rewrites its
+    name, release, provider and description. A report pinned to an earlier revision takes them from that
+    revision's card instead, so it prints what was described then. A version never corrected, or a pin at
+    its latest revision, keeps project.system as it is."""
+    if (system.get("card_revision") or 1) <= revision:
+        return system
+    card = qualification_data.card(project_id, system["pid"], sources=sources, revision=revision)
+    if card is None or card["revision"] >= system["card_revision"]:
+        return system
+    return {**system, "name": (card["system_name"] or "").strip(),
+            "version": _normalise_version(card["system_version"]),
+            "provider": card["company"], "description": card["description"] or None}
 
 
 def context_for(project_id, system_id, *, deps, mode="preview", layout=None, requested_by="",
@@ -201,6 +243,7 @@ def context_for(project_id, system_id, *, deps, mode="preview", layout=None, req
         return make_translator(package_language_file(package, "en"), messages)
 
     pid = system["project_id"]
+    system = system_as_pinned(pid, system, info.card_revision, sources=deps.sources)
     return BlockContext(
         project_id=pid,
         project=MappingProxyType(dict(project or {})),
@@ -208,7 +251,7 @@ def context_for(project_id, system_id, *, deps, mode="preview", layout=None, req
         newer_versions=tuple(n["number"] for n in newer),
         generated_at=deps.clock(),
         mode=mode,
-        data=ScopedData(pid, system, newer, deps),
+        data=ScopedData(pid, system, newer, deps, info.card_revision, info.pinned_at),
         report=info,
         language=language,
         t=t,

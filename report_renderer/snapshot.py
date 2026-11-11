@@ -40,6 +40,10 @@ SCHEMA = {
             },
         },
         "mode": {"enum": ["preview", "pdf", "docx"]},
+        # the revision of the version's AI card the report is made of; absent means revision 1
+        "card_revision": {"type": "integer", "minimum": 1},
+        # when the report was pinned (a date-time with its time zone): amendments made later are not listed
+        "pinned_at": {"type": "string"},
         "requested_by": {"type": "string"},
         "snapshot_version": {"type": "integer", "enum": [3]},
         "document": {
@@ -117,6 +121,8 @@ def _message(err) -> str:
         return "must be a UUID" if err.validator_value == UUID_PATTERN else "is not valid"
     if err.validator == "enum":
         return "must be one of " + ", ".join(str(v) for v in err.validator_value)
+    if err.validator == "minimum":
+        return f"must be at least {err.validator_value}"
     if err.validator == "maxItems":
         return f"must have at most {err.validator_value} items"
     if err.validator == "minLength":
@@ -177,6 +183,15 @@ def _content_problems(s) -> list[dict]:
         if why:
             out.append({"instance_id": None, "code": "invalid_snapshot", "pointer": "/style/logo/data_base64",
                         "message": why})
+    pinned = s.get("pinned_at") if isinstance(s, dict) else None
+    if isinstance(pinned, str):
+        try:
+            ok = datetime.fromisoformat(pinned).tzinfo is not None
+        except ValueError:
+            ok = False
+        if not ok:
+            out.append({"instance_id": None, "code": "invalid_snapshot", "pointer": "/pinned_at",
+                        "message": "is not a date-time with its time zone (ISO 8601)"})
     selection = s.get("selection") if isinstance(s, dict) else None
     if isinstance(selection, dict):
         for key in ("period_from", "period_to"):
@@ -228,8 +243,16 @@ def validate(snapshot) -> list[dict]:
     return problems
 
 
+def card_revision(snapshot: dict) -> int:
+    """The card revision a snapshot pins; a snapshot that names none pins revision 1."""
+    return snapshot.get("card_revision", 1)
+
+
 def fingerprint(snapshot: dict) -> str:
-    """SHA-256 of the canonical snapshot without mode, requested_by and document."""
+    """SHA-256 of the canonical snapshot without mode, requested_by and document.
+
+    A snapshot with `pinned_at` (the composer sets it at every generation) fingerprints differently each
+    time it is generated, even with the same blocks and pins: the moment is part of what the report read."""
     s = {k: v for k, v in snapshot.items() if k not in ("mode", "requested_by", "document")}
     raw = json.dumps(s, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()

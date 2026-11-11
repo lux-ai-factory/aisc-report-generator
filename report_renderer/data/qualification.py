@@ -26,7 +26,7 @@ def _params(project_id, system_id, revision=None) -> dict:
 def card(project_id, system_id, *, sources, revision: int) -> dict | None:
     return db.project_one(sources, check_uuid(project_id), "qualification",
                   'SELECT q.id, q."systemName" AS system_name, q."systemVersion" AS system_version, q.company,'
-                  ' q.description, q."targetUseCase" AS target_use_case, q."targetUsers" AS target_users,'
+                  ' q.revision, q.description, q."targetUseCase" AS target_use_case, q."targetUsers" AS target_users,'
                   ' q."intendedDeployers" AS intended_deployers, q."targetSystemTags" AS target_system_tags,'
                   ' q."sectorTags" AS sector_tags, q."marketFormTags" AS market_form_tags,'
                   ' q."localityTags" AS locality_tags, q.system_type, q.purpose'

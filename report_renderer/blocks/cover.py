@@ -29,11 +29,12 @@ class CoverBlock(BaseBlockRenderer):
         },
     }
     default_options = {"report_title": "AI system assessment report", "subtitle": "", "show_logo": True, "show_generated_by": True}
-    reads = ("platform",)
+    reads = ("platform", "qualification")
     choice_options = ()
 
     def load(self, ctx, options):
-        return {"logo": ctx.data.logo}
+        card = ctx.data.qualification.card()
+        return {"logo": ctx.data.logo, "revision": card["revision"] if card else 1}
 
     def render(self, data, options, ctx):
         """Never empty; shows a banner when newer versions exist."""
@@ -60,5 +61,5 @@ class CoverBlock(BaseBlockRenderer):
             "templates/cover.html.j2", options=options, project=ctx.project, system=ctx.system,
             generated=ctx.generated_at.astimezone(timezone.utc).strftime("%Y-%m-%d"), report=ctx.report,
             generated_by=generated_by if options["show_generated_by"] else None, banner=banner, logo=logo,
-            marking=marking_label, card_revision=ctx.card_revision, t=t)
+            marking=marking_label, card_revision=(data or {}).get("revision", 1), t=t)
         return BlockResult(html=html, status="ok")

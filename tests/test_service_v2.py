@@ -178,7 +178,7 @@ MORE = {
     "chapter": {"page_break_before"},
     "appendix": {"title"},
     "test_runs": set(),
-    "amendments": set(),
+    "amendments": {"include_archived"},
 }
 MAIN = {
     "cover": {"report_title", "subtitle"},

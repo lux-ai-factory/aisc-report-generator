@@ -42,6 +42,8 @@ SCHEMA = {
         "mode": {"enum": ["preview", "pdf", "docx"]},
         # the revision of the version's AI card the report is made of; absent means revision 1
         "card_revision": {"type": "integer", "minimum": 1},
+        # when the report was pinned (a date-time with its time zone): amendments made later are not listed
+        "pinned_at": {"type": "string"},
         "requested_by": {"type": "string"},
         "snapshot_version": {"type": "integer", "enum": [3]},
         "document": {
@@ -181,6 +183,15 @@ def _content_problems(s) -> list[dict]:
         if why:
             out.append({"instance_id": None, "code": "invalid_snapshot", "pointer": "/style/logo/data_base64",
                         "message": why})
+    pinned = s.get("pinned_at") if isinstance(s, dict) else None
+    if isinstance(pinned, str):
+        try:
+            ok = datetime.fromisoformat(pinned).tzinfo is not None
+        except ValueError:
+            ok = False
+        if not ok:
+            out.append({"instance_id": None, "code": "invalid_snapshot", "pointer": "/pinned_at",
+                        "message": "is not a date-time with its time zone (ISO 8601)"})
     selection = s.get("selection") if isinstance(s, dict) else None
     if isinstance(selection, dict):
         for key in ("period_from", "period_to"):

@@ -53,3 +53,21 @@ def test_components_and_graph_follow_the_pinned_revision(sources, revised_card):
     assert q.components(IDS["A"], IDS["A_V2"], sources=sources, revision=2) == []
     assert q.knowledge_graph(IDS["A"], IDS["A_V2"], sources=sources, revision=1) is not None
     assert q.knowledge_graph(IDS["A"], IDS["A_V2"], sources=sources, revision=2) is None
+
+
+def test_snapshot_pinned_at_needs_a_time_zone():
+    assert _problems({**snapshot([]), "pinned_at": "2026-09-30T00:00:00+00:00"}) == []
+    for bad in ("2026-09-30T00:00:00", "yesterday", 5):
+        assert [p["pointer"] for p in _problems({**snapshot([]), "pinned_at": bad})] == ["/pinned_at"], bad
+
+
+def test_fingerprint_of_a_snapshot_without_pinned_at_is_unchanged():
+    import hashlib
+    import json
+
+    fingerprint = need("report_renderer.snapshot", "fingerprint")
+    snap = snapshot([])
+    raw = json.dumps({k: v for k, v in snap.items() if k not in ("mode", "requested_by", "document")},
+                     sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    assert fingerprint(snap) == hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    assert fingerprint({**snap, "pinned_at": "2026-09-30T00:00:00+00:00"}) != fingerprint(snap)

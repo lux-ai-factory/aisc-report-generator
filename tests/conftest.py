@@ -190,10 +190,12 @@ DELETE FROM qualification.qualification_risk WHERE id = 'qr-r2-1';
 DELETE FROM qualification.qualification WHERE id = 'q-a2-r2';
 """
 AMENDED_CHECKLIST_SQL = """
-UPDATE controls.submission SET amend_reason = 'A question was misread', amend_requested_by = 'dana'
- WHERE id = 'sub-2';
+UPDATE controls.submission SET amend_reason = 'A question was misread', amend_requested_by = 'dana',
+  created_at = '2026-09-15 10:00+00' WHERE id = 'sub-2';
 """
-UNAMENDED_CHECKLIST_SQL = "UPDATE controls.submission SET amend_reason = NULL, amend_requested_by = NULL WHERE id = 'sub-2';"
+UNAMENDED_CHECKLIST_SQL = ("UPDATE controls.submission SET amend_reason = NULL, amend_requested_by = NULL,"
+                           " archived_at = NULL WHERE id = 'sub-2';")
+PINNED_AFTER_AMENDMENTS = "2026-09-30T00:00:00+00:00"
 
 
 @pytest.fixture
@@ -300,7 +302,8 @@ def block(block_type: str, **options) -> dict:
 
 
 def snapshot(blocks, project="A", system="A_V2", mode="preview", requested_by="alice",
-             name="Quarterly report", revision=4, selection=None, card_revision=None) -> dict:
+             name="Quarterly report", revision=4, selection=None, card_revision=None,
+             pinned_at=None) -> dict:
     snap = {
         "project_id": IDS[project],
         "system_id": IDS[system],
@@ -314,6 +317,8 @@ def snapshot(blocks, project="A", system="A_V2", mode="preview", requested_by="a
         snap["selection"] = selection
     if card_revision is not None:
         snap["card_revision"] = card_revision
+    if pinned_at is not None:
+        snap["pinned_at"] = pinned_at
     return snap
 
 
@@ -355,11 +360,11 @@ def status_of(result: dict, instance_id: str) -> dict:
 
 
 def render_one(deps, block_type, project="A", system="A_V2", mode="preview", selection=None, card_revision=None,
-               **options):
+               pinned_at=None, **options):
     """Render a layout of one block; returns (section text, status entry, section node, result)."""
     b = block(block_type, **options)
     result = render(deps, [b], project=project, system=system, mode=mode, selection=selection,
-                    card_revision=card_revision)
+                    card_revision=card_revision, pinned_at=pinned_at)
     node = section(result["html"], b["instance_id"])
     return text(node), status_of(result, b["instance_id"]), node, result
 

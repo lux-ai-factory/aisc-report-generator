@@ -37,7 +37,7 @@ def test_every_built_in_declares_a_valid_contract(type_id):
 
 # options and their defaults
 EXPECTED_DEFAULTS = {
-    "amendments": {},
+    "amendments": {"include_archived": False},
     "cover": {"report_title": "AI system assessment report", "subtitle": "", "show_logo": True, "show_generated_by": True},
     "ai_card": {"show_components": True, "show_tags": True, "show_graph_stats": False},
     "risk_classification": {"show_chains": True, "show_impact_areas": True, "stated_risk_class": "not_determined", "show_classification": True},

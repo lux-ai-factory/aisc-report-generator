@@ -77,6 +77,8 @@ class ReportInfo:
     selection: Selection = EMPTY
     #: the revision of the version's AI card the report is made of (the highest revision up to it is read)
     card_revision: int = 1
+    #: ISO 8601 date-time the report was pinned at, or None (older reports list no checklist amendments)
+    pinned_at: str | None = None
 
 
 class _Bound:
@@ -95,8 +97,10 @@ class _Bound:
 
 
 class ScopedData:
-    def __init__(self, project_id, system, newer, deps: Deps, card_revision: int | None = None):
+    def __init__(self, project_id, system, newer, deps: Deps, card_revision: int | None = None,
+                 pinned_at: str | None = None):
         self.project_id = project_id
+        self.pinned_at = pinned_at
         #: the pinned card revision; an earlier version compared with this one reads its newest card
         self.card_revision = card_revision if card_revision is not None else NEWEST_REVISION
         self.system = MappingProxyType(dict(system))
@@ -116,7 +120,8 @@ class ScopedData:
         if name not in DATA_MODULES:
             raise AttributeError(name)
         module = importlib.import_module(f"report_renderer.data.{name}")
-        bound = _Bound(module, self.project_id, self.system_id, self.sources, revision=self.card_revision)
+        bound = _Bound(module, self.project_id, self.system_id, self.sources, revision=self.card_revision,
+                       pinned_at=self.pinned_at)
         self.__dict__[name] = bound
         return bound
 
@@ -222,7 +227,7 @@ def context_for(project_id, system_id, *, deps, mode="preview", layout=None, req
         newer_versions=tuple(n["number"] for n in newer),
         generated_at=deps.clock(),
         mode=mode,
-        data=ScopedData(pid, system, newer, deps, info.card_revision),
+        data=ScopedData(pid, system, newer, deps, info.card_revision, info.pinned_at),
         report=info,
         language=language,
         t=t,

@@ -47,20 +47,25 @@ def submissions_with_answers(project_id, system_id, *, sources, include_archived
                  {"s": check_uuid(system_id), "arch": bool(include_archived)}, absent=None)
 
 
-def amendments(project_id, system_id, *, sources) -> list[dict]:
-    """The submissions of this version's answers that an amendment made, oldest first."""
+def amendments(project_id, system_id, *, sources, pinned_at=None, include_archived=False) -> list[dict]:
+    """The submissions of this version's answers that an amendment made, oldest first.
+
+    Only those made by `pinned_at` (an ISO 8601 date-time with its time zone) count, so a report made
+    again later does not gain amendments that came after it; without `pinned_at` there are none. Archived
+    submissions are left out unless `include_archived`."""
     dsn = _dsn(project_id, system_id, sources)
-    if dsn is None:
+    if dsn is None or pinned_at is None:
         return []
     return _read(dsn,
                  'SELECT c.title AS checklist, sub.version, sub.amend_reason AS reason,'
                  ' sub.amend_requested_by AS requested_by, sub.created_at'
                  ' FROM controls.submission sub JOIN controls.checklist c ON c.id = sub."checklistId"'
-                 " WHERE sub.amend_reason IS NOT NULL"
+                 " WHERE sub.amend_reason IS NOT NULL AND sub.created_at <= %(at)s::timestamptz"
+                 " AND (%(arch)s OR sub.archived_at IS NULL)"
                  " AND EXISTS (SELECT 1 FROM controls.submission_answer a"
                  '             WHERE a."submissionId" = sub.id AND a.system_version_pid = %(s)s)'
                  " ORDER BY sub.created_at, c.title, sub.version, sub.id",
-                 {"s": check_uuid(system_id)}, absent=[])
+                 {"s": check_uuid(system_id), "at": pinned_at, "arch": bool(include_archived)}, absent=[])
 
 
 def questions(project_id, system_id, *, sources, checklist_ids) -> list[dict]:

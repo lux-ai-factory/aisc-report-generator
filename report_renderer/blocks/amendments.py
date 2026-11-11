@@ -10,7 +10,6 @@ from markupsafe import Markup
 from aisc_report_plugin_interface import BaseBlockRenderer, BlockResult
 
 
-
 def _date(value) -> str:
     return value.strftime("%Y-%m-%d") if hasattr(value, "strftime") else str(value or "")[:10]
 
@@ -20,14 +19,22 @@ class AmendmentsBlock(BaseBlockRenderer):
     title = "Amendments"
     contract_version = 1
     description = "The corrections of the AI card and of the checklists of this version, with reason and requester."
-    options_schema = {"type": "object", "additionalProperties": False, "properties": {}}
-    default_options = {}
+    options_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "include_archived": {"type": "boolean", "title": "Include archived submissions",
+                                 "description": "Also lists amendments whose submission is archived.",
+                                 "x-aisc-more": True},
+        },
+    }
+    default_options = {"include_archived": False}
     reads = ("qualification", "controls")
     choice_options = ()
 
     def load(self, ctx, options):
         card = ctx.data.qualification.amendments()
-        checklists = ctx.data.controls.amendments()
+        checklists = ctx.data.controls.amendments(include_archived=options["include_archived"])
         return {"card": card, "checklists": checklists}
 
     def render(self, data, options, ctx):

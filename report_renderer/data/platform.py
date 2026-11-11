@@ -10,14 +10,15 @@ from __future__ import annotations
 from . import db
 from .scope import NotInProject, check_uuid
 
-_VERSION = "SELECT pid::text, number, name, version, provider, description, created_at FROM project.system"
+_VERSION = ("SELECT pid::text, number, name, version, provider, description, created_at, card_revision"
+            " FROM project.system")
 
 
 def _without_database(p: str, s: str) -> dict:
     """The pinned version of a project that has no database (or no project.system in it) yet: nothing
     is known of it, so it has no number, name or description, and nothing can be read for it."""
     return {"pid": s, "project_id": p, "number": 0, "name": "", "version": None, "provider": None,
-            "description": None, "created_at": None}
+            "description": None, "created_at": None, "card_revision": 1}
 
 
 def pinned_system(project_id, system_id, *, sources) -> dict:

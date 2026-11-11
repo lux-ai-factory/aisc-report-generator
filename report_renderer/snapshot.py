@@ -249,7 +249,10 @@ def card_revision(snapshot: dict) -> int:
 
 
 def fingerprint(snapshot: dict) -> str:
-    """SHA-256 of the canonical snapshot without mode, requested_by and document."""
+    """SHA-256 of the canonical snapshot without mode, requested_by and document.
+
+    A snapshot with `pinned_at` (the composer sets it at every generation) fingerprints differently each
+    time it is generated, even with the same blocks and pins: the moment is part of what the report read."""
     s = {k: v for k, v in snapshot.items() if k not in ("mode", "requested_by", "document")}
     raw = json.dumps(s, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()

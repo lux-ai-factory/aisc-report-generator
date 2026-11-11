@@ -207,6 +207,36 @@ def revised_card(bed):
     bed.psql(db, REMOVE_REVISED_CARD_SQL)
 
 
+CORRECTED_SYSTEM_SQL = """
+SET session_replication_role = replica;
+UPDATE qualification.qualification SET "systemName" = 'Alpha scorer FIXEDNAME', "systemVersion" = '1.0.1',
+  company = 'FIXEDPROVIDER', description = 'Scores loan files FIXEDDESCRIPTION' WHERE id = 'q-a2-r2';
+CREATE TABLE IF NOT EXISTS public.kept_system_row (LIKE project.system);
+DELETE FROM public.kept_system_row;
+INSERT INTO public.kept_system_row SELECT * FROM project.system WHERE pid = 'a2000000-0000-4000-8000-000000000002';
+UPDATE project.system SET name = 'Alpha scorer FIXEDNAME', version = '1.0.1', provider = 'FIXEDPROVIDER',
+  description = 'Scores loan files FIXEDDESCRIPTION', card_revision = 2
+  WHERE pid = 'a2000000-0000-4000-8000-000000000002';
+"""
+UNCORRECTED_SYSTEM_SQL = """
+SET session_replication_role = replica;
+UPDATE project.system s SET name = k.name, version = k.version, provider = k.provider,
+  description = k.description, card_revision = k.card_revision FROM public.kept_system_row k WHERE s.pid = k.pid;
+DROP TABLE public.kept_system_row;
+"""
+CORRECTION_MARKERS = ("FIXEDNAME", "FIXEDPROVIDER", "FIXEDDESCRIPTION", "1.0.1")
+
+
+@pytest.fixture
+def corrected_system(bed, revised_card):
+    """Version 2 of project A was corrected: its card's revision 2 and project.system carry the new name,
+    release, provider and description (as the platform writes them), and are given back as they were."""
+    db = report_bed.project_db(IDS["A"])
+    bed.psql(db, CORRECTED_SYSTEM_SQL)
+    yield
+    bed.psql(db, UNCORRECTED_SYSTEM_SQL)
+
+
 @pytest.fixture
 def amended_checklist(bed):
     """The second pass of the transparency checklist of project A was made by an amendment."""

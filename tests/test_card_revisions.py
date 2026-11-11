@@ -1,7 +1,7 @@
 """A report pins a card revision: the snapshot key, and the card readers. Database tests on the bed."""
 import pytest
 
-from conftest import IDS, need, snapshot
+from conftest import IDS, need, render_one, snapshot
 
 pytestmark = pytest.mark.db
 
@@ -71,3 +71,17 @@ def test_fingerprint_of_a_snapshot_without_pinned_at_is_unchanged():
                      sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     assert fingerprint(snap) == hashlib.sha256(raw.encode("utf-8")).hexdigest()
     assert fingerprint({**snap, "pinned_at": "2026-09-30T00:00:00+00:00"}) != fingerprint(snap)
+
+
+def test_a_report_pinned_before_a_correction_prints_the_card_as_it_was(deps, corrected_system):
+    from conftest import CORRECTION_MARKERS
+
+    for block_type in ("cover", "ai_card"):
+        *_, result = render_one(deps, block_type, card_revision=1)
+        leaked = [m for m in CORRECTION_MARKERS if m in result["html"]]
+        assert not leaked, f"{block_type}: a report pinned to revision 1 shows the correction {leaked}"
+
+
+def test_a_report_pinned_to_the_correction_prints_it(deps, corrected_system):
+    t, *_ = render_one(deps, "cover", card_revision=2)
+    assert "FIXEDNAME" in t and "FIXEDPROVIDER" in t and "1.0.1" in t

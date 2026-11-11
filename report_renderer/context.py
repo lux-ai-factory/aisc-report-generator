@@ -17,6 +17,7 @@ from .selection import EMPTY, Selection
 from . import languages
 from .data import Sources
 from .data import platform as platform_data
+from .data import qualification as qualification_data
 from .data.scope import NotInProject
 from .data.vocab import airo_labels, objective_labels, with_own_objectives
 from .errors import PlatformUnavailable, SourceUnavailable
@@ -197,6 +198,28 @@ class BlockContext:
         return self.percent_format.replace("{value}", text.replace(".", self.decimal_separator))
 
 
+def _normalise_version(version: str | None) -> str | None:
+    """A version as the platform stores it: trimmed, and nothing rather than empty (platform_service.systems)."""
+    return (version or "").strip() or None
+
+
+def system_as_pinned(project_id, system: dict, revision: int, *, sources) -> dict:
+    """The version as its card read at the pinned revision describes it.
+
+    project.system holds the version as its latest card revision describes it: a correction rewrites its
+    name, release, provider and description. A report pinned to an earlier revision takes them from that
+    revision's card instead, so it prints what was described then. A version never corrected, or a pin at
+    its latest revision, keeps project.system as it is."""
+    if (system.get("card_revision") or 1) <= revision:
+        return system
+    card = qualification_data.card(project_id, system["pid"], sources=sources, revision=revision)
+    if card is None or card["revision"] >= system["card_revision"]:
+        return system
+    return {**system, "name": (card["system_name"] or "").strip(),
+            "version": _normalise_version(card["system_version"]),
+            "provider": card["company"], "description": card["description"] or None}
+
+
 def context_for(project_id, system_id, *, deps, mode="preview", layout=None, requested_by="",
                 coverage_links=(), language="en", report=None, primary_color=None) -> BlockContext:
     try:
@@ -220,6 +243,7 @@ def context_for(project_id, system_id, *, deps, mode="preview", layout=None, req
         return make_translator(package_language_file(package, "en"), messages)
 
     pid = system["project_id"]
+    system = system_as_pinned(pid, system, info.card_revision, sources=deps.sources)
     return BlockContext(
         project_id=pid,
         project=MappingProxyType(dict(project or {})),

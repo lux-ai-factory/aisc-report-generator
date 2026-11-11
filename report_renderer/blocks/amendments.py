@@ -18,7 +18,8 @@ class AmendmentsBlock(BaseBlockRenderer):
     type_id = "amendments"
     title = "Amendments"
     contract_version = 1
-    description = "The corrections of the AI card and of the checklists of this version, with reason and requester."
+    description = ("The corrections of the AI card and of the checklists of this version, with reason and requester."
+                   " A checklist correction not yet submitted is listed with the day it was opened.")
     options_schema = {
         "type": "object",
         "additionalProperties": False,

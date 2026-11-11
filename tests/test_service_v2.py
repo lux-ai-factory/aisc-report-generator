@@ -178,6 +178,7 @@ MORE = {
     "chapter": {"page_break_before"},
     "appendix": {"title"},
     "test_runs": set(),
+    "amendments": set(),
 }
 MAIN = {
     "cover": {"report_title", "subtitle"},
@@ -196,6 +197,7 @@ MAIN = {
     "chapter": {"title", "intro"},
     "appendix": set(),
     "test_runs": {"detail"},
+    "amendments": set(),
 }
 COMMON_MORE = {"title", "page_break_before", "commentary_position"}
 

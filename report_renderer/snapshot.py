@@ -40,6 +40,8 @@ SCHEMA = {
             },
         },
         "mode": {"enum": ["preview", "pdf", "docx"]},
+        # the revision of the version's AI card the report is made of; absent means revision 1
+        "card_revision": {"type": "integer", "minimum": 1},
         "requested_by": {"type": "string"},
         "snapshot_version": {"type": "integer", "enum": [3]},
         "document": {
@@ -117,6 +119,8 @@ def _message(err) -> str:
         return "must be a UUID" if err.validator_value == UUID_PATTERN else "is not valid"
     if err.validator == "enum":
         return "must be one of " + ", ".join(str(v) for v in err.validator_value)
+    if err.validator == "minimum":
+        return f"must be at least {err.validator_value}"
     if err.validator == "maxItems":
         return f"must have at most {err.validator_value} items"
     if err.validator == "minLength":
@@ -226,6 +230,11 @@ def validate(snapshot) -> list[dict]:
     problems.extend(_surrogate_problems(s))
     problems.extend(_content_problems(s))
     return problems
+
+
+def card_revision(snapshot: dict) -> int:
+    """The card revision a snapshot pins; a snapshot that names none pins revision 1."""
+    return snapshot.get("card_revision", 1)
 
 
 def fingerprint(snapshot: dict) -> str:

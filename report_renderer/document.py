@@ -128,7 +128,11 @@ def _section(b: dict, ctx, deps) -> dict:
             options = {**cls.full_default_options(), **dict(b.get("options") or {})}
             if not cls.options_problems(options) and is_placeholder(options.get("text")):
                 return _unwritten(b, ctx)
-    return _render_block(b, ctx, deps)
+    section = _render_block(b, ctx, deps)
+    if section["status"] == "empty" and not str(section["html"]).strip() and not section["parts"]:
+        # a block that has nothing to say and prints nothing (the Amendments block) is left out
+        section["omit"] = True
+    return section
 
 
 def _css_escape_char(ch: str) -> str:
@@ -260,7 +264,8 @@ def render(snapshot: dict, deps) -> dict:
               "header_text": (look or {}).get("header_text"), "footer_text": (look or {}).get("footer_text"),
               "show_document_id": bool((look or {}).get("show_document_id", False)), "fingerprint": fingerprint,
               "ledger_anchor": document.get("ledger_anchor"), "declared_charts": snapshot.get("declared_charts"),
-              "selection": selection.from_snapshot(snapshot.get("selection"))}
+              "selection": selection.from_snapshot(snapshot.get("selection")),
+              "card_revision": snapshot_schema.card_revision(snapshot)}
     try:
         ctx = context_for(snapshot["project_id"], snapshot["system_id"], deps=deps, mode=mode,
                           layout=snapshot["layout"], requested_by=snapshot.get("requested_by", ""),

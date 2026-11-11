@@ -1,5 +1,6 @@
 """The built-in block types."""
 from .ai_card import AiCardBlock
+from .amendments import AmendmentsBlock
 from .changes_since import ChangesSinceBlock
 from .chapter import AppendixBlock, ChapterBlock
 from .chart import ChartBlock
@@ -17,4 +18,4 @@ from .test_runs import TestRunsBlock
 
 BUILTIN_BLOCKS = [CoverBlock, AiCardBlock, RiskClassificationBlock, ControlObjectivesBlock, TestResultsBlock,
                   ControlAnswersBlock, DashboardChartBlock, SummaryCoverageBlock, FreeTextBlock, ChapterBlock,
-                  AppendixBlock, ChartBlock, KeyFiguresBlock, ChangesSinceBlock, TestRunsBlock, SupersetExportsBlock]
+                  AppendixBlock, ChartBlock, KeyFiguresBlock, ChangesSinceBlock, TestRunsBlock, SupersetExportsBlock, AmendmentsBlock]

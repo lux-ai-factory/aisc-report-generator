@@ -60,5 +60,5 @@ class CoverBlock(BaseBlockRenderer):
             "templates/cover.html.j2", options=options, project=ctx.project, system=ctx.system,
             generated=ctx.generated_at.astimezone(timezone.utc).strftime("%Y-%m-%d"), report=ctx.report,
             generated_by=generated_by if options["show_generated_by"] else None, banner=banner, logo=logo,
-            marking=marking_label, t=t)
+            marking=marking_label, card_revision=ctx.card_revision, t=t)
         return BlockResult(html=html, status="ok")

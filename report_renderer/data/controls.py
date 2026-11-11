@@ -47,6 +47,22 @@ def submissions_with_answers(project_id, system_id, *, sources, include_archived
                  {"s": check_uuid(system_id), "arch": bool(include_archived)}, absent=None)
 
 
+def amendments(project_id, system_id, *, sources) -> list[dict]:
+    """The submissions of this version's answers that an amendment made, oldest first."""
+    dsn = _dsn(project_id, system_id, sources)
+    if dsn is None:
+        return []
+    return _read(dsn,
+                 'SELECT c.title AS checklist, sub.version, sub.amend_reason AS reason,'
+                 ' sub.amend_requested_by AS requested_by, sub.created_at'
+                 ' FROM controls.submission sub JOIN controls.checklist c ON c.id = sub."checklistId"'
+                 " WHERE sub.amend_reason IS NOT NULL"
+                 " AND EXISTS (SELECT 1 FROM controls.submission_answer a"
+                 '             WHERE a."submissionId" = sub.id AND a.system_version_pid = %(s)s)'
+                 " ORDER BY sub.created_at, c.title, sub.version, sub.id",
+                 {"s": check_uuid(system_id)}, absent=[])
+
+
 def questions(project_id, system_id, *, sources, checklist_ids) -> list[dict]:
     dsn = _dsn(project_id, system_id, sources)
     if dsn is None or not checklist_ids:

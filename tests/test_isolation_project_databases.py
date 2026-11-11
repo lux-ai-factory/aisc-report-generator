@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import (AISC_INSTALL, FIXED_NOW, IDS, RecordingImages, block, controls_keep_closed_answers, lazily,
-                      need, snapshot)
+from conftest import (AISC_INSTALL, FIXED_NOW, IDS, RecordingImages, block, cards_and_checklists_amend, controls_keep_closed_answers,
+                      lazily, need, snapshot)
 
 pytestmark = pytest.mark.db
 
@@ -67,6 +67,7 @@ def iso_bed():
     try:
         _add_project_without_module_tables(iso, b)
         controls_keep_closed_answers(b)
+        cards_and_checklists_amend(b)
         yield b
     finally:
         b.stop()
@@ -267,7 +268,7 @@ def test_module_data_of_the_pinned_version_from_the_projects_database(iso_source
     q = importlib.import_module("report_renderer.data.qualification")
     co = importlib.import_module("report_renderer.data.control_objectives")
     en = importlib.import_module("report_renderer.data.engine")
-    assert q.card(IDS["A"], IDS["A_V2"], sources=iso_sources) is not None
+    assert q.card(IDS["A"], IDS["A_V2"], sources=iso_sources, revision=1) is not None
     assert co.assessment(IDS["A"], IDS["A_V2"], sources=iso_sources) is not None
     pids = {e["pid"] for e in en.evaluations(IDS["A"], IDS["A_V2"], sources=iso_sources)}
     assert IDS["EVAL_A_V2"] in pids and IDS["EVAL_A_V3"] not in pids and IDS["EVAL_A_V1"] not in pids
@@ -279,10 +280,10 @@ def test_another_projects_version_reads_nothing_from_this_database(iso_sources):
     q = importlib.import_module("report_renderer.data.qualification")
     co = importlib.import_module("report_renderer.data.control_objectives")
     en = importlib.import_module("report_renderer.data.engine")
-    assert q.card(IDS["B"], IDS["A_V2"], sources=iso_sources) is None
+    assert q.card(IDS["B"], IDS["A_V2"], sources=iso_sources, revision=1) is None
     assert co.assessment(IDS["B"], IDS["A_V2"], sources=iso_sources) is None
     assert en.evaluations(IDS["B"], IDS["A_V2"], sources=iso_sources) == []
-    assert q.card(IDS["A"], IDS["B_V1"], sources=iso_sources) is None
+    assert q.card(IDS["A"], IDS["B_V1"], sources=iso_sources, revision=1) is None
     assert en.evaluations(IDS["A"], IDS["B_V1"], sources=iso_sources) == []
 
 
@@ -347,7 +348,8 @@ def test_a_missing_project_database_gives_empty_for_every_data_block(iso_deps):
 def test_a_missing_project_database_reads_as_nothing(iso_sources, module, function):
     """The data functions themselves answer nothing (None / []) for a project without a database."""
     fn = getattr(importlib.import_module(f"report_renderer.data.{module}"), function)
-    assert fn(IDS["C"], IDS["C_V1"], sources=iso_sources) in (None, [])
+    extra = {"revision": 1} if module == "qualification" else {}
+    assert fn(IDS["C"], IDS["C_V1"], sources=iso_sources, **extra) in (None, [])
 
 
 def test_a_missing_module_schema_or_table_gives_empty_never_error(iso_deps):

@@ -2,7 +2,8 @@
 
 Each figure is read separately; a figure without data shows "n/a" with the missing source named, and
 a source error makes only that tile "n/a (ref ...)". Tool tiles come from the dedicated tool
-renderers' headline() of each tool's latest Done run.
+renderers' headline() of each tool's latest Done run per target, named with
+that target and run.
 """
 from __future__ import annotations
 
@@ -127,17 +128,18 @@ class KeyFiguresBlock(BaseBlockRenderer):
         if not view.evaluations:
             return {"na": ctx.t("No test results for version {number}.", number=ctx.system["number"])}
         tools: list[str] = []
-        latest: dict[str, object] = {}
+        # one headline per tool and target: a tool run against several back-ends never passes one
+        # back-end's score off as the tool's
+        latest: dict[tuple[str, str], object] = {}
         for ev in view.evaluations:
             for rv in ev.runs:
                 name = rv.tool.get("display_name") or rv.tool.get("name")
                 if name and name not in tools:
                     tools.append(name)
                 if name:
-                    latest[name] = rv
+                    latest[(name, (rv.run.target or {}).get("label") or "")] = rv
         if options["show_tool_headlines"]:
-            for name in tools:
-                rv = latest[name]
+            for (name, target), rv in sorted(latest.items(), key=lambda kv: tools.index(kv[0][0])):
                 renderer = ctx.data.tools.tool_for(rv.tool)
                 if renderer is None or getattr(renderer, "contract_version", 1) < 2:
                     continue
@@ -149,12 +151,23 @@ class KeyFiguresBlock(BaseBlockRenderer):
                     continue
                 package = type(renderer).__module__.split(".")[0]
                 tt = ctx.translate_for(package)
+                source = self._headline_source(ctx, rv.run, target)
                 for item in items:
+                    note = tt(str(item["note"])) if item.get("note") else ""
                     out["tools"].append({"label": ctx.t("{label}: {value}", label=name, value=tt(str(item.get("label", "")))),
                                          "value": str(item.get("value", "")),
-                                         "note": tt(str(item["note"])) if item.get("note") else ""})
+                                         "note": ctx.t("{note}; {source}", note=note, source=source) if note else source})
             self._conversation_figures(view, ctx, out)
         return {"value": ctx.t("{count} evaluations", count=len(view.evaluations)), "note": ", ".join(tools)}
+
+    @staticmethod
+    def _headline_source(ctx, run, target: str) -> str:
+        """Where a headline was measured: the run's target and the run itself."""
+        run_name = (run.evaluation_plugin or {}).get("name")
+        where = target or ctx.t("target not recorded")
+        if run_name:
+            return ctx.t("on {target}, run {run}", target=where, run=run_name)
+        return ctx.t("on {target}", target=where)
 
     @staticmethod
     def _conversation_figures(view, ctx, out) -> None:

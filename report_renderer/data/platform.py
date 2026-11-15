@@ -3,7 +3,9 @@
 The platform database is read for core.project (and pg_database) only. The card versions are
 project.system of the project's own database: a version that is not there is NotInProject (404), and
 a project whose database (or whose project.system) is missing has no data at all, so its report is
-drawn from a stand-in version and every data block reads as empty.
+drawn from a stand-in version and every data block reads as empty. The other versions a report names (newer,
+older, every one) are the saved ones, project.saved_system: a version withdrawn because its card was never saved
+is left out.
 """
 from __future__ import annotations
 
@@ -47,7 +49,7 @@ def project(project_id, system_id, *, sources) -> dict:
 
 def newer_versions(project_id, system_id, *, sources) -> list[dict]:
     return db.project_rows(sources, check_uuid(project_id), "project",
-                           "SELECT pid::text, number FROM project.system"
+                           "SELECT pid::text, number FROM project.saved_system"
                            " WHERE number > (SELECT number FROM project.system WHERE pid = %(s)s)"
                            " ORDER BY number", {"s": check_uuid(system_id)})
 
@@ -55,7 +57,7 @@ def newer_versions(project_id, system_id, *, sources) -> list[dict]:
 def older_versions(project_id, system_id, *, sources) -> list[dict]:
     """The project's versions numbered below the pinned one, newest first."""
     return db.project_rows(sources, check_uuid(project_id), "project",
-                           "SELECT pid::text, number, version FROM project.system"
+                           "SELECT pid::text, number, version FROM project.saved_system"
                            " WHERE number < (SELECT number FROM project.system WHERE pid = %(s)s)"
                            " ORDER BY number DESC", {"s": check_uuid(system_id)})
 
@@ -64,4 +66,4 @@ def versions(project_id, system_id, *, sources) -> list[dict]:
     """Every version of the project, oldest first, with the moment it was saved: a comment is matched
     to the version current when it was written."""
     return db.project_rows(sources, check_uuid(project_id), "project",
-                           "SELECT pid::text, number, created_at FROM project.system ORDER BY created_at, number", {})
+                           "SELECT pid::text, number, created_at FROM project.saved_system ORDER BY created_at, number", {})

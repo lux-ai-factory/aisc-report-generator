@@ -201,10 +201,11 @@ def test_the_module_readers_never_use_the_platform_dsn(module):
 
 def test_platform_py_reads_only_core_project_and_pg_database():
     """data/platform.py reads core.project (and pg_database) from REPORT_PLATFORM_DATABASE_URL; the
-    version readers (pinned_system, newer_versions, older_versions) read project.system of the project."""
+    version readers (pinned_system, newer_versions, older_versions) read project.system of the project, the
+    lists of other versions its saved ones (project.saved_system)."""
     source = (DATA / "platform.py").read_text(encoding="utf-8")
     tables = set(re.findall(r"\b(?:FROM|JOIN)\s+([a-z_]+\.[a-z_]+|pg_database)\b", source, re.I))
-    assert tables <= {"core.project", "pg_database", "project.system"}, tables
+    assert tables <= {"core.project", "pg_database", "project.system", "project.saved_system"}, tables
     assert "project.system" in tables, "the version readers must read project.system"
 
 

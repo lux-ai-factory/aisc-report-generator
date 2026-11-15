@@ -138,9 +138,9 @@ def targets(project_id, system_id, *, sources) -> list[dict]:
 
 
 def latest_card_number(project_id, system_id, *, sources) -> int | None:
-    """The number of the project's latest version (its latest card)."""
+    """The number of the project's latest saved version (its latest card)."""
     row = db.project_one(sources, check_uuid(project_id), "engine",
-                 "SELECT max(number) AS n FROM project.system", {})
+                 "SELECT max(number) AS n FROM project.saved_system", {})
     return row["n"] if row else None
 
 

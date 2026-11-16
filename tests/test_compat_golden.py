@@ -4,7 +4,8 @@ The goldens were captured from the renderer at 41d11b9 (tests/golden/capture.py;
 the commit). When the card stopped recording the provider's measures, the risk sections of the HTML goldens
 lost their Control and Follow-up control lines by hand, and the PDF text of a_v2_live_styled was captured
 again (the shorter section moved a page break into a table row; the text outside Test results is otherwise
-the same). A snapshot that uses none of the optional snapshot keys must render the same:
+the same). The checklist answers' "Submission" line was reworded by hand in every golden when the
+submission's number stopped reading as a card version. A snapshot that uses none of the optional snapshot keys must render the same:
 - Alpha v2 and Mike v2 (evaluations): identical except inside the Test results section.
 - Alpha v2 with legacy links: identical except the second summary block.
 """

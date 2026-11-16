@@ -166,6 +166,16 @@ def test_an_unreviewed_map_says_so(deps):
     assert review_line(node) == ("not reviewed", "The evidence map of version 2 is not reviewed.")
 
 
+def test_a_review_a_later_change_ended_is_not_named(deps, bed, alpha_v2_reviewed):
+    """A change of the map ends its review; the review stays on record but no longer holds."""
+    conn = _project_db(bed)
+    conn.execute("ALTER TABLE evidence.review ADD COLUMN IF NOT EXISTS voided_at timestamptz")
+    conn.execute("UPDATE evidence.review SET voided_at = now() WHERE system_id = %s", (IDS["A_V2"],))
+    conn.close()
+    _, _, node, _ = render_one(deps, "summary_coverage")
+    assert review_line(node) == ("not reviewed", "The evidence map of version 2 is not reviewed.")
+
+
 def test_own_links_name_no_reviewer(deps, alpha_v2_reviewed):
     """Links set on the block are not the evidence map: no review is named for them."""
     _, _, node, _ = render_one(deps, "summary_coverage", links=LINKS)

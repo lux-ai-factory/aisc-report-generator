@@ -1,6 +1,6 @@
 """Fixtures of the renderer tests.
 
-The database tests run on one throwaway postgres:15-alpine container per session, built by the
+The database tests run on one throwaway postgres:15.19-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81 container per session, built by the
 superproject's `scripts/lib/report_bed_isolated.py` (found through AISC_INSTALL_DIR, see below). It
 loads the report bed's seed (`report_bed.py`: init SQL, platform migrations, schema dumps of the module
 schemas, a fixed seed) and moves it into one database per project: `platform` keeps core.project and

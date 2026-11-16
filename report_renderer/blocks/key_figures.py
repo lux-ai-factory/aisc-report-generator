@@ -125,7 +125,8 @@ class KeyFiguresBlock(BaseBlockRenderer):
         for cov in coverage.values():
             counts[cov.status] += 1
         with_evidence = counts["evidence"] + counts["evidence, attention"]
-        note = ", ".join(ctx.t("{label}: {value}", label=ctx.t(st), value=counts[st]) for st in STATUSES[1:])
+        # "; " between the counts: a status name holds a comma ("evidence, attention")
+        note = "; ".join(ctx.t("{label}: {value}", label=ctx.t(st), value=counts[st]) for st in STATUSES[1:])
         return {"value": ctx.t("{count} of {total} objectives with evidence", count=with_evidence, total=len(ids)),
                 "note": note}
 

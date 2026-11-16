@@ -82,9 +82,16 @@ class KeyFiguresBlock(BaseBlockRenderer):
         return {"na": ctx.t("No control objectives for version {number}.", number=ctx.system["number"])}
 
     def _risks(self, ctx, options, out):
+        """The risks of the version. Once control objectives are assessed, their risks are counted and rated;
+        before that, the card's own risks are counted and said to be not rated yet."""
         data = self._objectives_data(ctx, out)
         if data is None:
-            return self._no_objectives(ctx)
+            q = ctx.data.qualification
+            if q.card() is None:
+                return {"na": ctx.t("No AI card for version {number}.", number=ctx.system["number"])}
+            risks = q.risks()
+            out["newest"].append(q.newest_newer_card())
+            return {"value": str(len(risks)), "note": ctx.t("not rated yet") if risks else ""}
         bands = {}
         for r in data["rows"]:
             bands.setdefault(r["risk_id"], r["band"])

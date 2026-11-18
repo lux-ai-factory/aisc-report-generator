@@ -1,3 +1,0 @@
-/* page numbers in the table of contents, PDF and DOCX only */
-#toc a { display: block; }
-#toc a::after { content: leader('.') target-counter(attr(href), page); }

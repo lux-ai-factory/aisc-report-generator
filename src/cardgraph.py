@@ -92,6 +92,11 @@ class Node:
         # the node's type: its VAIR term when it has one, else its class
         return str(self.vair or self.cls or "")
 
+    @property
+    def text(self) -> str:
+        # the node's human wording: its full text, else its label
+        return str(self.full_text or self.label or "")
+
 
 @dataclass
 class Row:
@@ -107,6 +112,7 @@ class Chain:
     consequence: Node | None = None
     impact: Node | None = None
     vulnerability: Node | None = None
+    stakeholder: Node | None = None
     control: Node | None = None
     follow_up: Node | None = None
     areas: list[Node] = field(default_factory=list)
@@ -114,18 +120,21 @@ class Chain:
 
 @dataclass
 class Figure:
-    """The webapp's card figure: the system, its aspect rows and the risk chains."""
+    """The webapp's card figure: the system, its aspect rows and the risk chains.
 
-    system: Node
+    Parsed leniently: a view without a usable system node still yields its rows
+    and chains (the figure needs the system, the report content does not)."""
+
+    system: Node | None = None
     rows: list[Row] = field(default_factory=list)
     chains: list[Chain] = field(default_factory=list)
 
     @classmethod
     def from_view(cls, view) -> Figure | None:
-        view = view if isinstance(view, dict) else {}
-        system = Node.from_view(view.get("system"))
-        if system is None:
+        view = view if isinstance(view, dict) else None
+        if view is None:
             return None
+        system = Node.from_view(view.get("system"))
         rows = []
         for item in view.get("rows") or []:
             if not isinstance(item, dict) or not item.get("property"):
@@ -157,6 +166,7 @@ class Figure:
                     consequence=Node.from_view(item.get("consequence")),
                     impact=Node.from_view(item.get("impact")),
                     vulnerability=Node.from_view(item.get("vulnerability")),
+                    stakeholder=Node.from_view(item.get("stakeholder")),
                     control=Node.from_view(item.get("control")),
                     follow_up=Node.from_view(item.get("followUp")),
                     areas=[
@@ -619,7 +629,8 @@ def figure_svg(view: dict, colours: dict) -> Markup | None:
     """The webapp's card figure (system band + expanded risk chains) as an inline
     SVG, or None when the snapshot has no usable ``system.card.view``."""
     figure = Figure.from_view(view)
-    if figure is None:
+    if figure is None or figure.system is None:
+        return None
         return None
     result = _FigureLayout().layout(figure)
     if not result.nodes:

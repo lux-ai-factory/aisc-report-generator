@@ -1,0 +1,257 @@
+{% macro scalar_rows(obj) -%}
+  {% for key, value in (obj.items() if obj is mapping else []) %}
+    {% if value is not mapping and value is not sequence and value is not none %}
+      <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+    {% endif %}
+  {% endfor %}
+{%- endmacro %}
+
+{% set proj = snapshot.project if snapshot.project is mapping else {} %}
+{% set system = snapshot.system if snapshot.system is mapping else {} %}
+{% set has = {'system': 'system' in sections, 'controls': 'controls' in sections, 'objectives': 'objectives' in sections, 'evaluations': 'evaluations' in sections} %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ style.report_title or (proj.get('name', 'AI system') ~ ' — assessment report') }}</title>
+<style>
+{% include "css/report.css" %}
+{% include "css/chapters.css" %}
+{% include "css/toc_pages.css" %}
+/* the project's look (validated by render._style): colours, typeface, size */
+:root {
+  --l-aif-primary: {{ style.primary_color }};
+  --l-aif-dominant-100: {{ style.primary_color }};
+  --l-aif-accent: {{ style.accent_color }};
+  --l-aif-bright-secondary-100: {{ style.accent_color }};
+  --l-aif-font: {{ style.font_stack | safe }};
+  --l-aif-font-size: {{ style.font_size_pt }}pt;
+}
+html, body { font-family: var(--l-aif-font, Arial, sans-serif); font-size: var(--l-aif-font-size, 11pt); }
+h1, h2, h3 { color: var(--l-aif-primary); }
+{% set ver = system.get('version') if system.get('version') is mapping else {} %}
+{% set page_header = style.header_text or ((proj.get('name', '') ~ (', Version ' ~ style.report_version if style.report_version else ''))) %}
+@page {
+  size: A4;
+  margin: 24mm 16mm 20mm 16mm;
+  @top-left { content: {{ page_header | css_text }}; font-size: 9pt; }
+  {% if style.marking_label %}@top-right { content: {{ style.marking_label | css_text }}; font-size: 9pt; color: {{ style.accent_color }}; }{% endif %}
+  {% if style.footer_text %}@bottom-left { content: {{ style.footer_text | css_text }}; font-size: 9pt; }{% endif %}
+  {% if style.show_document_id and style.document_id %}@bottom-center { content: {{ ("Document " ~ style.document_id ~ " | Fingerprint " ~ style.fingerprint) | css_text }}; font-size: 9pt; }{% endif %}
+  @bottom-right { content: "Page " counter(page) " of " counter(pages); font-size: 9pt; }
+}
+/* the html report (browser preview) gets its own side margins */
+@media screen { body { padding: 0 32px; } }
+</style>
+</head>
+<body>
+
+{# cover — the pilot renderer's cover block #}
+<div class="cover">
+  {% if style.logo %}<p class="logo"><img src="{{ style.logo }}" alt="Logo"></p>{% endif %}
+  <h1>{{ style.report_title or (proj.get('name', 'AI system') ~ ' — AI assessment report') }}</h1>
+  {% if style.subtitle %}<p class="subtitle">{{ style.subtitle }}</p>{% elif proj.get('description') %}<p class="subtitle">{{ proj['description'] }}</p>{% endif %}
+  {% if style.marking_label %}<p class="marking">{{ style.marking_label }}</p>{% endif %}
+  <dl class="card">
+    <dt>Project</dt><dd>{{ proj.get('name', '') }}</dd>
+    <dt>AI system</dt><dd>{{ system.get('name', '') }}</dd>
+    <dt>Version</dt>
+    <dd>Version {{ style.report_version }}{% if ver.get('version') or ver.get('name') %} — {{ ver.get('version') or ver.get('name') }}{% endif %}</dd>
+    {% if ver.get('provider') %}<dt>Provider</dt><dd>{{ ver['provider'] }}</dd>{% endif %}
+    <dt>Date</dt><dd>Generated {{ snapshot.generated_at }}</dd>
+  </dl>
+
+  {% if key_figures %}
+  <div class="key-figures">
+    {% for f in key_figures if f is mapping %}
+      <div class="figure"><p class="figure-label">{{ f.get('label', '') }}</p><p class="figure-value">{{ f.get('value', '') }}</p>{% if f.get('note') %}<p class="figure-note">{{ f['note'] }}</p>{% endif %}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{# table of contents #}
+<nav id="toc">
+  <h2>Contents</h2>
+  <ol>
+    {% set n = namespace(i=1) %}
+    {% for sid, title in [('system', 'AI system'), ('controls', 'Controls'), ('objectives', 'Control objectives'), ('evaluations', 'Evaluations')] %}
+      {% if has[sid] %}
+        <li><a href="#{{ sid }}">{{ n.i }}. {{ title }}</a></li>
+        {% set n.i = n.i + 1 %}
+      {% endif %}
+    {% endfor %}
+  </ol>
+</nav>
+
+{% macro chapter(number, title, sid) -%}
+<section class="block block-{{ sid }} chapter" id="{{ sid }}">
+  <h1 class="chapter-title">{{ number }}. {{ title }}</h1>
+  {{ caller() }}
+</section>
+{%- endmacro %}
+
+{% set n = namespace(i=1) %}
+
+{% if has.system %}
+{% set n.i = n.i %}
+{% call chapter(n.i, 'AI system', 'system') %}{% set n.i = n.i + 1 %}
+  {% if system.get('version') is mapping %}
+    <h2>Version</h2>
+    <table>{{ scalar_rows(system['version']) }}</table>
+  {% endif %}
+  {% if system.get('card') is mapping or card.get('rows') %}
+    <h2>AI card</h2>
+    {% if card.get('rows') %}
+      <table class="ai-card">
+        <tbody>
+          {% for row in card['rows'] if row is mapping %}
+            <tr><th>{{ row.get('label', '') }}</th><td>{{ row.get('values') | join(', ') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+    {% if card.get('counts') or card.get('digest') %}
+      <p class="muted">Knowledge graph: {{ card['counts'].get('nodes', 0) }} nodes · {{ card['counts'].get('triples', 0) }} triples{% if card.get('digest') %} · digest {{ card['digest'][:12] }}{% endif %}</p>
+    {% endif %}
+    {% if card_graph %}
+      <h3>AI system graph</h3>
+      <div class="card-graph">{{ card_graph }}</div>
+    {% endif %}
+  {% endif %}
+  {% if risks %}
+    <h2>Risk classification</h2>
+    {% for r in risks if r is mapping %}
+      <section class="risk">
+        <h3>Risk {{ loop.index }}: {{ r.get('risk', '') }}{% if r.get('risk_term') %} · {{ r['risk_term'] }}{% endif %}</h3>
+        <dl class="card">
+          {% if r.get('source') %}<dt>caused by</dt><dd>{{ r['source'] }}{% if r.get('source_term') %} · {{ r['source_term'] }}{% endif %}</dd>{% endif %}
+          {% if r.get('consequence') %}<dt>leading to</dt><dd>{{ r['consequence'] }}{% if r.get('consequence_term') %} · {{ r['consequence_term'] }}{% endif %}</dd>{% endif %}
+          {% if r.get('impact') %}<dt>impact</dt><dd>{{ r['impact'] }}{% if r.get('impact_term') %} · {{ r['impact_term'] }}{% endif %}</dd>{% endif %}
+          {% if r.get('stakeholder') %}<dt>affecting</dt><dd>{{ r['stakeholder'] }}</dd>{% endif %}
+          {% if r.get('control') %}<dt>controlled by</dt><dd>{{ r['control'] }}{% if r.get('control_term') %} · {{ r['control_term'] }}{% endif %}</dd>{% endif %}
+          {% if r.get('follow_up') %}<dt>followed up by</dt><dd>{{ r['follow_up'] }}</dd>{% endif %}
+          {% if r.get('impact_areas') %}<dt>areas</dt><dd>{{ r['impact_areas'] | join(', ') }}</dd>{% endif %}
+        </dl>
+      </section>
+    {% endfor %}
+  {% endif %}
+{% endcall %}
+{% endif %}
+
+{% if has.controls %}
+{% call chapter(n.i, 'Controls', 'controls') %}{% set n.i = n.i + 1 %}
+  <table>
+    <thead><tr><th>Checklist</th><th>Topic</th><th>Status</th><th>Coverage</th><th>Readiness</th><th>Mean</th></tr></thead>
+    <tbody>
+      {% for ctrl in snapshot.controls if ctrl is mapping %}
+        <tr>
+          <td>{{ ctrl.get('name', '') }}{% if ctrl.get('version') %} <span class="muted">v{{ ctrl['version'] }}</span>{% endif %}</td>
+          <td>{{ ctrl.get('control_topic', '') }}</td>
+          <td>{{ ctrl.get('status', '') }}</td>
+          <td>{{ (ctrl['coverage']['percent'] if ctrl.get('coverage') is mapping and ctrl['coverage'].get('percent') is not none else '') }}</td>
+          <td>{{ ctrl.get('readiness') if ctrl.get('readiness') is not none else '' }}</td>
+          <td>{{ ctrl.get('mean_score') if ctrl.get('mean_score') is not none else '' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% for ctrl in snapshot.controls if ctrl is mapping and ctrl.get('answers') %}
+    <h3>{{ ctrl.get('name', '') }} · answers</h3>
+    <table class="answers">
+      <colgroup><col class="question"><col class="answer"><col class="score"></colgroup>
+      <thead><tr><th>Question</th><th>Answer</th><th>Score</th></tr></thead>
+      <tbody>
+        {% for a in ctrl['answers'] if a is mapping %}
+          <tr><td>{{ a.get('text', '') }}</td><td>{{ a.get('answer', '') }}</td><td>{{ a.get('score') if a.get('score') is not none else '' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+{% endcall %}
+{% endif %}
+
+{% if has.objectives and snapshot.objectives is mapping %}
+{% call chapter(n.i, 'Control objectives', 'objectives') %}{% set n.i = n.i + 1 %}
+  {% if snapshot.objectives.get('priorities') %}
+    <h2>Priorities</h2>
+    <table>
+      <thead><tr><th>Objective</th><th>Rank</th><th>Score</th><th>Top rating</th><th>Key</th></tr></thead>
+      <tbody>
+        {% for p in snapshot.objectives.priorities if p is mapping %}
+          <tr>
+            <td>{{ p.get('text', '') }}
+                {% if p.get('objective_id') %}<div class="muted">{{ p['objective_id'] }}</div>{% endif %}
+                {% if p.get('reasons') %}<div class="muted">{{ p['reasons'] | join(', ') }}</div>{% endif %}</td>
+            <td>{{ p.get('rank') if p.get('rank') is not none else '' }}</td>
+            <td>{{ p.get('score') if p.get('score') is not none else '' }}</td>
+            <td>{{ p.get('top_rating') if p.get('top_rating') is not none else '' }}</td>
+            <td>{{ 'yes' if p.get('key') else 'no' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  {% if snapshot.objectives.get('risks') %}
+    <h2>Risks</h2>
+    <table>
+      <thead><tr><th>Risk</th><th>Rating</th><th>Comment</th></tr></thead>
+      <tbody>
+        {% for r in snapshot.objectives.risks if r is mapping %}
+          <tr><td>{{ r.get('name', '') }}</td><td>{{ r.get('rating') if r.get('rating') is not none else '' }}</td><td>{{ r.get('comment', '') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endcall %}
+{% endif %}
+
+{% if has.evaluations %}
+{% call chapter(n.i, 'Evaluations', 'evaluations') %}{% set n.i = n.i + 1 %}
+  {% for ev in evaluations %}
+    {% if ev is mapping %}
+      <h2>{{ ev.get('task') or ev.get('plugin') or ('Evaluation ' ~ loop.index) }}
+          {% if ev.get('status') %}<span class="chips"><span>{{ ev['status'] }}</span></span>{% endif %}</h2>
+      {% set kr = ev.get('key_results') %}
+      {% if kr is mapping %}
+        <p>{{ kr.get('observations', 0) }} observations · mean score {{ kr.get('mean_score') if kr.get('mean_score') is not none else '—' }}</p>
+        {% if kr.get('metrics') %}
+          <table>
+            <thead><tr><th>Metric</th><th>Mean</th><th>Min</th><th>Max</th><th>N</th></tr></thead>
+            <tbody>
+              {% for m in kr.metrics if m is mapping %}
+                <tr><td>{{ m.get('name') }}</td><td>{{ m.get('mean') }}</td><td>{{ m.get('min') }}</td><td>{{ m.get('max') }}</td><td>{{ m.get('n') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+        {% if kr.get('detailed_measurements') %}
+          <h3>Detailed measurements</h3>
+          {% for dim in kr['detailed_measurements'] if dim is mapping %}
+            <p><strong>{{ dim.get('key') }}</strong></p>
+            <table>
+              <thead><tr><th>Group</th><th>Mean</th><th>N</th></tr></thead>
+              <tbody>
+                {% for g in (dim.get('groups') or []) if g is mapping %}
+                  <tr><td>{{ g.get('label') }}</td><td>{{ g.get('mean') }}</td><td>{{ g.get('n') }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endfor %}
+        {% endif %}
+      {% endif %}
+      {% for plot in ev.get('plots') or [] if plot is mapping %}
+        {% if plot.get('title') %}<h3>{{ plot['title'] }}</h3>{% endif %}
+        {% if plot.get('description') %}<p class="muted">{{ plot['description'] }}</p>{% endif %}
+        <div class="plot-item plot-svg">{{ plot['svg'] }}</div>
+      {% endfor %}
+    {% else %}
+      <h2>{{ ev }}</h2>
+    {% endif %}
+  {% endfor %}
+{% endcall %}
+{% endif %}
+
+</body>
+</html>

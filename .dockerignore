@@ -1,8 +1,14 @@
-# local environments and build leftovers, in this folder and in plugins/<tool>/
-**/.venv
+# The image only needs pyproject.toml, uv.lock and the lean renderer under src/ (app, render, plots,
+# cardgraph, charts and the templates). Everything else stays out.
+**
+!pyproject.toml
+!uv.lock
+!src/app.py
+!src/render.py
+!src/plots.py
+!src/cardgraph.py
+!src/charts.py
+!src/templates/
+
+# never ship local caches
 **/__pycache__
-**/*.egg-info
-**/build
-**/.pytest_cache
-**/.ruff_cache
-reports/

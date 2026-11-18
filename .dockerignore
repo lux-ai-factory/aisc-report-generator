@@ -8,6 +8,7 @@
 !src/plots.py
 !src/cardgraph.py
 !src/charts.py
+!src/style.py
 !src/templates/
 
 # never ship local caches

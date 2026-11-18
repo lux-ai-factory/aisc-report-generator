@@ -17,7 +17,8 @@ plugin bundles were removed in the cleanup):
 ```
 src/
   app.py               the FastAPI server: POST /api/generate (X-AISC-Service-Token), GET /health
-  render.py            draws the snapshot into HTML / PDF
+  render.py            the Renderer: draws the snapshot into HTML / PDF
+  style.py             ReportStyle: the snapshot's validated look (colours, font, marking, logo)
   plots.py             the evaluations' declared charts -> bars
   charts.py            the bar/hbar SVG renderer (inlined from the plugin interface)
   cardgraph.py         the AI-card graph / figure -> inline SVG
@@ -59,10 +60,11 @@ REPORT_SERVICE_TOKEN=... uvicorn app:app --host 0.0.0.0 --port 8080
 
 `POST /api/generate` body: `{"project_pid": str, "format": "pdf" | "html", "snapshot": {...}}`;
 the snapshot is the backend's report snapshot (project, system + AI card, controls, objectives,
-evaluations, sections, and `style` — the project's customisation: report title, subtitle,
-primary/accent colour). Each evaluation also carries its plugins' declared charts
+evaluations, sections, and `style` — the project's customisation: report title, subtitle, LAIF
+colours, font and size, page header/footer, marking, document id and logo, validated into
+`ReportStyle`). Each evaluation also carries its plugins' declared charts
 (`get_metric_visualizations`) and the run's measurements; the renderer draws them as inline SVG
-bars (`src/plots.py` + the plugin interface's `charts.py`). The cover also shows key-figures tiles,
+bars (`src/plots.py` + `src/charts.py`). The cover also shows key-figures tiles,
 and the AI system chapter draws the **webapp's system band** (system + its aspect rows, node types
 visible) from `system.card.view` as static SVG scaled to one page, then the **expanded risk cards**
 (Risk N · caused by / leading to / impact / affecting / controlled by / areas, VAIR terms after the

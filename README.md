@@ -63,8 +63,9 @@ the snapshot is the backend's report snapshot (project, system + AI card, contro
 evaluations, sections, and `style` — the project's customisation: report title, subtitle, LAIF
 colours, font and size, page header/footer, marking, document id and logo, validated into
 `ReportStyle`). Each evaluation also carries its plugins' declared charts
-(`get_metric_visualizations`) and the run's measurements; the renderer draws them as inline SVG
-bars (`src/plots.py` + `src/charts.py`). The cover also shows key-figures tiles,
+(`get_metric_visualizations`) and the run's measurements; the webapp renders them with MUI and submits PNG panels in `evaluation_charts`.
+The backend associates panels with selected evaluations and stores them as `plots` in the snapshot.
+The renderer embeds these images; missing exports show an unavailable message. The cover also shows key-figures tiles,
 and the AI system chapter draws the **webapp's system band** (system + its aspect rows, node types
 visible) from `system.card.view` as static SVG scaled to one page, then the **expanded risk cards**
 (Risk N · caused by / leading to / impact / affecting / controlled by / areas, VAIR terms after the
@@ -77,5 +78,19 @@ and checklist answers. The backend also normalises the card's JSON-LD to plain `
 
 The lean renderer is verified by building the image and posting a backend-shaped snapshot to
 `/api/generate` (PDF and HTML), checking that an invalid style falls back to the defaults and that a
-declared chart renders as SVG in both formats (the chart renderer and the AI-card graph are pure
+browser-exported evaluation chart embeds in both formats (the chart renderer and the AI-card graph are pure
 functions checked by ruff + a smoke render on the image).
+
+### Report chart artifacts
+
+New chart PNGs are multipart uploads to report-owned artifacts in the existing S3 bucket.
+Snapshots keep `artifact:<uuid>` references; the backend resolves these to authenticated
+internal URLs when invoking the renderer. Set `REPORT_BACKEND_INTERNAL_URL` consistently
+on backend and report service when the backend is not reachable at `http://aisc-backend:8000`.
+Downloaded HTML embeds fetched PNGs and remains self-contained.
+
+Apply backend migration `0037_report_artifacts_dashboard` before deploying the updated webapp.
+The shared project dashboard has GET/PUT endpoints at `/projects/{pid}/dashboard`;
+PUT requires the last loaded revision. Existing browser dashboards require explicit import.
+Run `uv run python manage.py cleanup_report_preparations` periodically to remove
+abandoned preparations older than 24 hours. Deleting a report removes its chart files.

@@ -10,6 +10,7 @@ dependencies = [
     { name = "cairosvg" },
     { name = "defusedxml" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "jinja2" },
     { name = "lxml" },
     { name = "pillow" },
@@ -19,7 +20,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
@@ -30,6 +30,7 @@ requires-dist = [
     { name = "cairosvg", specifier = ">=2.7" },
     { name = "defusedxml", specifier = ">=0.7" },
     { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "httpx", specifier = ">=0.27,<1" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "lxml", specifier = ">=5" },
     { name = "pillow", specifier = ">=12.3.0" },
@@ -39,7 +40,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = ">=0.27,<1" },
     { name = "pytest", specifier = ">=8,<9" },
     { name = "ruff", specifier = ">=0.17.5" },
     { name = "ty", specifier = ">=0.0.105" },

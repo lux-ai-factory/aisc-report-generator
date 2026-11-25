@@ -8,7 +8,7 @@
 
 {% set proj = snapshot.project if snapshot.project is mapping else {} %}
 {% set system = snapshot.system if snapshot.system is mapping else {} %}
-{% set has = {'system': 'system' in sections, 'controls': 'controls' in sections, 'objectives': 'objectives' in sections, 'evaluations': 'evaluations' in sections} %}
+{% set has = {'system': 'system' in sections, 'controls': 'controls' in sections, 'objectives': 'objectives' in sections, 'evaluations': 'evaluations' in sections, 'dashboard': 'dashboard' in sections} %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -76,7 +76,7 @@ h1, h2, h3 { color: var(--l-aif-primary); }
   <h2>Contents</h2>
   <ol>
     {% set n = namespace(i=1) %}
-    {% for sid, title in [('system', 'AI system'), ('controls', 'Controls'), ('objectives', 'Control objectives'), ('evaluations', 'Evaluations')] %}
+    {% for sid, title in [('system', 'AI system'), ('controls', 'Controls'), ('objectives', 'Control objectives'), ('evaluations', 'Evaluations'), ('dashboard', 'Dashboard')] %}
       {% if has[sid] %}
         <li><a href="#{{ sid }}">{{ n.i }}. {{ title }}</a></li>
         {% set n.i = n.i + 1 %}
@@ -244,12 +244,44 @@ h1, h2, h3 { color: var(--l-aif-primary); }
       {% for plot in ev.get('plots') or [] if plot is mapping %}
         {% if plot.get('title') %}<h3>{{ plot['title'] }}</h3>{% endif %}
         {% if plot.get('description') %}<p class="muted">{{ plot['description'] }}</p>{% endif %}
-        <div class="plot-item plot-svg">{{ plot['svg'] }}</div>
+        {% for panel in plot.get('panels') or [] if panel is mapping %}
+          {% if panel.get('label') %}<h4>{{ panel['label'] }}</h4>{% endif %}
+          {% if panel.get('image') %}
+            <img class="plot-item plot-image" src="{{ panel['image'] }}" alt="{{ plot.get('title') or 'Evaluation chart' }}">
+          {% else %}
+            <p class="muted">Panel unavailable — no image was exported.</p>
+          {% endif %}
+        {% else %}
+          <p class="muted">Chart unavailable — no image was exported.</p>
+        {% endfor %}
+      {% else %}
+        <p class="muted">Charts unavailable — no images were exported.</p>
       {% endfor %}
     {% else %}
       <h2>{{ ev }}</h2>
     {% endif %}
   {% endfor %}
+{% endcall %}
+{% endif %}
+{% if has.dashboard %}
+{% call chapter(n.i, 'Dashboard', 'dashboard') %}{% set n.i = n.i + 1 %}
+  {% if dashboard_widgets %}
+    {% for item in dashboard_widgets if item is mapping %}
+      {% if item.get('kind') == 'text' %}
+        <section class="dashboard-note">{{ item.get('text') }}</section>
+      {% elif item.get('kind') == 'chart' %}
+        {% if item.get('title') %}<h2>{{ item['title'] }}</h2>{% endif %}
+        {% if item.get('image') %}
+          <img class="plot-item plot-image" src="{{ item['image'] }}" alt="{{ item['title'] or item['key'] }}">
+        {% else %}
+          <p class="muted">Chart unavailable — no image was exported.</p>
+        {% endif %}
+        {% if item.get('comment') %}<p class="muted">{{ item['comment'] }}</p>{% endif %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="muted">No dashboard charts or comments collected.</p>
+  {% endif %}
 {% endcall %}
 {% endif %}
 

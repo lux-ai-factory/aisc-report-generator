@@ -13,7 +13,6 @@ from jinja2 import Environment, FileSystemLoader
 from markupsafe import Markup
 
 import cardgraph
-import plots
 from style import ReportStyle, css_text
 
 _TEMPLATES = Path(__file__).resolve().parent / "templates"
@@ -38,18 +37,8 @@ class Renderer:
         return env
 
     def evaluations(self) -> list:
-        """The evaluations with their declared charts drawn (a chart with no
-        wanted rows is left out)."""
-        colours = {
-            "primary": self.style.primary_color,
-            "text": "#000000",
-            "grid": "#cccccc",
-        }
-        return [
-            {**evaluation, "plots": plots.for_evaluation(evaluation, colours)}
-            if isinstance(evaluation, dict) else evaluation
-            for evaluation in self.snapshot.get("evaluations") or []
-        ]
+        """Evaluation summaries and browser-rendered charts from the snapshot."""
+        return self.snapshot.get("evaluations") or []
 
     def card_aspects(self) -> dict:
         """The AI card, flattened for the template: its labelled rows (aspect →
@@ -183,6 +172,7 @@ class Renderer:
             sections=self.snapshot.get("sections") or [],
             style=self.style,
             evaluations=self.evaluations(),
+            dashboard_widgets=(self.snapshot.get("dashboard") or {}).get("widgets") or [],
             card=self.card_aspects(),
             risks=self.risk_cards(),
             key_figures=self.key_figures(),

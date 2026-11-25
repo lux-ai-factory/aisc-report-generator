@@ -432,9 +432,12 @@ header img {
 
 .plot-image {
   display: block;
-  width: 100%;
+  width: auto;
   max-width: 100%;
   height: auto;
+  /* like the AI card graph: the image fits one page, whatever its aspect */
+  max-height: 200mm;
+  margin: 0 auto;
 }
 
 .plot-svg,
